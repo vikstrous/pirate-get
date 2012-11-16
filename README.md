@@ -15,4 +15,4 @@ Run install.sh
 Usage
 ---
 
-pirate-get <search query>
+pirate-get &lt;search query&gt;

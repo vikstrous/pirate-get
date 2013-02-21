@@ -1,7 +1,7 @@
 pirate-get
 ---
 
-pirate-get is a convenient command line tool to speed up your trip to the pirate bay and get your completely legal torrents more quickly.
+pirate-get is a convenient command line tool to speed up your trip to the Pirate Bay and get your completely legal torrents more quickly.
 
 Tested only on Ubuntu.
 
@@ -15,4 +15,16 @@ Run install.sh
 Usage
 ---
 
+```
 pirate-get &lt;search query&gt;
+```
+
+OR
+
+```
+pirate-get &lt;search query&gt; --local &lt;database&gt;
+```
+
+If you want to use a local copy of the Pirate Bay database download a copy here (or wherever the latest version is currently):
+
+http://thepiratebay.se/torrent/8156416

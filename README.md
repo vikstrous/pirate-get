@@ -16,13 +16,13 @@ Usage
 ---
 
 ```
-pirate-get &lt;search query&gt;
+pirate-get <search query>
 ```
 
 OR
 
 ```
-pirate-get &lt;search query&gt; --local &lt;database&gt;
+pirate-get <search query> --local <database.xml>
 ```
 
 If you want to use a local copy of the Pirate Bay database download a copy here (or wherever the latest version is currently):

@@ -37,8 +37,9 @@ class MyHTMLParser(HTMLParser):
 
 
 def main():
-
     parser = argparse.ArgumentParser(description='Finds and downloads torrents from the Pirate Bay')
+    parser.add_argument('q', metavar='search_term', help="The term to search for")
+    parser.add_argument('--local', dest='database', help="An xml file containing the Pirate Bay database")
 
     def local(args):
         xml_str = ''
@@ -51,9 +52,6 @@ def main():
     def remote(args):
         f = urllib2.urlopen('http://thepiratebay.se/search/' + args.q.replace(" ", "+") + '/0/7/0')
         return re.findall(""""(magnet\:\?xt=[^"]*)""", f.read())
-
-    parser.add_argument('q', metavar='search_term', help="The term to search for")
-    parser.add_argument('--local', dest='database', help="An xml file containing the Pirate Bay database")
 
     args = parser.parse_args()
     if args.database:

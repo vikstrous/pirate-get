@@ -32,7 +32,7 @@ class MyHTMLParser(HTMLParser):
             else:
                 self.state = 'looking'
         if self.state == 'magnet':
-            self.results.append('magnet:?xt=urn:btih:' + urllib.quote(data) + '&dn=' + urllib.quote(self.title))
+            self.results.append(['magnet:?xt=urn:btih:' + urllib.quote(data) + '&dn=' + urllib.quote(self.title), '?', '?'])
             self.state = 'looking'
 
 
@@ -49,9 +49,27 @@ def main():
         htmlparser.feed(xml_str)
         return htmlparser.results
 
+    #todo: redo this with html parser instead of regex
     def remote(args):
         f = urllib2.urlopen('http://thepiratebay.se/search/' + args.q.replace(" ", "+") + '/0/7/0')
-        return re.findall(""""(magnet\:\?xt=[^"]*)""", f.read())
+	res = f.read()
+        found = re.findall(""""(magnet\:\?xt=[^"]*)|<td align="right">([^<]+)</td>""", res)
+        state = "seeds"
+        curr = ['',0,0] #magnet, seeds, leeches
+        res_l = []
+        for f in found:
+            if f[1] == '':
+                curr[0] = f[0]
+            else:
+                if state == 'seeds':
+                    curr[1] = f[1]
+                    state = 'leeches'
+                else:
+                    curr[2] = f[1]
+                    state = 'seeds'
+                    res_l.append(curr)
+                    curr = ['', 0, 0]
+        return res_l
 
     args = parser.parse_args()
     if args.database:
@@ -59,12 +77,22 @@ def main():
     else:
         mags = remote(args)
 
+    print "S=seeders"
+    print "L=leechers"
     if mags:
         for m in range(len(mags)):
-            name = re.search("dn=([^\&]*)", mags[m])
-            print str(m) + ".", urllib.unquote(name.group(1).encode('ascii')).decode('utf-8').replace("+", " ")
+            magnet = mags[m]
+            name = re.search("dn=([^\&]*)", magnet[0])
+            print str(m) + '. S:' + str(magnet[1]) + ' L:' + str(magnet[2]) + ' ', urllib.unquote(name.group(1).encode('ascii')).decode('utf-8').replace("+", " ")
         l = raw_input("Select a link: ")
-        webbrowser.open(mags[int(l)])
+        try:
+            choice = int(l)
+        except Exception:
+            choice = None
+        if not choice == None:
+            webbrowser.open(mags[choice])
+        else:
+            print "Cancelled."
     else:
         print "no results"
 

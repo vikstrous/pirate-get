@@ -3,7 +3,7 @@ pirate-get
 
 pirate-get is a convenient command line tool to speed up your trip to the Pirate Bay and get your completely legal torrents more quickly.
 
-Tested only on Ubuntu.
+Tested only on Ubuntu. It should work anywhere else too. Let me know if it doesn't.
 
 Installation
 ---

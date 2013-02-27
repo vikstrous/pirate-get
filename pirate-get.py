@@ -40,6 +40,7 @@ def main():
     parser = argparse.ArgumentParser(description='Finds and downloads torrents from the Pirate Bay')
     parser.add_argument('q', metavar='search_term', help="The term to search for")
     parser.add_argument('--local', dest='database', help="An xml file containing the Pirate Bay database")
+    parser.add_argument('-p', dest='pages', help="The number of pages to fetch (doesn't work with --local)", default=1)
 
     def local(args):
         xml_str = ''
@@ -51,24 +52,32 @@ def main():
 
     #todo: redo this with html parser instead of regex
     def remote(args):
-        f = urllib2.urlopen('http://thepiratebay.se/search/' + args.q.replace(" ", "+") + '/0/7/0')
-	res = f.read()
-        found = re.findall(""""(magnet\:\?xt=[^"]*)|<td align="right">([^<]+)</td>""", res)
-        state = "seeds"
-        curr = ['',0,0] #magnet, seeds, leeches
         res_l = []
-        for f in found:
-            if f[1] == '':
-                curr[0] = f[0]
-            else:
-                if state == 'seeds':
-                    curr[1] = f[1]
-                    state = 'leeches'
+        try:
+            pages = int(args.pages)
+            if pages < 1:
+                raise Exception('')
+        except Exception:
+            raise Exception("Please provide an integer greater than 0 for the number of pages to fetch.")
+
+        for page in xrange(pages):
+            f = urllib2.urlopen('http://thepiratebay.se/search/' + args.q.replace(" ", "+") + '/' + str(page) + '/7/0')
+            res = f.read()
+            found = re.findall(""""(magnet\:\?xt=[^"]*)|<td align="right">([^<]+)</td>""", res)
+            state = "seeds"
+            curr = ['',0,0] #magnet, seeds, leeches
+            for f in found:
+                if f[1] == '':
+                    curr[0] = f[0]
                 else:
-                    curr[2] = f[1]
-                    state = 'seeds'
-                    res_l.append(curr)
-                    curr = ['', 0, 0]
+                    if state == 'seeds':
+                        curr[1] = f[1]
+                        state = 'leeches'
+                    else:
+                        curr[2] = f[1]
+                        state = 'seeds'
+                        res_l.append(curr)
+                        curr = ['', 0, 0]
         return res_l
 
     args = parser.parse_args()
@@ -77,9 +86,9 @@ def main():
     else:
         mags = remote(args)
 
-    print "S=seeders"
-    print "L=leechers"
-    if mags:
+    if mags and len(mags) > 0:
+        print "S=seeders"
+        print "L=leechers"
         for m in range(len(mags)):
             magnet = mags[m]
             name = re.search("dn=([^\&]*)", magnet[0])

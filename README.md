@@ -16,13 +16,17 @@ Usage
 ---
 
 ```
-pirate-get <search query>
-```
+usage: pirate-get.py [-h] [--local DATABASE] [-p PAGES] search_term
 
-OR
+Finds and downloads torrents from the Pirate Bay
 
-```
-pirate-get <search query> --local <database.xml>
+positional arguments:
+  search_term       The term to search for
+
+optional arguments:
+  -h, --help        show this help message and exit
+  --local DATABASE  An xml file containing the Pirate Bay database
+  -p PAGES          The number of pages to fetch (doesn't work with --local)
 ```
 
 If you want to use a local copy of the Pirate Bay database download a copy here (or wherever the latest version is currently):

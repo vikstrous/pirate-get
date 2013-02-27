@@ -90,7 +90,7 @@ def main():
         except Exception:
             choice = None
         if not choice == None:
-            webbrowser.open(mags[choice])
+            webbrowser.open(mags[choice][0])
         else:
             print "Cancelled."
     else:

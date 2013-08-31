@@ -8,9 +8,9 @@ Tested only on Ubuntu. It should work anywhere else too. Let me know if it doesn
 Installation
 ---
 
-Make sure you have python (2.7.3?) installed.
+Make sure you have python installed.
 
-Run install.sh
+Run install.sh (or install-py3.sh if you use python 3)
 
 Usage
 ---

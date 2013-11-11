@@ -60,67 +60,44 @@ def main():
         except Exception:
             raise Exception("Please provide an integer greater than 0 for the number of pages to fetch.")
 
-        # Catch the Ctrl-C exception and exit cleanly
-        try:
-            for page in xrange(pages):
-                f = urllib2.urlopen('http://thepiratebay.se/search/' + args.q.replace(" ", "+") + '/' + str(page) + '/7/0')
-                res = f.read()
-                found = re.findall(""""(magnet\:\?xt=[^"]*)|<td align="right">([^<]+)</td>""", res)
-
-                # get sizes as well and substitute the &nbsp; character
-                sizes = [ match.replace("&nbsp;", " ") for match in re.findall("(?<=Size )[0-9]+\.[0-9]+\&nbsp\;[KMGT]iB",res) ]
-
-                state = "seeds"
-                curr = ['',0,0] #magnet, seeds, leeches
-                for f in found:
-                    if f[1] == '':
-                        curr[0] = f[0]
+        for page in xrange(pages):
+            f = urllib2.urlopen('http://thepiratebay.se/search/' + args.q.replace(" ", "+") + '/' + str(page) + '/7/0')
+            res = f.read()
+            found = re.findall(""""(magnet\:\?xt=[^"]*)|<td align="right">([^<]+)</td>""", res)
+            state = "seeds"
+            curr = ['',0,0] #magnet, seeds, leeches
+            for f in found:
+                if f[1] == '':
+                    curr[0] = f[0]
+                else:
+                    if state == 'seeds':
+                        curr[1] = f[1]
+                        state = 'leeches'
                     else:
-                        if state == 'seeds':
-                            curr[1] = f[1]
-                            state = 'leeches'
-                        else:
-                            curr[2] = f[1]
-                            state = 'seeds'
-                            res_l.append(curr)
-                            curr = ['', 0, 0]
-        except KeyboardInterrupt :
-            print "\nCancelled."
-            exit()
-
-        # return the sizes in a spearate list
-        return res_l, sizes
+                        curr[2] = f[1]
+                        state = 'seeds'
+                        res_l.append(curr)
+                        curr = ['', 0, 0]
+        return res_l
 
     args = parser.parse_args()
     if args.database:
         mags = local(args)
     else:
-        mags, sizes = remote(args)
+        mags = remote(args)
 
     if mags and len(mags) > 0:
-        # enhanced print output with column titles
-        print "\n%-5s  %-6s  %-6s  %-5s  %-11s  %s" % ( "LINK", "SEED", "LEECH", "RATIO", "SIZE", "NAME")
+        print "S=seeders"
+        print "L=leechers"
         for m in range(len(mags)):
             magnet = mags[m]
             name = re.search("dn=([^\&]*)", magnet[0])
-
-            # compute the S/L ratio (Higher is better)
-            ratio = float(magnet[1])/float(magnet[2])
-
-            # enhanced print output with justified columns
-            print "%-5s  %-6s  %-6s  %5.1f  %-11s  %s" % (m, magnet[1], magnet[2], ratio ,sizes[m], urllib.unquote(name.group(1).encode('ascii')).decode('utf-8').replace("+", " ") )
-
-        try:
-            l = raw_input("Select a link: ")
-        except KeyboardInterrupt :
-            print "\nCancelled."
-            exit()
-
+            print str(m) + '. S:' + str(magnet[1]) + ' L:' + str(magnet[2]) + ' ', urllib.unquote(name.group(1).encode('ascii')).decode('utf-8').replace("+", " ")
+        l = raw_input("Select a link: ")
         try:
             choice = int(l)
         except Exception:
             choice = None
-
         if not choice == None:
             webbrowser.open(mags[choice][0])
         else:

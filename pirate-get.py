@@ -105,7 +105,10 @@ def main():
             name = re.search("dn=([^\&]*)", magnet[0])
 
             # compute the S/L ratio (Higher is better)
-            ratio = float(magnet[1])/float(magnet[2])
+            try:
+                ratio = float(magnet[1])/float(magnet[2])
+            except ZeroDivisionError:
+                ratio = 0
 
             # enhanced print output with justified columns
             print "%-5s  %-6s  %-6s  %5.1f  %-11s  %s" % (m, magnet[1], magnet[2], ratio ,sizes[m], urllib.unquote(name.group(1).encode('ascii')).decode('utf-8').replace("+", " ") )

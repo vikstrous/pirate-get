@@ -70,7 +70,9 @@ def main():
                 # get sizes as well and substitute the &nbsp; character
                 # print res
                 sizes = [ match.replace("&nbsp;", " ") for match in re.findall("(?<=Size )[0-9.]+\&nbsp\;[KMGT]iB",res) ]
+                uploaded = [ match.replace("&nbsp;", " ") for match in re.findall("(?<=Uploaded ).+(?=\, Size)",res) ]
                 # print sizes
+                # print uploaded
                 state = "seeds"
                 curr = ['',0,0] #magnet, seeds, leeches
                 for f in found:
@@ -90,17 +92,17 @@ def main():
             exit()
 
         # return the sizes in a spearate list
-        return res_l, sizes
+        return res_l, sizes, uploaded
 
     args = parser.parse_args()
     if args.database:
         mags = local(args)
     else:
-        mags, sizes = remote(args)
+        mags, sizes, uploaded = remote(args)
 
     if mags and len(mags) > 0:
         # enhanced print output with column titles
-        print "\n%-5s  %-6s  %-6s  %-5s  %-11s  %s" % ( "LINK", "SEED", "LEECH", "RATIO", "SIZE", "NAME")
+        print "\n%-5s %-6s %-6s %-5s %-11s %-11s %s" % ( "LINK", "SEED", "LEECH", "RATIO", "SIZE", "UPLOAD", "NAME")
         for m in range(len(mags)):
             magnet = mags[m]
             name = re.search("dn=([^\&]*)", magnet[0])
@@ -112,7 +114,7 @@ def main():
                 ratio = 0
 
             # enhanced print output with justified columns
-            print "%-5s  %-6s  %-6s  %5.1f  %-11s  %s" % (m, magnet[1], magnet[2], ratio ,sizes[m], urllib.unquote(name.group(1).encode('ascii')).decode('utf-8').replace("+", " ") )
+            print "%-5s %-6s %-6s %5.1f %-11s %-11s %s" % (m, magnet[1], magnet[2], ratio ,sizes[m], uploaded[m],urllib.unquote(name.group(1).encode('ascii')).decode('utf-8').replace("+", " ") )
 
         try:
             l = raw_input("Select a link: ")

@@ -68,8 +68,9 @@ def main():
                 found = re.findall(""""(magnet\:\?xt=[^"]*)|<td align="right">([^<]+)</td>""", res)
 
                 # get sizes as well and substitute the &nbsp; character
-                sizes = [ match.replace("&nbsp;", " ") for match in re.findall("(?<=Size )[0-9]+\.[0-9]+\&nbsp\;[KMGT]iB",res) ]
-
+                # print res
+                sizes = [ match.replace("&nbsp;", " ") for match in re.findall("(?<=Size )[0-9.]+\&nbsp\;[KMGT]iB",res) ]
+                # print sizes
                 state = "seeds"
                 curr = ['',0,0] #magnet, seeds, leeches
                 for f in found:

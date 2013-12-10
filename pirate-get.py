@@ -5,6 +5,7 @@ import urllib2
 import re
 from HTMLParser import HTMLParser
 import argparse
+from pprint import pprint
 
 
 # create a subclass and override the handler methods
@@ -69,10 +70,10 @@ def main():
 
                 # get sizes as well and substitute the &nbsp; character
                 # print res
-                sizes = [ match.replace("&nbsp;", " ") for match in re.findall("(?<=Size )[0-9.]+\&nbsp\;[KMGT]iB",res) ]
+                sizes = [ match.replace("&nbsp;", " ") for match in re.findall("(?<=Size )[0-9.]+\&nbsp\;[KMGT]*[i ]*B",res) ]
                 uploaded = [ match.replace("&nbsp;", " ") for match in re.findall("(?<=Uploaded ).+(?=\, Size)",res) ]
-                # print sizes
-                # print uploaded
+                # pprint(sizes); print len(sizes)
+                # pprint(uploaded); print len(uploaded)
                 state = "seeds"
                 curr = ['',0,0] #magnet, seeds, leeches
                 for f in found:

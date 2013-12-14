@@ -41,7 +41,7 @@ class MyHTMLParser(HTMLParser):
 def main():
     parser = argparse.ArgumentParser(description='Finds and downloads torrents from the Pirate Bay')
     parser.add_argument('q', metavar='search_term', help="The term to search for")
-    parser.add_argument('-t',dest='transmission',action='store_true', help="call transmission-remote to start the download", default=True)
+    parser.add_argument('-t',dest='transmission',action='store_true', help="call transmission-remote to start the download", default=False)
     parser.add_argument('--local', dest='database', help="An xml file containing the Pirate Bay database")
     parser.add_argument('-p', dest='pages', help="The number of pages to fetch (doesn't work with --local)", default=1)
 

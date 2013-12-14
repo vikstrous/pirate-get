@@ -3,6 +3,7 @@ import webbrowser
 import urllib
 import urllib2
 import re
+import os
 from HTMLParser import HTMLParser
 import argparse
 from pprint import pprint
@@ -40,6 +41,7 @@ class MyHTMLParser(HTMLParser):
 def main():
     parser = argparse.ArgumentParser(description='Finds and downloads torrents from the Pirate Bay')
     parser.add_argument('q', metavar='search_term', help="The term to search for")
+    parser.add_argument('-t',dest='transmission',action='store_true', help="call transmission-remote to start the download", default=True)
     parser.add_argument('--local', dest='database', help="An xml file containing the Pirate Bay database")
     parser.add_argument('-p', dest='pages', help="The number of pages to fetch (doesn't work with --local)", default=1)
 
@@ -129,7 +131,15 @@ def main():
             choice = None
 
         if not choice == None:
-            webbrowser.open(mags[choice][0])
+            url = mags[choice][0]
+            print
+            print "url:"
+            print url
+            if args.transmission: 
+                os.system("""transmission-remote --add "%s" """ % (url))
+                os.system("transmission-remote -l")
+            else:
+                webbrowser.open(url)
         else:
             print "Cancelled."
     else:

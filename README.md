@@ -3,20 +3,20 @@ pirate-get
 
 pirate-get is a convenient command line tool (inspired by APT) to speed up your trip to the Pirate Bay and get your completely legal torrents more quickly.
 
-Tested on Ubuntu, Linux Mint and Arch Linux. It should work anywhere else too. Let me know if it doesn't.
+Tested on Arch Linux mostly. It should work on any other Linux too. Let me know if it doesn't. (--local option hasn't been tested recently)
 
 Installation
 ---
 
-Make sure you have python installed.
+Make sure you have python 2 installed.
 
-Run install.sh (or install-py3.sh if you use python 3)
+Run install.sh
 
 Usage
 ---
 
 ```
-usage: pirate-get.py [-h] [--local DATABASE] [-p PAGES] search_term
+usage: pirate-get [-h] [--local DATABASE] [-p PAGES] search_term
 
 Finds and downloads torrents from the Pirate Bay
 

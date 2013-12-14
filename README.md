@@ -16,7 +16,7 @@ Usage
 ---
 
 ```
-usage: pirate-get [-h] [--local DATABASE] [-p PAGES] search_term
+usage: pirate-get [-h] [-t] [--local DATABASE] [-p PAGES] search_term
 
 Finds and downloads torrents from the Pirate Bay
 
@@ -25,6 +25,7 @@ positional arguments:
 
 optional arguments:
   -h, --help        show this help message and exit
+  -t                call transmission-remote to start the download
   --local DATABASE  An xml file containing the Pirate Bay database
   -p PAGES          The number of pages to fetch (doesn't work with --local)
 ```

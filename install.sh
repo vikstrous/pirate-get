@@ -4,7 +4,7 @@ if [ "$UID" -ne 0 ]
   exit
 fi
 
-TMP=`mktemp python`
+TMP=`mktemp pirate-get-XXX`
 if [ `which python2.7` ]
 then
     echo "#!/usr/bin/env python2.7" > $TMP

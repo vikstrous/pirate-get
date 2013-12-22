@@ -3,7 +3,7 @@ pirate-get
 
 pirate-get is a convenient command line tool (inspired by APT) to speed up your trip to the Pirate Bay and get your completely legal torrents more quickly.
 
-Tested on Arch Linux mostly. It should work on any other Linux too. Let me know if it doesn't. (--local option hasn't been tested recently)
+Tested on Arch Linux mostly. It should work on any other Linux too. Let me know if it doesn't. Also tested on OSX (whatever the latest one is - I don't know I don't use non-free operating systems.) --local option hasn't been tested recently.
 
 Installation
 ---

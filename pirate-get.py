@@ -44,6 +44,7 @@ def main():
     parser.add_argument('-t',dest='transmission',action='store_true', help="call transmission-remote to start the download", default=False)
     parser.add_argument('--local', dest='database', help="An xml file containing the Pirate Bay database")
     parser.add_argument('-p', dest='pages', help="The number of pages to fetch (doesn't work with --local)", default=1)
+    parser.add_argument('-0', dest='first', action='store_true', help="choose the top result", default=False)
 
     def local(args):
         xml_str = ''
@@ -119,16 +120,21 @@ def main():
             # enhanced print output with justified columns
             print "%-5s %-6s %-6s %5.1f %-11s %-11s  %s" % (m, magnet[1], magnet[2], ratio ,sizes[m], uploaded[m],urllib.unquote(name.group(1).encode('ascii')).decode('utf-8').replace("+", " ") )
 
-        try:
-            l = raw_input("Select a link: ")
-        except KeyboardInterrupt :
-            print "\nCancelled."
-            exit()
+        if args.first:
+            print "Choosing first result";
+            choice = 0
 
-        try:
-            choice = int(l)
-        except Exception:
-            choice = None
+        else:
+            try:
+                l = raw_input("Select a link: ")
+            except KeyboardInterrupt :
+                print "\nCancelled."
+                exit()
+
+            try:
+                choice = int(l)
+            except Exception:
+                choice = None
 
         if not choice == None:
             url = mags[choice][0]

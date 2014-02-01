@@ -8,6 +8,12 @@ from HTMLParser import HTMLParser
 import argparse
 from pprint import pprint
 
+class NoRedirection(urllib2.HTTPErrorProcessor):
+
+    def http_response(self, request, response):
+        return response
+
+    https_response = http_response
 
 # create a subclass and override the handler methods
 class MyHTMLParser(HTMLParser):
@@ -104,7 +110,10 @@ def main():
     else:
         mirrors = ["http://thepiratebay.se"]
         try:
-            f = urllib2.urlopen("http://proxybay.info/list.txt")
+            opener = urllib2.build_opener(NoRedirection)
+            f = opener.open("http://proxybay.info/list.txt")
+            if f.getcode() != 200:
+                raise Exception("The pirate bay responded with an error.")
             res = f.read()
             mirrors += res.split("\n")[3:]
         except:

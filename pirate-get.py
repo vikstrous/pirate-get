@@ -55,7 +55,7 @@ def main():
         return htmlparser.results
 
     #todo: redo this with html parser instead of regex
-    def remote(args):
+    def remote(args, mirror):
         res_l = []
         try:
             pages = int(args.pages)
@@ -67,7 +67,7 @@ def main():
         # Catch the Ctrl-C exception and exit cleanly
         try:
             for page in xrange(pages):
-                f = urllib2.urlopen('http://thepiratebay.se/search/' + args.q.replace(" ", "+") + '/' + str(page) + '/7/0')
+                f = urllib2.urlopen(mirror + '/search/' + args.q.replace(" ", "+") + '/' + str(page) + '/7/0')
                 res = f.read()
                 found = re.findall(""""(magnet\:\?xt=[^"]*)|<td align="right">([^<]+)</td>""", res)
 
@@ -102,7 +102,20 @@ def main():
     if args.database:
         mags = local(args)
     else:
-        mags, sizes, uploaded = remote(args)
+        mirrors = ["http://thepiratebay.se"]
+        try:
+            f = urllib2.urlopen("http://proxybay.info/list.txt")
+            res = f.read()
+            mirrors += res.split("\n")[3:]
+        except:
+            print "Could not fetch additional mirrors"
+        for mirror in mirrors:
+            try:
+                print("Trying " + mirror)
+                mags, sizes, uploaded = remote(args, mirror)
+                break
+            except Exception, e:
+                print("Could not contact " + mirror)
 
     if mags and len(mags) > 0:
         # enhanced print output with column titles

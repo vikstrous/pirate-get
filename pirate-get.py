@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import webbrowser
 import urllib
-import requests
+import urllib2
 import re
 import os
 from HTMLParser import HTMLParser
@@ -67,7 +67,8 @@ def main():
         # Catch the Ctrl-C exception and exit cleanly
         try:
             for page in xrange(pages):
-                res = requests.get(mirror + '/search/' + args.q.replace(" ", "+") + '/' + str(page) + '/7/0').text
+                f = urllib2.urlopen(mirror + '/search/' + args.q.replace(" ", "+") + '/' + str(page) + '/7/0')
+                res = f.read()
                 found = re.findall(""""(magnet\:\?xt=[^"]*)|<td align="right">([^<]+)</td>""", res)
 
                 # get sizes as well and substitute the &nbsp; character
@@ -101,18 +102,16 @@ def main():
     if args.database:
         mags = local(args)
     else:
-        mirrors = ["http://thepiratebay.se/"]
+        mirrors = ["http://thepiratebay.se"]
         try:
-            res = requests.get("http://proxybay.info/list.txt").text
+            f = urllib2.urlopen("http://proxybay.info/list.txt")
+            res = f.read()
             mirrors += res.split("\n")[3:]
         except:
             print "Could not fetch additional mirrors"
         for mirror in mirrors:
             try:
                 print("Trying " + mirror)
-                code = requests.head(mirror).status_code
-                if code != 200:
-                  continue
                 mags, sizes, uploaded = remote(args, mirror)
                 break
             except Exception, e:

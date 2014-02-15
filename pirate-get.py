@@ -157,66 +157,69 @@ def main():
                 mags, sizes, uploaded = remote(args, mirror)
                 break
             except Exception, e:
+                print(format(e))
                 print("Could not contact " + mirror, color="WARN")
 
-    if mags and len(mags) > 0:
-        # enhanced print output with column titles
-        print("%5s %6s %6s %-5s %-11s %-11s  %s" \
-            % ( "LINK", "SEED", "LEECH", "RATIO", "SIZE", "UPLOAD", "NAME"),
-            color="header")
-        cur_color = "zebra_0"
-        for i in range(len(mags)):
-            magnet = mags[i]
-            no_seeders = int(magnet[1])
-            no_leechers = int(magnet[2])
-            name = re.search("dn=([^\&]*)", magnet[0])
-
-            # compute the S/L ratio (Higher is better)
-            try:
-                ratio = no_seeders/no_leechers
-            except ZeroDivisionError:
-                ratio = -1
-
-            # Alternate between colors
-            cur_color = "zebra_0" if (cur_color == "zebra_1") else "zebra_1"
-
-            torrent_name = urllib.unquote(name.group(1).encode('ascii')) \
-                .decode('utf-8').replace("+", " ")
-            # enhanced print output with justified columns
-            print ("%5d %6d %6d %5.1f %-11s %-11s  %s" % (
-                i, no_seeders, no_leechers, ratio ,sizes[i],
-                uploaded[i], torrent_name), color=cur_color)
-
-        if args.first:
-            print("Choosing first result");
-            choice = 0
-
-        else:
-            try:
-                l = raw_input("Select a link: ")
-            except KeyboardInterrupt :
-                print("\nCancelled.")
-                exit()
-
-            try:
-                choice = int(l)
-            except Exception:
-                choice = None
-
-        if not choice == None:
-            url = mags[choice][0]
-            print
-            print("url:")
-            print(url)
-            if args.transmission: 
-                os.system("""transmission-remote --add "%s" """ % (url))
-                os.system("transmission-remote -l")
-            else:
-                webbrowser.open(url)
-        else:
-            print("Cancelled.")
-    else:
+    if not mags or len(mags) == 0:
         print("no results")
+        return
+    # enhanced print output with column titles
+    print("%5s %6s %6s %-5s %-11s %-11s  %s" \
+        % ( "LINK", "SEED", "LEECH", "RATIO", "SIZE", "UPLOAD", "NAME"),
+        color="header")
+    cur_color = "zebra_0"
+    for m in range(len(mags)):
+        magnet = mags[m]
+        no_seeders = int(magnet[1])
+        no_leechers = int(magnet[2])
+        name = re.search("dn=([^\&]*)", magnet[0])
+
+        # compute the S/L ratio (Higher is better)
+        try:
+            ratio = no_seeders/no_leechers
+        except ZeroDivisionError:
+            ratio = -1
+
+        # Alternate between colors
+        cur_color = "zebra_0" if (cur_color == "zebra_1") else "zebra_1"
+
+        torrent_name = urllib.unquote(name.group(1).encode('ascii')) \
+            .decode('utf-8').replace("+", " ")
+        # enhanced print output with justified columns
+        print ("%5d %6d %6d %5.1f %-11s %-11s  %s" % (
+            m, no_seeders, no_leechers, ratio ,sizes[m],
+            uploaded[m], torrent_name), color=cur_color)
+
+    if args.first:
+        print("Choosing first result");
+        choice = (0)
+    else:
+        try:
+            l = raw_input("Select link(s): ")
+        except KeyboardInterrupt :
+            print("\nCancelled.")
+            exit()
+
+        try:
+            # Very permissive handling
+            # Substitute multiple consecutive spaces or commas for single comma
+            l = re.sub("[ ,]+", ",", l)
+            # Remove anything that isn't an integer or comma.
+            l = re.sub("[^0-9,]", "", l)
+            # Turn into list
+            choices = l.split(",")
+        except Exception:
+            choices = ()
+
+    for choice in choices:
+        choice = int(choice)
+        url = mags[choice][0]
+        print(url)
+        if args.transmission: 
+            os.system("""transmission-remote --add "%s" """ % (url))
+            os.system("transmission-remote -l")
+        else:
+            webbrowser.open(url)
 
 if __name__ == "__main__":
     main()

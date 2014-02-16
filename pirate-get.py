@@ -72,6 +72,13 @@ def main():
                 res = f.read()
                 found = re.findall(""""(magnet\:\?xt=[^"]*)|<td align="right">([^<]+)</td>""", res)
 
+                # check for a blocked mirror
+                no_results = re.search(""""No hits\.""", res)
+                if found == [] and not no_results is None:
+                    # Contradiction - we found no results, but the page didn't say there were no results
+                    # the page is probably not actually the pirate bay, so let's try another mirror
+                    raise Exception("Blocked mirror detected.")
+
                 # get sizes as well and substitute the &nbsp; character
                 # print res
                 sizes = [ match.replace("&nbsp;", " ") for match in re.findall("(?<=Size )[0-9.]+\&nbsp\;[KMGT]*[i ]*B",res) ]

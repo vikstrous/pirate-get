@@ -74,7 +74,7 @@ def main():
 
                 # check for a blocked mirror
                 no_results = re.search(""""No hits\.""", res)
-                if found == [] and not no_results is None:
+                if found == [] and no_results is None:
                     # Contradiction - we found no results, but the page didn't say there were no results
                     # the page is probably not actually the pirate bay, so let's try another mirror
                     raise Exception("Blocked mirror detected.")

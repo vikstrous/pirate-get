@@ -5,13 +5,13 @@ import webbrowser
 import urllib
 import urllib2
 import re
-import ConfigParser, os
+import os
+import ConfigParser
 import string
 import random
 from HTMLParser import HTMLParser
 import argparse
 from pprint import pprint
-
 
 class NoRedirection(urllib2.HTTPErrorProcessor):
 
@@ -51,15 +51,15 @@ class MyHTMLParser(HTMLParser):
 
 def main():
 
-
+    # new ConfigParser
     config = ConfigParser.ConfigParser()
 
-    # defaults
+    # default options so we dont die later
     config.add_section('SaveToFile')
     config.set('SaveToFile', 'enabled', False)
     config.set('SaveToFile', 'directory', '~/Dropbox/pirate-get/')
 
-    # load user settings
+    # load user options, to override default ones
     config.read([os.path.expanduser('~/.config/pirate-get/pirate.cfg')])
 
     parser = argparse.ArgumentParser(description='Finds and downloads torrents from the Pirate Bay')
@@ -234,7 +234,7 @@ def main():
             choices = ()
 
     if config.get('SaveToFile', 'enabled'):
-
+        # Save to file is enabled
         fileName = os.path.expanduser(config.get('SaveToFile', 'directory')) + id_generator() + '.magnet'
         print ("Saving to File: " + fileName)
         f = open(fileName, 'w')
@@ -246,11 +246,16 @@ def main():
         f.close()
 
     else:
-       if args.transmission:
-           os.system("""transmission-remote --add "%s" """ % (url))
-           os.system("transmission-remote -l")
-       else:
-           webbrowser.open(url)
+        # use transmission as default
+        for choice in choices:
+            choice = int(choice)
+            url = mags[choice][0]
+            print(url)
+            if args.transmission:
+                os.system("""transmission-remote --add "%s" """ % (url))
+                os.system("transmission-remote -l")
+            else:
+                webbrowser.open(url)
 
 
 

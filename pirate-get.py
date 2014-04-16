@@ -6,6 +6,9 @@ import urllib
 import urllib2
 import re
 import os
+import ConfigParser
+import string
+import random
 from HTMLParser import HTMLParser
 import argparse
 from pprint import pprint
@@ -47,6 +50,18 @@ class MyHTMLParser(HTMLParser):
 
 
 def main():
+
+    # new ConfigParser
+    config = ConfigParser.ConfigParser()
+
+    # default options so we dont die later
+    config.add_section('SaveToFile')
+    config.set('SaveToFile', 'enabled', False)
+    config.set('SaveToFile', 'directory', '~/Dropbox/pirate-get/')
+
+    # load user options, to override default ones
+    config.read([os.path.expanduser('~/.config/pirate-get/pirate.cfg')])
+
     parser = argparse.ArgumentParser(description='Finds and downloads torrents from the Pirate Bay')
     parser.add_argument('q', metavar='search_term', help="The term to search for")
     parser.add_argument('-t',dest='transmission',action='store_true', help="call transmission-remote to start the download", default=False)
@@ -218,15 +233,34 @@ def main():
         except Exception:
             choices = ()
 
-    for choice in choices:
-        choice = int(choice)
-        url = mags[choice][0]
-        print(url)
-        if args.transmission: 
-            os.system("""transmission-remote --add "%s" """ % (url))
-            os.system("transmission-remote -l")
-        else:
-            webbrowser.open(url)
+    if config.get('SaveToFile', 'enabled'):
+        # Save to file is enabled
+        fileName = os.path.expanduser(config.get('SaveToFile', 'directory')) + id_generator() + '.magnet'
+        print ("Saving to File: " + fileName)
+        f = open(fileName, 'w')
+        for choice in choices:
+            choice = int(choice)
+            url = mags[choice][0]
+            f.write(url + '\n')
+
+        f.close()
+
+    else:
+        # use transmission as default
+        for choice in choices:
+            choice = int(choice)
+            url = mags[choice][0]
+            print(url)
+            if args.transmission:
+                os.system("""transmission-remote --add "%s" """ % (url))
+                os.system("transmission-remote -l")
+            else:
+                webbrowser.open(url)
+
+
+
+def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
 
 if __name__ == "__main__":
     main()

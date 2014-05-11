@@ -12,6 +12,8 @@ import random
 from HTMLParser import HTMLParser
 import argparse
 from pprint import pprint
+from StringIO import StringIO
+import gzip
 
 class NoRedirection(urllib2.HTTPErrorProcessor):
 
@@ -84,7 +86,12 @@ def main():
         # Catch the Ctrl-C exception and exit cleanly
         try:
             for page in xrange(pages):
-                f = urllib2.urlopen(mirror + '/search/' + args.q.replace(" ", "+") + '/' + str(page) + '/7/0')
+                request = urllib2.Request(mirror + '/search/' + args.q.replace(" ", "+") + '/' + str(page) + '/7/0')
+                request.add_header('Accept-encoding', 'gzip')
+                f = urllib2.urlopen(request)
+                if f.info().get('Content-Encoding') == 'gzip':
+                    buf = StringIO(f.read())
+                    f = gzip.GzipFile(fileobj=buf)
                 res = f.read()
                 found = re.findall(""""(magnet\:\?xt=[^"]*)|<td align="right">([^<]+)</td>""", res)
 

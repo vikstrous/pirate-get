@@ -12,6 +12,9 @@ Make sure you have python 2 installed.
 
 Run install.sh
 
+If you're using Arch Linux there's a package avalaible at the AUR:
+https://aur.archlinux.org/packages/pirate-get-git/
+
 Usage
 ---
 

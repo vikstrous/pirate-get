@@ -263,7 +263,7 @@ def main():
                 os.system("""transmission-remote --add "%s" """ % (url))
                 os.system("transmission-remote -l")
             elif args.command:
- 		          os.system(args.custom % (url))
+ 		          os.system(args.command % (url))
             else:
                 webbrowser.open(url)
 

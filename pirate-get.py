@@ -222,7 +222,7 @@ def main():
 
     if args.first:
         print("Choosing first result");
-        choice = (0)
+        choices = [0]
     else:
         try:
             l = raw_input("Select link(s): ")

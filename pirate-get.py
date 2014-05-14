@@ -85,6 +85,8 @@ def main():
 
         # Catch the Ctrl-C exception and exit cleanly
         try:
+            sizes = []
+            uploaded = []
             for page in xrange(pages):
                 request = urllib2.Request(mirror + '/search/' + args.q.replace(" ", "+") + '/' + str(page) + '/7/0')
                 request.add_header('Accept-encoding', 'gzip')
@@ -104,8 +106,8 @@ def main():
 
                 # get sizes as well and substitute the &nbsp; character
                 # print res
-                sizes = [ match.replace("&nbsp;", " ") for match in re.findall("(?<=Size )[0-9.]+\&nbsp\;[KMGT]*[i ]*B",res) ]
-                uploaded = [ match.replace("&nbsp;", " ") for match in re.findall("(?<=Uploaded ).+(?=\, Size)",res) ]
+                sizes.extend([match.replace("&nbsp;", " ") for match in re.findall("(?<=Size )[0-9.]+\&nbsp\;[KMGT]*[i ]*B",res)])
+                uploaded.extend([match.replace("&nbsp;", " ") for match in re.findall("(?<=Uploaded ).+(?=\, Size)",res)])
                 # pprint(sizes); print len(sizes)
                 # pprint(uploaded); print len(uploaded)
                 state = "seeds"

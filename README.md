@@ -17,17 +17,21 @@ https://aur.archlinux.org/packages/pirate-get-git/
 ## Usage
 
 ```
-usage: pirate-get.py [-h] [-t] [--custom COMMAND] [--local DATABASE]
-                     [-p PAGES] [-0] [--color]
-                     search_term
+usage: pirate-get.py [-h] [-c category] [-R] [-l] [-t] [--custom COMMAND]
+                     [--local DATABASE] [-p PAGES] [-0] [--color]
+                     [search [search ...]]
 
 Finds and downloads torrents from the Pirate Bay
 
 positional arguments:
-  search_term       The term to search for
+  search            Term to search for
 
 optional arguments:
   -h, --help        show this help message and exit
+  -c category       Specify a category to search
+  -R                Torrents uploaded in the last 48hours. *ignored in
+                    searches*
+  -l                List categories
   -t                call transmission-remote to start the download
   --custom COMMAND  call custom command, %s will be replaced with the url
   --local DATABASE  An xml file containing the Pirate Bay database

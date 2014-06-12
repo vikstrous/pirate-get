@@ -65,13 +65,18 @@ def main():
     config.read([os.path.expanduser('~/.config/pirate-get/pirate.cfg')])
 
     parser = argparse.ArgumentParser(description='Finds and downloads torrents from the Pirate Bay')
-    parser.add_argument('q', metavar='search_term', help="The term to search for")
+    parser.add_argument('search', metavar='search', nargs="*", help="Term to search for")
+    parser.add_argument('-c', dest='category', metavar='category', help="Specify a category to search", default="All")
+    parser.add_argument('-R', dest='recent',  action='store_true', help="Torrents uploaded in the last 48hours. *ignored in searches*", default=False)
+    parser.add_argument('-l', dest='list_categories',  action='store_true', help="List categories", default=False)
     parser.add_argument('-t',dest='transmission',action='store_true', help="call transmission-remote to start the download", default=False)
     parser.add_argument('--custom',dest='command', help="call custom command, %%s will be replaced with the url")
     parser.add_argument('--local', dest='database', help="An xml file containing the Pirate Bay database")
     parser.add_argument('-p', dest='pages', help="The number of pages to fetch (doesn't work with --local)", default=1)
     parser.add_argument('-0', dest='first', action='store_true', help="choose the top result", default=False)
     parser.add_argument('--color', dest='color', action='store_true', help="use colored output", default=False)
+
+    categories = {"All":"0","Audio":"100","Audio/Music":"101","Audio/Audio books":"102","Audio/Sound clips":"103","Audio/FLAC":"104","Audio/Other":"199","Video":"200","Video/Movies":"201","Video/Movies DVDR":"202","Video/Music videos":"203","Video/Movie clips":"204","Video/TV shows":"205","Video/Handheld":"206","Video/HD - Movies":"207","Video/HD - TV shows":"208","Video/3D":"209","Video/Other":"299","Applications":"300","Applications/Windows":"301","Applications/Mac":"302","Applications/UNIX":"303","Applications/Handheld":"304","Applications/IOS (iPad/iPhone)":"305","Applications/Android":"306","Applications/Other OS":"399","Games":"400","Games/PC":"401","Games/Mac":"402","Games/PSx":"403","Games/XBOX360":"404","Games/Wii":"405","Games/Handheld":"406","Games/IOS (iPad/iPhone)":"407","Games/Android":"408","Games/Other":"499","Porn":"500","Porn/Movies":"501","Porn/Movies DVDR":"502","Porn/Pictures":"503","Porn/Games":"504","Porn/HD - Movies":"505","Porn/Movie clips":"506","Porn/Other":"599","Other":"600","Other/E-books":"601","Other/Comics":"602","Other/Pictures":"603","Other/Covers":"604","Other/Physibles":"605","Other/Other":"699"}
 
     #todo: redo this with html parser instead of regex
     def remote(args, mirror):
@@ -83,12 +88,31 @@ def main():
         except Exception:
             raise Exception("Please provide an integer greater than 0 for the number of pages to fetch.")
 
+        if str(args.category) in categories.values():
+            category = args.category;
+        elif args.category in categories.keys():
+            category = categories[args.category]
+        else:
+            category = "0";
+            print ("Invalid category ignored", color="WARN")
+
         # Catch the Ctrl-C exception and exit cleanly
         try:
             sizes = []
             uploaded = []
             for page in xrange(pages):
-                request = urllib2.Request(mirror + '/search/' + args.q.replace(" ", "+") + '/' + str(page) + '/7/0')
+
+                #
+                if len(args.search) == 0:
+                    path = "/top/48h" if args.recent else "/top/"
+                    if(category == "0"):
+                        path += 'all'
+                    else:
+                        path += category
+                else:
+                    path = '/search/' + "+".join(args.search) + '/' + str(page) + '/7/' + category
+
+                request = urllib2.Request(mirror + path)
                 request.add_header('Accept-encoding', 'gzip')
                 f = urllib2.urlopen(request)
                 if f.info().get('Content-Encoding') == 'gzip':
@@ -170,6 +194,16 @@ def main():
         htmlparser.feed(xml_str)
         return htmlparser.results
 
+
+    if args.list_categories:
+
+        cur_color = "zebra_0"
+        for key, value in sorted(categories.iteritems()) :
+
+            cur_color = "zebra_0" if (cur_color == "zebra_1") else "zebra_1"
+            print(str(value) +"\t" + key, color=cur_color)
+
+        return
     if args.database:
         mags = local(args)
     else:
@@ -268,8 +302,6 @@ def main():
  		          os.system(args.command % (url))
             else:
                 webbrowser.open(url)
-
-
 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))

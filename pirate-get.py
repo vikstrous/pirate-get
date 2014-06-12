@@ -164,7 +164,7 @@ def main():
             color_dict = {"default": "",
             "header": colorama.Back.WHITE + colorama.Fore.BLACK,
             "zebra_0": "",
-            "zebra_1": colorama.Style.DIM,
+            "zebra_1": colorama.Style.BRIGHT,
             "WARN": colorama.Fore.YELLOW,
             "ERROR": colorama.Fore.RED}
             def n_print(*args, **kwargs):

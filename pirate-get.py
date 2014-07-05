@@ -74,6 +74,7 @@ def main():
     parser.add_argument('--local', dest='database', help="An xml file containing the Pirate Bay database")
     parser.add_argument('-p', dest='pages', help="The number of pages to fetch (doesn't work with --local)", default=1)
     parser.add_argument('-0', dest='first', action='store_true', help="choose the top result", default=False)
+    parser.add_argument('-a', dest='download_all', action='store_true', help="download all results", default=False)
     parser.add_argument('--color', dest='color', action='store_true', help="use colored output", default=False)
 
     categories = {"All":"0","Audio":"100","Audio/Music":"101","Audio/Audio books":"102","Audio/Sound clips":"103","Audio/FLAC":"104","Audio/Other":"199","Video":"200","Video/Movies":"201","Video/Movies DVDR":"202","Video/Music videos":"203","Video/Movie clips":"204","Video/TV shows":"205","Video/Handheld":"206","Video/HD - Movies":"207","Video/HD - TV shows":"208","Video/3D":"209","Video/Other":"299","Applications":"300","Applications/Windows":"301","Applications/Mac":"302","Applications/UNIX":"303","Applications/Handheld":"304","Applications/IOS (iPad/iPhone)":"305","Applications/Android":"306","Applications/Other OS":"399","Games":"400","Games/PC":"401","Games/Mac":"402","Games/PSx":"403","Games/XBOX360":"404","Games/Wii":"405","Games/Handheld":"406","Games/IOS (iPad/iPhone)":"407","Games/Android":"408","Games/Other":"499","Porn":"500","Porn/Movies":"501","Porn/Movies DVDR":"502","Porn/Pictures":"503","Porn/Games":"504","Porn/HD - Movies":"505","Porn/Movie clips":"506","Porn/Other":"599","Other":"600","Other/E-books":"601","Other/Comics":"602","Other/Pictures":"603","Other/Covers":"604","Other/Physibles":"605","Other/Other":"699"}
@@ -259,6 +260,9 @@ def main():
     if args.first:
         print("Choosing first result");
         choices = [0]
+    elif args.download_all:
+        print("Downloading all results");
+        choices = range(0, len(mags))
     else:
         try:
             l = raw_input("Select link(s): ")

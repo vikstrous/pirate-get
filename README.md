@@ -18,7 +18,7 @@ https://aur.archlinux.org/packages/pirate-get-git/
 
 ```
 usage: pirate-get.py [-h] [-c category] [-R] [-l] [-t] [--custom COMMAND]
-                     [--local DATABASE] [-p PAGES] [-0] [--color]
+                     [--local DATABASE] [-p PAGES] [-0] [-a] [--color]
                      [search [search ...]]
 
 Finds and downloads torrents from the Pirate Bay
@@ -37,6 +37,7 @@ optional arguments:
   --local DATABASE  An xml file containing the Pirate Bay database
   -p PAGES          The number of pages to fetch (doesn't work with --local)
   -0                choose the top result
+  -a                download all results
   --color           use colored output
 ```
 

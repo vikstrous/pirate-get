@@ -101,6 +101,7 @@ def main():
         try:
             sizes = []
             uploaded = []
+            identifiers = []
             for page in xrange(pages):
 
                 #
@@ -133,6 +134,7 @@ def main():
                 # print res
                 sizes.extend([match.replace("&nbsp;", " ") for match in re.findall("(?<=Size )[0-9.]+\&nbsp\;[KMGT]*[i ]*B",res)])
                 uploaded.extend([match.replace("&nbsp;", " ") for match in re.findall("(?<=Uploaded ).+(?=\, Size)",res)])
+                identifiers.extend([match.replace("&nbsp;", " ") for match in re.findall("(?<=/torrent/)[0-9]+(?=/)",res)])
                 # pprint(sizes); print len(sizes)
                 # pprint(uploaded); print len(uploaded)
                 state = "seeds"
@@ -154,7 +156,7 @@ def main():
             exit()
 
         # return the sizes in a spearate list
-        return res_l, sizes, uploaded
+        return res_l, sizes, uploaded, identifiers
 
     args = parser.parse_args()
 
@@ -221,7 +223,7 @@ def main():
         for mirror in mirrors:
             try:
                 print("Trying " + mirror)
-                mags, sizes, uploaded = remote(args, mirror)
+                mags, sizes, uploaded, identifiers = remote(args, mirror)
                 break
             except Exception, e:
                 print(format(e))
@@ -231,31 +233,73 @@ def main():
         print("no results")
         return
     # enhanced print output with column titles
-    print("%5s %6s %6s %-5s %-11s %-11s  %s" \
-        % ( "LINK", "SEED", "LEECH", "RATIO", "SIZE", "UPLOAD", "NAME"),
-        color="header")
-    cur_color = "zebra_0"
-    for m in range(len(mags)):
-        magnet = mags[m]
-        no_seeders = int(magnet[1])
-        no_leechers = int(magnet[2])
-        name = re.search("dn=([^\&]*)", magnet[0])
+    def print_search_results():
+	print("%5s %6s %6s %-5s %-11s %-11s  %s" \
+	    % ( "LINK", "SEED", "LEECH", "RATIO", "SIZE", "UPLOAD", "NAME"),
+	    color="header")
+	cur_color = "zebra_0"
+	for m in range(len(mags)):
+	    magnet = mags[m]
+	    no_seeders = int(magnet[1])
+	    no_leechers = int(magnet[2])
+	    name = re.search("dn=([^\&]*)", magnet[0])
 
-        # compute the S/L ratio (Higher is better)
-        try:
-            ratio = no_seeders/no_leechers
-        except ZeroDivisionError:
-            ratio = -1
+	    # compute the S/L ratio (Higher is better)
+	    try:
+		ratio = no_seeders/no_leechers
+	    except ZeroDivisionError:
+		ratio = -1
 
-        # Alternate between colors
-        cur_color = "zebra_0" if (cur_color == "zebra_1") else "zebra_1"
+	    # Alternate between colors
+	    cur_color = "zebra_0" if (cur_color == "zebra_1") else "zebra_1"
 
-        torrent_name = urllib.unquote(name.group(1).encode('ascii')) \
-            .decode('utf-8').replace("+", " ")
-        # enhanced print output with justified columns
-        print ("%5d %6d %6d %5.1f %-11s %-11s  %s" % (
-            m, no_seeders, no_leechers, ratio ,sizes[m],
-            uploaded[m], torrent_name), color=cur_color)
+	    torrent_name = urllib.unquote(name.group(1).encode('ascii')) \
+		.decode('utf-8').replace("+", " ")
+	    # enhanced print output with justified columns
+	    print ("%5d %6d %6d %5.1f %-11s %-11s  %s" % (
+		m, no_seeders, no_leechers, ratio ,sizes[m],
+		uploaded[m], torrent_name), color=cur_color)
+    def print_descriptions(chosen_links):
+        for link in chosen_links:
+            path = '/torrent/' + identifiers[int(link)] + '/'
+            request = urllib2.Request(mirror + path)
+            request.add_header('Accept-encoding', 'gzip')
+            f = urllib2.urlopen(request)
+            if f.info().get('Content-Encoding') == 'gzip':
+                buf = StringIO(f.read())
+                f = gzip.GzipFile(fileobj=buf)
+            res = f.read()
+	    name = re.search("dn=([^\&]*)", mags[int(link)][0])
+	    torrent_name = urllib.unquote(name.group(1).encode('ascii')) \
+		.decode('utf-8').replace("+", " ")
+            desc = re.search(r"<div class=\"nfo\">\s*<pre>(.+?)(?=</pre>)", res, re.DOTALL).group(1)
+            # Replace HTML links with markdown style versions
+            desc = re.sub(r"<a href=\"\s*([^\"]+?)\s*\"[^>]*>(\s*)([^<]+?)(\s*)</a>", r"\2[\3](\1)\4", desc)
+            print ('Description for "' + torrent_name + '":', color="zebra_1")
+            print (desc, color="zebra_0")
+
+    def print_fileLists(chosen_links):
+        for link in chosen_links:
+            path = '/ajax_details_filelist.php'
+            query = '?id=' + identifiers[int(link)]
+            request = urllib2.Request(mirror + path + query)
+            request.add_header('Accept-encoding', 'gzip')
+            f = urllib2.urlopen(request)
+            if f.info().get('Content-Encoding') == 'gzip':
+                buf = StringIO(f.read())
+                f = gzip.GzipFile(fileobj=buf)
+            res = f.read().replace("&nbsp;", " ")
+            files = re.findall(r"<td align=\"left\">\s*([^<]+?)\s*</td><td align=\"right\">\s*([^<]+?)\s*</tr>", res)
+	    name = re.search("dn=([^\&]*)", mags[int(link)][0])
+	    torrent_name = urllib.unquote(name.group(1).encode('ascii')) \
+		.decode('utf-8').replace("+", " ")
+            print ('Files in "' + torrent_name + '":', color="zebra_1")
+            cur_color = "zebra_0"
+            for f in files:
+                print ("%-11s  %s" % (f[1], f[0]), color=cur_color)
+                cur_color = "zebra_0" if (cur_color == "zebra_1") else "zebra_1"
+
+    print_search_results()
 
     if args.first:
         print("Choosing first result");
@@ -264,22 +308,57 @@ def main():
         print("Downloading all results");
         choices = range(0, len(mags))
     else:
-        try:
-            l = raw_input("Select link(s): ")
-        except KeyboardInterrupt :
-            print("\nCancelled.")
-            exit()
+        # New input loop to support different link options
+    	while True:
+	    try:
+		l = raw_input("Select link(s) (Type 'h' for more options): ")
+	    except KeyboardInterrupt :
+		print("\nCancelled.")
+		exit()
 
-        try:
-            # Very permissive handling
-            # Substitute multiple consecutive spaces or commas for single comma
-            l = re.sub("[ ,]+", ",", l)
-            # Remove anything that isn't an integer or comma.
-            l = re.sub("[^0-9,]", "", l)
-            # Turn into list
-            choices = l.split(",")
-        except Exception:
-            choices = ()
+	    try:
+		# Very permissive handling
+		# Check for any occurances or d, f, or p
+		cmd_code_match = re.search(r'([hdfp])', l, flags=re.IGNORECASE)
+		if cmd_code_match:
+		    code = cmd_code_match.group(0).lower()
+                else:
+                    code = None
+		# Clean up command codes
+		l = re.sub(r"^[hdfp, ]*|[hdfp, ]*$", "", l)
+		# Substitute multiple consecutive spaces or commas for single comma
+		l = re.sub("[ ,]+", ",", l)
+		# Remove anything that isn't an integer or comma.
+		l = re.sub("[^0-9,]", "", l)
+		# Turn into list
+		choices = l.split(",")
+                # Act on option, if supplied
+                if code == 'h':
+                    print("Options:")
+                    print("<links>: Download selected torrents")
+                    print("[d<links>]: Get descriptions")
+                    print("[f<links>]: Get files")
+                    print("[p] Print search results")
+                    continue
+                elif code == 'd':
+                    print_descriptions(choices)
+                    continue
+                elif code == 'f':
+                    print_fileLists(choices)
+                    continue
+                elif code == 'p':
+                    print_search_results()
+                    continue
+                elif not l:
+                    print('No links entered!')
+                    continue
+                else:
+                    break
+	    except Exception, e:
+                print('Exception:')
+                print(str(e))
+		choices = ()
+                break;
 
     if config.get('SaveToFile', 'enabled'):
         # Save to file is enabled

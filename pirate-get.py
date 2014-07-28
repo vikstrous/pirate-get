@@ -234,31 +234,31 @@ def main():
         return
     # enhanced print output with column titles
     def print_search_results():
-	print("%5s %6s %6s %-5s %-11s %-11s  %s" \
-	    % ( "LINK", "SEED", "LEECH", "RATIO", "SIZE", "UPLOAD", "NAME"),
-	    color="header")
-	cur_color = "zebra_0"
-	for m in range(len(mags)):
-	    magnet = mags[m]
-	    no_seeders = int(magnet[1])
-	    no_leechers = int(magnet[2])
-	    name = re.search("dn=([^\&]*)", magnet[0])
+        print("%5s %6s %6s %-5s %-11s %-11s  %s" \
+            % ( "LINK", "SEED", "LEECH", "RATIO", "SIZE", "UPLOAD", "NAME"),
+            color="header")
+        cur_color = "zebra_0"
+        for m in range(len(mags)):
+            magnet = mags[m]
+            no_seeders = int(magnet[1])
+            no_leechers = int(magnet[2])
+            name = re.search("dn=([^\&]*)", magnet[0])
 
-	    # compute the S/L ratio (Higher is better)
-	    try:
-		ratio = no_seeders/no_leechers
-	    except ZeroDivisionError:
-		ratio = -1
+            # compute the S/L ratio (Higher is better)
+            try:
+                ratio = no_seeders/no_leechers
+            except ZeroDivisionError:
+                ratio = -1
 
-	    # Alternate between colors
-	    cur_color = "zebra_0" if (cur_color == "zebra_1") else "zebra_1"
+            # Alternate between colors
+            cur_color = "zebra_0" if (cur_color == "zebra_1") else "zebra_1"
 
-	    torrent_name = urllib.unquote(name.group(1).encode('ascii')) \
-		.decode('utf-8').replace("+", " ")
-	    # enhanced print output with justified columns
-	    print ("%5d %6d %6d %5.1f %-11s %-11s  %s" % (
-		m, no_seeders, no_leechers, ratio ,sizes[m],
-		uploaded[m], torrent_name), color=cur_color)
+            torrent_name = urllib.unquote(name.group(1).encode('ascii')) \
+                .decode('utf-8').replace("+", " ")
+            # enhanced print output with justified columns
+            print ("%5d %6d %6d %5.1f %-11s %-11s  %s" % (
+                m, no_seeders, no_leechers, ratio ,sizes[m],
+                uploaded[m], torrent_name), color=cur_color)
     def print_descriptions(chosen_links):
         for link in chosen_links:
             path = '/torrent/' + identifiers[int(link)] + '/'
@@ -269,9 +269,9 @@ def main():
                 buf = StringIO(f.read())
                 f = gzip.GzipFile(fileobj=buf)
             res = f.read()
-	    name = re.search("dn=([^\&]*)", mags[int(link)][0])
-	    torrent_name = urllib.unquote(name.group(1).encode('ascii')) \
-		.decode('utf-8').replace("+", " ")
+            name = re.search("dn=([^\&]*)", mags[int(link)][0])
+            torrent_name = urllib.unquote(name.group(1).encode('ascii')) \
+                .decode('utf-8').replace("+", " ")
             desc = re.search(r"<div class=\"nfo\">\s*<pre>(.+?)(?=</pre>)", res, re.DOTALL).group(1)
             # Replace HTML links with markdown style versions
             desc = re.sub(r"<a href=\"\s*([^\"]+?)\s*\"[^>]*>(\s*)([^<]+?)(\s*)</a>", r"\2[\3](\1)\4", desc)
@@ -290,9 +290,9 @@ def main():
                 f = gzip.GzipFile(fileobj=buf)
             res = f.read().replace("&nbsp;", " ")
             files = re.findall(r"<td align=\"left\">\s*([^<]+?)\s*</td><td align=\"right\">\s*([^<]+?)\s*</tr>", res)
-	    name = re.search("dn=([^\&]*)", mags[int(link)][0])
-	    torrent_name = urllib.unquote(name.group(1).encode('ascii')) \
-		.decode('utf-8').replace("+", " ")
+            name = re.search("dn=([^\&]*)", mags[int(link)][0])
+            torrent_name = urllib.unquote(name.group(1).encode('ascii')) \
+                .decode('utf-8').replace("+", " ")
             print ('Files in "' + torrent_name + '":', color="zebra_1")
             cur_color = "zebra_0"
             for f in files:
@@ -309,29 +309,29 @@ def main():
         choices = range(0, len(mags))
     else:
         # New input loop to support different link options
-    	while True:
-	    try:
-		l = raw_input("Select link(s) (Type 'h' for more options): ")
-	    except KeyboardInterrupt :
-		print("\nCancelled.")
-		exit()
+        while True:
+            try:
+                l = raw_input("Select link(s) (Type 'h' for more options): ")
+            except KeyboardInterrupt :
+                print("\nCancelled.")
+                exit()
 
-	    try:
-		# Very permissive handling
-		# Check for any occurances or d, f, or p
-		cmd_code_match = re.search(r'([hdfp])', l, flags=re.IGNORECASE)
-		if cmd_code_match:
-		    code = cmd_code_match.group(0).lower()
+            try:
+                # Very permissive handling
+                # Check for any occurances or d, f, or p
+                cmd_code_match = re.search(r'([hdfp])', l, flags=re.IGNORECASE)
+                if cmd_code_match:
+                    code = cmd_code_match.group(0).lower()
                 else:
                     code = None
-		# Clean up command codes
-		l = re.sub(r"^[hdfp, ]*|[hdfp, ]*$", "", l)
-		# Substitute multiple consecutive spaces or commas for single comma
-		l = re.sub("[ ,]+", ",", l)
-		# Remove anything that isn't an integer or comma.
-		l = re.sub("[^0-9,]", "", l)
-		# Turn into list
-		choices = l.split(",")
+                # Clean up command codes
+                l = re.sub(r"^[hdfp, ]*|[hdfp, ]*$", "", l)
+                # Substitute multiple consecutive spaces or commas for single comma
+                l = re.sub("[ ,]+", ",", l)
+                # Remove anything that isn't an integer or comma.
+                l = re.sub("[^0-9,]", "", l)
+                # Turn into list
+                choices = l.split(",")
                 # Act on option, if supplied
                 if code == 'h':
                     print("Options:")
@@ -354,10 +354,10 @@ def main():
                     continue
                 else:
                     break
-	    except Exception, e:
+            except Exception, e:
                 print('Exception:')
                 print(str(e))
-		choices = ()
+                choices = ()
                 break;
 
     if config.get('SaveToFile', 'enabled'):
@@ -382,7 +382,7 @@ def main():
                 os.system("""transmission-remote --add "%s" """ % (url))
                 os.system("transmission-remote -l")
             elif args.command:
- 		          os.system(args.command % (url))
+                os.system(args.command % (url))
             else:
                 webbrowser.open(url)
 

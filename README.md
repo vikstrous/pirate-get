@@ -64,6 +64,6 @@ If you want to use a local copy of the Pirate Bay database download a copy here 
 http://thepiratebay.se/torrent/8156416
 
 
-# License
+## License
 
 pirate-get is licensed under the GNU Affero General Public License version 3 or later. See the accompanying file COPYING or http://www.gnu.org/licenses/agpl.html.

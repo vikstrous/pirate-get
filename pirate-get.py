@@ -65,10 +65,13 @@ def main():
     config.read([os.path.expanduser('~/.config/pirate-get/pirate.cfg')])
 
     parser = argparse.ArgumentParser(description='Finds and downloads torrents from the Pirate Bay')
+    parser.add_argument('-b', dest='browse',  action='store_true', help="Display in Browse mode", default=False)
     parser.add_argument('search', metavar='search', nargs="*", help="Term to search for")
     parser.add_argument('-c', dest='category', metavar='category', help="Specify a category to search", default="All")
+    parser.add_argument('-s', dest='sort', metavar='sort', help="Specify a sort option", default="SeedersDsc")
     parser.add_argument('-R', dest='recent',  action='store_true', help="Torrents uploaded in the last 48hours. *ignored in searches*", default=False)
     parser.add_argument('-l', dest='list_categories',  action='store_true', help="List categories", default=False)
+    parser.add_argument('--list_sorts', dest='list_sorts',  action='store_true', help="List Sortable Types", default=False)
     parser.add_argument('-t',dest='transmission',action='store_true', help="call transmission-remote to start the download", default=False)
     parser.add_argument('--custom',dest='command', help="call custom command, %%s will be replaced with the url")
     parser.add_argument('--local', dest='database', help="An xml file containing the Pirate Bay database")
@@ -78,6 +81,8 @@ def main():
     parser.add_argument('--color', dest='color', action='store_true', help="use colored output", default=False)
 
     categories = {"All":"0","Audio":"100","Audio/Music":"101","Audio/Audio books":"102","Audio/Sound clips":"103","Audio/FLAC":"104","Audio/Other":"199","Video":"200","Video/Movies":"201","Video/Movies DVDR":"202","Video/Music videos":"203","Video/Movie clips":"204","Video/TV shows":"205","Video/Handheld":"206","Video/HD - Movies":"207","Video/HD - TV shows":"208","Video/3D":"209","Video/Other":"299","Applications":"300","Applications/Windows":"301","Applications/Mac":"302","Applications/UNIX":"303","Applications/Handheld":"304","Applications/IOS (iPad/iPhone)":"305","Applications/Android":"306","Applications/Other OS":"399","Games":"400","Games/PC":"401","Games/Mac":"402","Games/PSx":"403","Games/XBOX360":"404","Games/Wii":"405","Games/Handheld":"406","Games/IOS (iPad/iPhone)":"407","Games/Android":"408","Games/Other":"499","Porn":"500","Porn/Movies":"501","Porn/Movies DVDR":"502","Porn/Pictures":"503","Porn/Games":"504","Porn/HD - Movies":"505","Porn/Movie clips":"506","Porn/Other":"599","Other":"600","Other/E-books":"601","Other/Comics":"602","Other/Pictures":"603","Other/Covers":"604","Other/Physibles":"605","Other/Other":"699"}
+
+    sorts = {"TitleDsc":"1","TitleAsc":"2","DateDsc":"3","DateAsc":"4","SizeDsc":"5","SizeAsc":"6","SeedersDsc":"7","SeedersAsc":"8","LeechersDsc":"9","LeechersAsc":"10","CategoryDsc":"13","CategoryAsc":"14","Default":"99"}
 
     #todo: redo this with html parser instead of regex
     def remote(args, mirror):
@@ -97,6 +102,14 @@ def main():
             category = "0";
             print ("Invalid category ignored", color="WARN")
 
+        if str(args.sort) in sorts.values():
+            sort = args.sort;
+        elif args.sort in sorts.keys():
+            sort = sorts[args.sort]
+        else:
+            sort = "99";
+            print ("Invalid sort ignored", color="WARN")
+
         # Catch the Ctrl-C exception and exit cleanly
         try:
             sizes = []
@@ -105,14 +118,19 @@ def main():
             for page in xrange(pages):
 
                 #
-                if len(args.search) == 0:
+                if args.browse:
+                    path = "/browse/"
+                    if(category == "0"):
+                        category = '100'
+                    path = '/browse/' + category + '/' + str(page) + '/' + str(sort)
+                elif len(args.search) == 0:
                     path = "/top/48h" if args.recent else "/top/"
                     if(category == "0"):
                         path += 'all'
                     else:
                         path += category
                 else:
-                    path = '/search/' + "+".join(args.search) + '/' + str(page) + '/7/' + category
+                    path = '/search/' + "+".join(args.search) + '/' + str(page) + '/' + str(sort) + '/' + category
 
                 request = urllib2.Request(mirror + path)
                 request.add_header('Accept-encoding', 'gzip')
@@ -131,12 +149,10 @@ def main():
                     raise Exception("Blocked mirror detected.")
 
                 # get sizes as well and substitute the &nbsp; character
-                # print res
                 sizes.extend([match.replace("&nbsp;", " ") for match in re.findall("(?<=Size )[0-9.]+\&nbsp\;[KMGT]*[i ]*B",res)])
                 uploaded.extend([match.replace("&nbsp;", " ") for match in re.findall("(?<=Uploaded ).+(?=\, Size)",res)])
                 identifiers.extend([match.replace("&nbsp;", " ") for match in re.findall("(?<=/torrent/)[0-9]+(?=/)",res)])
-                # pprint(sizes); print len(sizes)
-                # pprint(uploaded); print len(uploaded)
+
                 state = "seeds"
                 curr = ['',0,0] #magnet, seeds, leeches
                 for f in found:
@@ -207,6 +223,17 @@ def main():
             print(str(value) +"\t" + key, color=cur_color)
 
         return
+
+    if args.list_sorts:
+
+        cur_color = "zebra_0"
+        for key, value in sorted(sorts.iteritems()) :
+
+            cur_color = "zebra_0" if (cur_color == "zebra_1") else "zebra_1"
+            print(str(value) +"\t" + key, color=cur_color)
+
+        return
+
     if args.database:
         mags = local(args)
     else:

@@ -338,15 +338,15 @@ def main():
         # New input loop to support different link options
         while True:
             try:
-                l = raw_input("Select link(s) (Type 'h' for more options): ")
+                l = raw_input("Select link(s) (Type 'h' for more options ['q' to quit]): ")
             except KeyboardInterrupt :
                 print("\nCancelled.")
                 exit()
 
             try:
                 # Very permissive handling
-                # Check for any occurances or d, f, or p
-                cmd_code_match = re.search(r'([hdfp])', l, flags=re.IGNORECASE)
+                # Check for any occurances or d, f, p or q
+                cmd_code_match = re.search(r'([hdfpq])', l, flags=re.IGNORECASE)
                 if cmd_code_match:
                     code = cmd_code_match.group(0).lower()
                 else:
@@ -366,7 +366,11 @@ def main():
                     print("[d<links>]: Get descriptions")
                     print("[f<links>]: Get files")
                     print("[p] Print search results")
+                    print("[q] Quit")
                     continue
+                elif code == 'q':
+                    print("User Cancelled.")
+                    exit()
                 elif code == 'd':
                     print_descriptions(choices)
                     continue

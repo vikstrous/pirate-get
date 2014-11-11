@@ -43,7 +43,10 @@ optional arguments:
 
 ## Configuration file
 
-pirate-get will check to see if `$HOME/.config/pirate-get/pirate.cfg` exists. If it does it will use it as its default configuration settings.
+You can use a file to override pirate-get's default settings. pirate-get will
+first check if `$XDG_CONFIG_HOME/pirate-get/pirate.cfg` exists, then check if
+`$HOME/.config/pirate-get/pirate.cfg` exists, and load the first file it finds.
+
 
 ### SaveToFile
 

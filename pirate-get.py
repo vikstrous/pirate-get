@@ -80,7 +80,13 @@ def main():
     config.set('SaveToFile', 'directory', '~/Dropbox/pirate-get/')
 
     # load user options, to override default ones
-    config.read([os.path.expanduser('~/.config/pirate-get/pirate.cfg')])
+    def config_to_load():
+        if os.path.isfile(os.path.expandvars('$XDG_CONFIG_HOME/pirate-get/pirate.cfg')):
+            return os.path.expandvars('$XDG_CONFIG_HOME/pirate-get/pirate.cfg')
+        else:
+            return os.path.expanduser('~/.config/pirate-get/pirate.cfg')
+
+    config.read([config_to_load()])
 
     parser = argparse.ArgumentParser(description='Finds and downloads torrents from the Pirate Bay')
     parser.add_argument('-b', dest='browse',  action='store_true', help="Display in Browse mode", default=False)

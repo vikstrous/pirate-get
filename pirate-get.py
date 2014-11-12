@@ -264,7 +264,7 @@ def main():
         mirrors = ["http://thepiratebay.se"]
         try:
             opener = urllib2.build_opener(NoRedirection)
-            f = opener.open("http://proxybay.info/list.txt")
+            f = opener.open("https://proxybay.info/list.txt")
             if f.getcode() != 200:
                 raise Exception("The pirate bay responded with an error.")
             res = f.read()

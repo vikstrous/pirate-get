@@ -214,7 +214,7 @@ def main():
                 """Print with colors"""
                 try:
                     c = color_dict[kwargs.pop("color")]
-                    args = (c + str(args[0]),) + args[1:] + (colorama.Style.RESET_ALL,)
+                    args = (c + str(args[0].encode('utf-8')),) + args[1:] + (colorama.Style.RESET_ALL,)
                 except KeyError as e:
                     pass
                 except IndexError as e:

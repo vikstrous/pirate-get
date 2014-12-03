@@ -143,7 +143,7 @@ def print(*args, **kwargs):
         colorama.init()
         color_dict = {
             "default": "",
-            "header":  colorama.Back.BLACK + colorama.Fore.BLUE,
+            "header":  colorama.Back.BLACK + colorama.Fore.WHITE,
             "alt":     colorama.Fore.YELLOW,
             "zebra_0": "",
             "zebra_1": colorama.Fore.BLUE,
@@ -475,8 +475,8 @@ def main():
         # New input loop to support different link options
         while True:
             try:
-                print("\nSelect links (Type 'h' for more options"
-                          ", 'q' to quit)", end="", color="alt")
+                print("\nSelect links (Type 'h' for more options" +
+                          ", 'q' to quit)", end="\b", color="alt")
                 l=input(": ")
             except KeyboardInterrupt :
                 print("\nCancelled.")
@@ -504,13 +504,13 @@ def main():
                 print("")
                 if code == 'h':
                     print("Options:",
-                    "<links>: Download selected torrents",
-                    "[d<links>]: Get descriptions",
-                    "[f<links>]: Get files",
-                    "[p] Print search results",
-                    "[q] Quit", sep="\n")
+                          "<links>: Download selected torrents",
+                          "[d<links>]: Get descriptions",
+                          "[f<links>]: Get files",
+                          "[p] Print search results",
+                          "[q] Quit", sep="\n")
                 elif code == 'q':
-                    print("User Cancelled.")
+                    print("Bye.", color="alt")
                     sys.exit(0)
                 elif code == 'd':
                     print_descriptions(choices, mags, site, identifiers)
@@ -523,7 +523,7 @@ def main():
                 else:
                     break
             except Exception as e:
-                print('Exception:')
+                print('Exception:', color="ERROR")
                 print(str(e))
                 choices = ()
                 sys.exit(1)

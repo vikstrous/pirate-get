@@ -465,7 +465,8 @@ def main():
         # New input loop to support different link options
         while True:
             try:
-                l = raw_input("Select link(s) (Type 'h' for more options ['q' to quit]): ")
+                l = input("Select link(s) (Type 'h' for more options"
+                          "['q' to quit]): ")
             except KeyboardInterrupt :
                 print("\nCancelled.")
                 exit()
@@ -518,7 +519,7 @@ def main():
                 choices = ()
                 break;
 
-    if config.get('SaveToFile', 'enabled'):
+    if config.getboolean('SaveToFile', 'enabled'):
         # Save to file is enabled
         fileName = os.path.expanduser(
                         config.get('SaveToFile','directory')

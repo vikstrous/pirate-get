@@ -372,7 +372,7 @@ def main():
     # new ConfigParser
     config = configparser.ConfigParser()
 
-    # default options so we dont die later
+    # default options so we don't die later
     config.add_section('SaveToFile')
     config.set('SaveToFile', 'enabled', 'false')
     config.set('SaveToFile', 'directory', '~/downloads/pirate-get/')
@@ -443,19 +443,21 @@ def main():
             opener = request.build_opener(NoRedirection)
             f = opener.open("https://proxybay.info/list.txt")
             if f.getcode() != 200:
-                raise Exception("The pirate bay responded with an error.")
+                raise IOError("The pirate bay responded with an error.")
             res = f.read().decode('utf8')
             mirrors.append(res.split("\n")[3:])
-        except:
+        except IOError:
             print("Could not fetch additional mirrors", color="WARN")
         for mirror in mirrors:
             try:
                 print("Trying " + mirror)
                 mags, sizes, uploaded, identifiers = remote(args, mirror)
+                site = mirror
                 break
             except Exception as e:
                 print(format(e))
                 print("Could not contact", mirror, color="WARN")
+
 
     if not mags or len(mags) == 0:
         print("no results")
@@ -464,20 +466,21 @@ def main():
     print_search_results(mags, sizes, uploaded)
 
     if args.first:
-        print("Choosing first result");
+        print("Choosing first result")
         choices = [0]
     elif args.download_all:
-        print("Downloading all results");
+        print("Downloading all results")
         choices = range(len(mags))
     else:
         # New input loop to support different link options
         while True:
             try:
-                l = input("\nSelect link(s) (Type 'h' for more options"
-                          "['q' to quit]): ")
+                print("\nSelect links (Type 'h' for more options"
+                          ", 'q' to quit)", end="", color="alt")
+                l=input(": ")
             except KeyboardInterrupt :
                 print("\nCancelled.")
-                exit()
+                sys.exit(0)
 
             try:
                 # Very permissive handling
@@ -487,14 +490,16 @@ def main():
                     code = cmd_code_match.group(0).lower()
                 else:
                     code = None
+
                 # Clean up command codes
-                l = re.sub(r"^[hdfp, ]*|[hdfp, ]*$", "", l)
                 # Substitute multiple consecutive spaces/commas for single comma
-                l = re.sub("[ ,]+", ",", l)
                 # Remove anything that isn't an integer or comma.
-                l = re.sub("[^0-9,]", "", l)
                 # Turn into list
+                l = re.sub(r"^[hdfp, ]*|[hdfp, ]*$", "", l)
+                l = re.sub("[ ,]+", ",", l)
+                l = re.sub("[^0-9,]", "", l)
                 choices = l.split(",")
+
                 # Act on option, if supplied
                 print("")
                 if code == 'h':

@@ -130,7 +130,7 @@ def main():
                         action='store_true',
                         help="download all results")
     parser.add_argument('--color', dest='color',
-                        action='store_true',
+                        action='store_true', default=True,
                         help="use colored output")
 
     categories = {
@@ -306,9 +306,9 @@ def main():
             colorama.init()
             color_dict = {
                 "default": "",
-                "header":  colorama.Back.WHITE + colorama.Fore.BLACK,
+                "header":  colorama.Back.BLACK + colorama.Fore.BLUE,
                 "zebra_0": "",
-                "zebra_1": colorama.Style.BRIGHT,
+                "zebra_1": colorama.Fore.BLUE,
                 "WARN":    colorama.Fore.YELLOW,
                 "ERROR":   colorama.Fore.RED}
 
@@ -399,16 +399,16 @@ def main():
             try:
                 ratio = no_seeders/no_leechers
             except ZeroDivisionError:
-                ratio = -1
+                ratio = 0
 
             # Alternate between colors
             cur_color = "zebra_0" if (cur_color == "zebra_1") else "zebra_1"
 
             torrent_name = parse.unquote(name.group(1)).replace("+", " ")
             # enhanced print output with justified columns
-            print("%5d %6d %6d %5.1f %-11s %-11s  %s" % (
+            print("%5d %6d %6d %5.1f %-11s %-11s  %-*s" % (
                 m, no_seeders, no_leechers, ratio ,sizes[m],
-                uploaded[m], torrent_name[:columns]), color=cur_color)
+                uploaded[m], columns, torrent_name), color=cur_color)
 
     def print_descriptions(chosen_links):
         for link in chosen_links:
@@ -522,7 +522,7 @@ def main():
                 print('Exception:')
                 print(str(e))
                 choices = ()
-                break;
+                break
 
     if config.getboolean('SaveToFile', 'enabled'):
         # Save to file is enabled

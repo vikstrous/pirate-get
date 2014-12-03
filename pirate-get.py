@@ -82,15 +82,15 @@ def main():
 
     # default options so we dont die later
     config.add_section('SaveToFile')
-    config.set('SaveToFile', 'enabled', False)
-    config.set('SaveToFile', 'directory', '~/Dropbox/pirate-get/')
+    config.set('SaveToFile', 'enabled', 'false')
+    config.set('SaveToFile', 'directory', '~/downloads/pirate-get/')
 
     # load user options, to override default ones
     def config_to_load():
-        if os.path.isfile(os.path.expandvars('$XDG_CONFIG_HOME/pirate-get/pirate.cfg')):
-            return os.path.expandvars('$XDG_CONFIG_HOME/pirate-get/pirate.cfg')
+        if os.path.isfile(os.path.expandvars('$XDG_CONFIG_HOME/pirate-get')):
+            return os.path.expandvars('$XDG_CONFIG_HOME/pirate-get')
         else:
-            return os.path.expanduser('~/.config/pirate-get/pirate.cfg')
+            return os.path.expanduser('~/.config/pirate-get')
 
     config.read([config_to_load()])
 

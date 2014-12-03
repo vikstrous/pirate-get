@@ -17,21 +17,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with pirate-get.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
-import __builtin__
-import webbrowser
-import urllib
-import urllib2
-import re
 import os
-import ConfigParser
-import string
 import random
-from HTMLParser import HTMLParser
-import argparse
-from pprint import pprint
-from StringIO import StringIO
+import re
+import string
 import gzip
+import configparser
+import argparse
+import builtins
+
+import webbrowser
+import urllib.request as request
+import urllib.parse as parse
+
+from html.parser import HTMLParser
+from pprint import pprint
+from io import StringIO, BytesIO
 
 class NoRedirection(urllib2.HTTPErrorProcessor):
 

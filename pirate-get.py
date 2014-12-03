@@ -470,7 +470,7 @@ def main():
         # New input loop to support different link options
         while True:
             try:
-                l = input("Select link(s) (Type 'h' for more options"
+                l = input("\nSelect link(s) (Type 'h' for more options"
                           "['q' to quit]): ")
             except KeyboardInterrupt :
                 print("\nCancelled.")
@@ -493,6 +493,7 @@ def main():
                 # Turn into list
                 choices = l.split(",")
                 # Act on option, if supplied
+                print("")
                 if code == 'h':
                     print("Options:",
                     "<links>: Download selected torrents",

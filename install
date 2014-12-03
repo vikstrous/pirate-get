@@ -1,0 +1,3 @@
+#!/bin/sh
+cp $(dirname $0)/pirate-get.py /usr/local/bin/pirate-get
+chmod +x /usr/local/bin/pirate-get

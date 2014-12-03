@@ -36,6 +36,7 @@ from io import StringIO, BytesIO
 
 class NoRedirection(urllib2.HTTPErrorProcessor):
 
+class NoRedirection(request.HTTPErrorProcessor):
     def http_response(self, request, response):
         return response
 
@@ -73,7 +74,7 @@ class MyHTMLParser(HTMLParser):
 def main():
 
     # new ConfigParser
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
 
     # default options so we dont die later
     config.add_section('SaveToFile')
@@ -220,12 +221,12 @@ def main():
                     pass
                 except IndexError as e:
                     pass
-                return __builtin__.print(*args, **kwargs)
+                return builtins.print(*args, **kwargs)
         else:
             def n_print(*args, **kwargs):
                 if("color" in kwargs):
                     kwargs.pop('color')
-                return __builtin__.print(*args, **kwargs)
+                return builtins.print(*args, **kwargs)
         return n_print
 
     print=make_print()
@@ -264,7 +265,7 @@ def main():
     else:
         mirrors = ["http://thepiratebay.se"]
         try:
-            opener = urllib2.build_opener(NoRedirection)
+            opener = request.build_opener(NoRedirection)
             f = opener.open("https://proxybay.info/list.txt")
             if f.getcode() != 200:
                 raise Exception("The pirate bay responded with an error.")
@@ -316,15 +317,17 @@ def main():
             path = '/torrent/' + identifiers[int(link)] + '/'
             request = urllib2.Request(mirror + path)
             request.add_header('Accept-encoding', 'gzip')
-            f = urllib2.urlopen(request)
+            f = request.urlopen(request)
+
             if f.info().get('Content-Encoding') == 'gzip':
                 buf = StringIO(f.read())
                 f = gzip.GzipFile(fileobj=buf)
             res = f.read()
             name = re.search("dn=([^\&]*)", mags[int(link)][0])
-            torrent_name = urllib.unquote(name.group(1).encode('ascii')) \
-                .decode('utf-8').replace("+", " ")
-            desc = re.search(r"<div class=\"nfo\">\s*<pre>(.+?)(?=</pre>)", res, re.DOTALL).group(1)
+            torrent_name = parse.unquote(name.group(1)).replace("+", " ")
+            desc = re.search(r"<div class=\"nfo\">\s*<pre>(.+?)(?=</pre>)",
+                             res, re.DOTALL).group(1)
+
             # Replace HTML links with markdown style versions
             desc = re.sub(r"<a href=\"\s*([^\"]+?)\s*\"[^>]*>(\s*)([^<]+?)(\s*)</a>", r"\2[\3](\1)\4", desc)
             print ('Description for "' + torrent_name + '":', color="zebra_1")
@@ -334,12 +337,13 @@ def main():
         for link in chosen_links:
             path = '/ajax_details_filelist.php'
             query = '?id=' + identifiers[int(link)]
-            request = urllib2.Request(mirror + path + query)
+            request = request.Request(mirror + path + query)
             request.add_header('Accept-encoding', 'gzip')
-            f = urllib2.urlopen(request)
+            f = request.urlopen(request)
+
             if f.info().get('Content-Encoding') == 'gzip':
-                buf = StringIO(f.read())
-                f = gzip.GzipFile(fileobj=buf)
+                f = gzip.GzipFile(fileobj=BytesIO(f.read()))
+
             res = f.read().replace("&nbsp;", " ")
             files = re.findall(r"<td align=\"left\">\s*([^<]+?)\s*</td><td align=\"right\">\s*([^<]+?)\s*</tr>", res)
             name = re.search("dn=([^\&]*)", mags[int(link)][0])

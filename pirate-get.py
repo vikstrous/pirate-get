@@ -282,7 +282,7 @@ def main():
                 print("Trying " + mirror)
                 mags, sizes, uploaded, identifiers = remote(args, mirror)
                 break
-            except Exception, e:
+            except Exception as e:
                 print(format(e))
                 print("Could not contact " + mirror, color="WARN")
 
@@ -417,7 +417,7 @@ def main():
                     continue
                 else:
                     break
-            except Exception, e:
+            except Exception as e:
                 print('Exception:')
                 print(str(e))
                 choices = ()

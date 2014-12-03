@@ -18,6 +18,7 @@
 # along with pirate-get.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import sys
 import random
 import re
 import string
@@ -503,7 +504,7 @@ def main():
                     "[q] Quit", sep="\n")
                 elif code == 'q':
                     print("User Cancelled.")
-                    break
+                    sys.exit(0)
                 elif code == 'd':
                     print_descriptions(choices)
                 elif code == 'f':
@@ -518,7 +519,7 @@ def main():
                 print('Exception:')
                 print(str(e))
                 choices = ()
-                break
+                sys.exit(1)
 
     if config.getboolean('SaveToFile', 'enabled'):
         # Save to file is enabled

@@ -500,22 +500,17 @@ def main():
                     "[f<links>]: Get files",
                     "[p] Print search results",
                     "[q] Quit", sep="\n")
-                    continue
                 elif code == 'q':
                     print("User Cancelled.")
-                    exit()
+                    break
                 elif code == 'd':
                     print_descriptions(choices)
-                    continue
                 elif code == 'f':
                     print_fileLists(choices)
-                    continue
                 elif code == 'p':
                     print_search_results()
-                    continue
                 elif not l:
                     print('No links entered!')
-                    continue
                 else:
                     break
             except Exception as e:

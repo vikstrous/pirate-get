@@ -445,7 +445,7 @@ def main():
             if f.info().get('Content-Encoding') == 'gzip':
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))
 
-            res = f.read().replace("&nbsp;", " ")
+            res = f.read().decode('utf-8').replace("&nbsp;", " ")
             files = re.findall(r"<td align=\"left\">\s*([^<]+?)\s*</td><td ali"
                                r"gn=\"right\">\s*([^<]+?)\s*</tr>", res)
             name = re.search("dn=([^\&]*)", mags[int(link)][0])

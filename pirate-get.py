@@ -382,10 +382,13 @@ def main():
 
     # enhanced print output with column titles
     def print_search_results():
-        print("%5s %6s %6s %-5s %-11s %-11s  %s" \
-            % ( "LINK", "SEED", "LEECH", "RATIO", "SIZE", "UPLOAD", "NAME"),
-            color="header")
+        columns = int(os.popen('stty size', 'r').read().split()[1]) - 52
         cur_color = "zebra_0"
+
+        print("%5s %6s %6s %-5s %-11s %-11s  %-*s" \
+            % ( "LINK", "SEED", "LEECH", "RATIO", "SIZE", "UPLOAD", columns, "NAME"),
+            color="header")
+
         for m in range(len(mags)):
             magnet = mags[m]
             no_seeders = int(magnet[1])
@@ -403,9 +406,10 @@ def main():
 
             torrent_name = parse.unquote(name.group(1)).replace("+", " ")
             # enhanced print output with justified columns
-            print ("%5d %6d %6d %5.1f %-11s %-11s  %s" % (
+            print("%5d %6d %6d %5.1f %-11s %-11s  %s" % (
                 m, no_seeders, no_leechers, ratio ,sizes[m],
-                uploaded[m], torrent_name), color=cur_color)
+                uploaded[m], torrent_name[:columns]), color=cur_color)
+
     def print_descriptions(chosen_links):
         for link in chosen_links:
             path = '/torrent/%s/' % identifiers[int(link)]

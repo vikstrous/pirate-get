@@ -412,16 +412,17 @@ def main():
 
     def print_descriptions(chosen_links):
         for link in chosen_links:
-            path = '/torrent/%s/' % identifiers[int(link)]
-            request = request.Request(mirror + path)
-            request.add_header('Accept-encoding', 'gzip')
-            f = request.urlopen(request)
+            link = int(link)
+            path = '/torrent/%s/' % identifiers[link]
+            req = request.Request(mirror + path)
+            req.add_header('Accept-encoding', 'gzip')
+            f = request.urlopen(req)
 
             if f.info().get('Content-Encoding') == 'gzip':
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))
 
-            res = f.read()
-            name = re.search("dn=([^\&]*)", mags[int(link)][0])
+            res = f.read().decode('utf-8')
+            name = re.search("dn=([^\&]*)", mags[link][0])
             torrent_name = parse.unquote(name.group(1)).replace("+", " ")
             desc = re.search(r"<div class=\"nfo\">\s*<pre>(.+?)(?=</pre>)",
                              res, re.DOTALL).group(1)

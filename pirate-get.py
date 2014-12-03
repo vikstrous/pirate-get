@@ -67,7 +67,11 @@ class MyHTMLParser(HTMLParser):
             else:
                 self.state = 'looking'
         if self.state == 'magnet':
-            self.results.append(['magnet:?xt=urn:btih:' + urllib.quote(data) + '&dn=' + urllib.quote(self.title), '?', '?'])
+            self.results.append([
+                'magnet:?xt=urn:btih:' +
+                parse.quote(data) +
+                '&dn=' +
+                parse.quote(self.title), '?', '?'])
             self.state = 'looking'
 
 
@@ -216,7 +220,7 @@ def main():
                 """Print with colors"""
                 try:
                     c = color_dict[kwargs.pop("color")]
-                    args = (c + str(args[0].encode('utf-8')),) + args[1:] + (colorama.Style.RESET_ALL,)
+                    args = (c + args[0],) + args[1:] + (colorama.Style.RESET_ALL,)
                 except KeyError as e:
                     pass
                 except IndexError as e:
@@ -269,8 +273,8 @@ def main():
             f = opener.open("https://proxybay.info/list.txt")
             if f.getcode() != 200:
                 raise Exception("The pirate bay responded with an error.")
-            res = f.read()
-            mirrors += res.split("\n")[3:]
+            res = f.read().decode('utf8')
+            mirrors.append(res.split("\n")[3:])
         except:
             print("Could not fetch additional mirrors", color="WARN")
         for mirror in mirrors:
@@ -306,8 +310,7 @@ def main():
             # Alternate between colors
             cur_color = "zebra_0" if (cur_color == "zebra_1") else "zebra_1"
 
-            torrent_name = urllib.unquote(name.group(1).encode('ascii')) \
-                .decode('utf-8').replace("+", " ")
+            torrent_name = parse.unquote(name.group(1)).replace("+", " ")
             # enhanced print output with justified columns
             print ("%5d %6d %6d %5.1f %-11s %-11s  %s" % (
                 m, no_seeders, no_leechers, ratio ,sizes[m],
@@ -320,8 +323,8 @@ def main():
             f = request.urlopen(request)
 
             if f.info().get('Content-Encoding') == 'gzip':
-                buf = StringIO(f.read())
-                f = gzip.GzipFile(fileobj=buf)
+                f = gzip.GzipFile(fileobj=BytesIO(f.read()))
+
             res = f.read()
             name = re.search("dn=([^\&]*)", mags[int(link)][0])
             torrent_name = parse.unquote(name.group(1)).replace("+", " ")
@@ -347,9 +350,9 @@ def main():
             res = f.read().replace("&nbsp;", " ")
             files = re.findall(r"<td align=\"left\">\s*([^<]+?)\s*</td><td align=\"right\">\s*([^<]+?)\s*</tr>", res)
             name = re.search("dn=([^\&]*)", mags[int(link)][0])
-            torrent_name = urllib.unquote(name.group(1).encode('ascii')) \
-                .decode('utf-8').replace("+", " ")
-            print ('Files in "' + torrent_name + '":', color="zebra_1")
+            torrent_name = parse.unquote(name.group(1)).replace("+", " ")
+
+            print('Files in "' + torrent_name + '":', color="zebra_1")
             cur_color = "zebra_0"
             for f in files:
                 print ("%-11s  %s" % (f[1], f[0]), color=cur_color)

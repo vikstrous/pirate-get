@@ -34,7 +34,6 @@ from html.parser import HTMLParser
 from pprint import pprint
 from io import StringIO, BytesIO
 
-class NoRedirection(urllib2.HTTPErrorProcessor):
 
 class NoRedirection(request.HTTPErrorProcessor):
     def http_response(self, request, response):
@@ -76,7 +75,6 @@ class MyHTMLParser(HTMLParser):
 
 
 def main():
-
     # new ConfigParser
     config = configparser.ConfigParser()
 
@@ -94,25 +92,108 @@ def main():
 
     config.read([config_to_load()])
 
-    parser = argparse.ArgumentParser(description='Finds and downloads torrents from the Pirate Bay')
-    parser.add_argument('-b', dest='browse',  action='store_true', help="Display in Browse mode", default=False)
-    parser.add_argument('search', metavar='search', nargs="*", help="Term to search for")
-    parser.add_argument('-c', dest='category', metavar='category', help="Specify a category to search", default="All")
-    parser.add_argument('-s', dest='sort', metavar='sort', help="Specify a sort option", default="SeedersDsc")
-    parser.add_argument('-R', dest='recent',  action='store_true', help="Torrents uploaded in the last 48hours. *ignored in searches*", default=False)
-    parser.add_argument('-l', dest='list_categories',  action='store_true', help="List categories", default=False)
-    parser.add_argument('--list_sorts', dest='list_sorts',  action='store_true', help="List Sortable Types", default=False)
-    parser.add_argument('-t',dest='transmission',action='store_true', help="call transmission-remote to start the download", default=False)
-    parser.add_argument('--custom',dest='command', help="call custom command, %%s will be replaced with the url")
-    parser.add_argument('--local', dest='database', help="An xml file containing the Pirate Bay database")
-    parser.add_argument('-p', dest='pages', help="The number of pages to fetch (doesn't work with --local)", default=1)
-    parser.add_argument('-0', dest='first', action='store_true', help="choose the top result", default=False)
-    parser.add_argument('-a', dest='download_all', action='store_true', help="download all results", default=False)
-    parser.add_argument('--color', dest='color', action='store_true', help="use colored output", default=False)
+    parser = argparse.ArgumentParser(
+                description='finds and downloads torrents from the Pirate Bay')
+    parser.add_argument('-b', dest='browse',
+                        action='store_true',
+                        help="display in Browse mode")
+    parser.add_argument('search', metavar='search',
+                        nargs="*", help="term to search for")
+    parser.add_argument('-c', dest='category', metavar='category',
+                        help="specify a category to search", default="All")
+    parser.add_argument('-s', dest='sort', metavar='sort',
+                        help="specify a sort option", default="SeedersDsc")
+    parser.add_argument('-R', dest='recent',  action='store_true',
+                        help="torrents uploaded in the last 48hours."
+                                                "*ignored in searches*")
+    parser.add_argument('-l', dest='list_categories',
+                        action='store_true',
+                        help="list categories")
+    parser.add_argument('--list_sorts', dest='list_sorts',
+                        action='store_true',
+                        help="list Sortable Types")
+    parser.add_argument('-t', dest='transmission',
+                         action='store_true',
+                         help="call transmission-remote to start the download")
+    parser.add_argument('--custom', dest='command',
+                        help="call custom command, %%s will be replaced with"
+                                                                    "the url")
+    parser.add_argument('--local', dest='database',
+                        help="an xml file containing the Pirate Bay database")
+    parser.add_argument('-p', dest='pages', default=1,
+                        help="the number of pages to fetch (doesn't work with"
+                                                                    "--local)")
+    parser.add_argument('-0', dest='first',
+                        action='store_true',
+                        help="choose the top result")
+    parser.add_argument('-a', dest='download_all',
+                        action='store_true',
+                        help="download all results")
+    parser.add_argument('--color', dest='color',
+                        action='store_true',
+                        help="use colored output")
 
-    categories = {"All":"0","Audio":"100","Audio/Music":"101","Audio/Audio books":"102","Audio/Sound clips":"103","Audio/FLAC":"104","Audio/Other":"199","Video":"200","Video/Movies":"201","Video/Movies DVDR":"202","Video/Music videos":"203","Video/Movie clips":"204","Video/TV shows":"205","Video/Handheld":"206","Video/HD - Movies":"207","Video/HD - TV shows":"208","Video/3D":"209","Video/Other":"299","Applications":"300","Applications/Windows":"301","Applications/Mac":"302","Applications/UNIX":"303","Applications/Handheld":"304","Applications/IOS (iPad/iPhone)":"305","Applications/Android":"306","Applications/Other OS":"399","Games":"400","Games/PC":"401","Games/Mac":"402","Games/PSx":"403","Games/XBOX360":"404","Games/Wii":"405","Games/Handheld":"406","Games/IOS (iPad/iPhone)":"407","Games/Android":"408","Games/Other":"499","Porn":"500","Porn/Movies":"501","Porn/Movies DVDR":"502","Porn/Pictures":"503","Porn/Games":"504","Porn/HD - Movies":"505","Porn/Movie clips":"506","Porn/Other":"599","Other":"600","Other/E-books":"601","Other/Comics":"602","Other/Pictures":"603","Other/Covers":"604","Other/Physibles":"605","Other/Other":"699"}
+    categories = {
+        "All":"0",
+        "Audio":"100",
+        "Audio/Music":"101",
+        "Audio/Audio books":"102",
+        "Audio/Sound clips":"103",
+        "Audio/FLAC":"104",
+        "Audio/Other":"199",
+        "Video":"200",
+        "Video/Movies":"201",
+        "Video/Movies DVDR":"202",
+        "Video/Music videos":"203",
+        "Video/Movie clips":"204",
+        "Video/TV shows":"205",
+        "Video/Handheld":"206",
+        "Video/HD - Movies":"207",
+        "Video/HD - TV shows":"208",
+        "Video/3D":"209",
+        "Video/Other":"299",
+        "Applications":"300",
+        "Applications/Windows":"301",
+        "Applications/Mac":"302",
+        "Applications/UNIX":"303",
+        "Applications/Handheld":"304",
+        "Applications/IOS (iPad/iPhone)":"305",
+        "Applications/Android":"306",
+        "Applications/Other OS":"399",
+        "Games":"400",
+        "Games/PC":"401",
+        "Games/Mac":"402",
+        "Games/PSx":"403",
+        "Games/XBOX360":"404",
+        "Games/Wii":"405",
+        "Games/Handheld":"406",
+        "Games/IOS (iPad/iPhone)":"407",
+        "Games/Android":"408",
+        "Games/Other":"499",
+        "Porn":"500",
+        "Porn/Movies":"501",
+        "Porn/Movies DVDR":"502",
+        "Porn/Pictures":"503",
+        "Porn/Games":"504",
+        "Porn/HD - Movies":"505",
+        "Porn/Movie clips":"506",
+        "Porn/Other":"599",
+        "Other":"600",
+        "Other/E-books":"601",
+        "Other/Comics":"602",
+        "Other/Pictures":"603",
+        "Other/Covers":"604",
+        "Other/Physibles":"605",
+        "Other/Other":"699"}
 
-    sorts = {"TitleDsc":"1","TitleAsc":"2","DateDsc":"3","DateAsc":"4","SizeDsc":"5","SizeAsc":"6","SeedersDsc":"7","SeedersAsc":"8","LeechersDsc":"9","LeechersAsc":"10","CategoryDsc":"13","CategoryAsc":"14","Default":"99"}
+    sorts = {
+           "TitleDsc": "1",     "TitleAsc": "2",
+            "DateDsc": "3",      "DateAsc": "4",
+            "SizeDsc": "5",      "SizeAsc": "6",
+         "SeedersDsc": "7",   "SeedersAsc": "8",
+        "LeechersDsc": "9",  "LeechersAsc": "10",
+        "CategoryDsc": "13", "CategoryAsc": "14",
+            "Default": "99"}
 
     #todo: redo this with html parser instead of regex
     def remote(args, mirror):
@@ -122,7 +203,8 @@ def main():
             if pages < 1:
                 raise Exception('')
         except Exception:
-            raise Exception("Please provide an integer greater than 0 for the number of pages to fetch.")
+            raise Exception("Please provide an integer greater than 0"
+                            "for the number of pages to fetch.")
 
         if str(args.category) in categories.values():
             category = args.category;
@@ -130,7 +212,7 @@ def main():
             category = categories[args.category]
         else:
             category = "0";
-            print ("Invalid category ignored", color="WARN")
+            print("Invalid category ignored", color="WARN")
 
         if str(args.sort) in sorts.values():
             sort = args.sort;
@@ -138,21 +220,20 @@ def main():
             sort = sorts[args.sort]
         else:
             sort = "99";
-            print ("Invalid sort ignored", color="WARN")
+            print("Invalid sort ignored", color="WARN")
 
         # Catch the Ctrl-C exception and exit cleanly
         try:
             sizes = []
             uploaded = []
             identifiers = []
-            for page in xrange(pages):
-
-                #
+            for page in range(pages):
                 if args.browse:
                     path = "/browse/"
                     if(category == "0"):
                         category = '100'
-                    path = '/browse/' + category + '/' + str(page) + '/' + str(sort)
+                    path = '/browse/' + '/'.join(str(i) for i in (
+                                                category, page, sort))
                 elif len(args.search) == 0:
                     path = "/top/48h" if args.recent else "/top/"
                     if(category == "0"):
@@ -160,31 +241,44 @@ def main():
                     else:
                         path += category
                 else:
-                    path = '/search/' + "+".join(args.search) + '/' + str(page) + '/' + str(sort) + '/' + category
+                    path = '/search/' + '/'.join(str(i) for i in (
+                                                    "+".join(args.search),
+                                                    page, sort,
+                                                    category))
 
-                request = urllib2.Request(mirror + path)
-                request.add_header('Accept-encoding', 'gzip')
-                f = urllib2.urlopen(request)
+                req = request.Request(mirror + path)
+                req.add_header('Accept-encoding', 'gzip')
+                f = request.urlopen(req)
                 if f.info().get('Content-Encoding') == 'gzip':
-                    buf = StringIO(f.read())
-                    f = gzip.GzipFile(fileobj=buf)
-                res = f.read()
-                found = re.findall(""""(magnet\:\?xt=[^"]*)|<td align="right">([^<]+)</td>""", res)
+                    f = gzip.GzipFile(fileobj=BytesIO(f.read()))
+                res = f.read().decode('utf-8')
+                found = re.findall('"(magnet\:\?xt=[^"]*)|<td align="right">'
+                                                         '([^<]+)</td>', res)
 
                 # check for a blocked mirror
-                no_results = re.search(""""No hits\.""", res)
+                no_results = re.search("\"No hits\.", res)
                 if found == [] and not no_results is None:
-                    # Contradiction - we found no results, but the page didn't say there were no results
-                    # the page is probably not actually the pirate bay, so let's try another mirror
+                    # Contradiction - we found no results,
+                    # but the page didn't say there were no results.
+                    # The page is probably not actually the pirate bay,
+                    # so let's try another mirror
                     raise Exception("Blocked mirror detected.")
 
                 # get sizes as well and substitute the &nbsp; character
-                sizes.extend([match.replace("&nbsp;", " ") for match in re.findall("(?<=Size )[0-9.]+\&nbsp\;[KMGT]*[i ]*B",res)])
-                uploaded.extend([match.replace("&nbsp;", " ") for match in re.findall("(?<=Uploaded ).+(?=\, Size)",res)])
-                identifiers.extend([match.replace("&nbsp;", " ") for match in re.findall("(?<=/torrent/)[0-9]+(?=/)",res)])
+                sizes.extend([match.replace("&nbsp;", " ")
+                             for match in re.findall("(?<=Size )[0-9.]"
+                             "+\&nbsp\;[KMGT]*[i ]*B", res)])
+
+                uploaded.extend([match.replace("&nbsp;", " ")
+                                for match in re.findall("(?<=Uploaded )"
+                                ".+(?=\, Size)",res)])
+
+                identifiers.extend([match.replace("&nbsp;", " ")
+                                for match in re.findall("(?<=/torrent/)"
+                                "[0-9]+(?=/)",res)])
 
                 state = "seeds"
-                curr = ['',0,0] #magnet, seeds, leeches
+                curr = ['', 0, 0] #magnet, seeds, leeches
                 for f in found:
                     if f[1] == '':
                         curr[0] = f[0]
@@ -210,12 +304,14 @@ def main():
         if(args.color):
             import colorama
             colorama.init()
-            color_dict = {"default": "",
-            "header": colorama.Back.WHITE + colorama.Fore.BLACK,
-            "zebra_0": "",
-            "zebra_1": colorama.Style.BRIGHT,
-            "WARN": colorama.Fore.YELLOW,
-            "ERROR": colorama.Fore.RED}
+            color_dict = {
+                "default": "",
+                "header":  colorama.Back.WHITE + colorama.Fore.BLACK,
+                "zebra_0": "",
+                "zebra_1": colorama.Style.BRIGHT,
+                "WARN":    colorama.Fore.YELLOW,
+                "ERROR":   colorama.Fore.RED}
+
             def n_print(*args, **kwargs):
                 """Print with colors"""
                 try:
@@ -245,23 +341,17 @@ def main():
 
 
     if args.list_categories:
-
         cur_color = "zebra_0"
         for key, value in sorted(categories.iteritems()) :
-
             cur_color = "zebra_0" if (cur_color == "zebra_1") else "zebra_1"
             print(str(value) +"\t" + key, color=cur_color)
-
         return
 
     if args.list_sorts:
-
         cur_color = "zebra_0"
-        for key, value in sorted(sorts.iteritems()) :
-
+        for key, value in sorted(sorts.iteritems()):
             cur_color = "zebra_0" if (cur_color == "zebra_1") else "zebra_1"
             print(str(value) +"\t" + key, color=cur_color)
-
         return
 
     if args.database:
@@ -284,11 +374,12 @@ def main():
                 break
             except Exception as e:
                 print(format(e))
-                print("Could not contact " + mirror, color="WARN")
+                print("Could not contact", mirror, color="WARN")
 
     if not mags or len(mags) == 0:
         print("no results")
         return
+
     # enhanced print output with column titles
     def print_search_results():
         print("%5s %6s %6s %-5s %-11s %-11s  %s" \
@@ -317,8 +408,8 @@ def main():
                 uploaded[m], torrent_name), color=cur_color)
     def print_descriptions(chosen_links):
         for link in chosen_links:
-            path = '/torrent/' + identifiers[int(link)] + '/'
-            request = urllib2.Request(mirror + path)
+            path = '/torrent/%s/' % identifiers[int(link)]
+            request = request.Request(mirror + path)
             request.add_header('Accept-encoding', 'gzip')
             f = request.urlopen(request)
 
@@ -332,9 +423,11 @@ def main():
                              res, re.DOTALL).group(1)
 
             # Replace HTML links with markdown style versions
-            desc = re.sub(r"<a href=\"\s*([^\"]+?)\s*\"[^>]*>(\s*)([^<]+?)(\s*)</a>", r"\2[\3](\1)\4", desc)
-            print ('Description for "' + torrent_name + '":', color="zebra_1")
-            print (desc, color="zebra_0")
+            desc = re.sub(r"<a href=\"\s*([^\"]+?)\s*\"[^>]*>(\s*)([^<]+?)(\s*"
+                          r")</a>", r"\2[\3](\1)\4", desc)
+
+            print('Description for "' + torrent_name + '":', color="zebra_1")
+            print(desc, color="zebra_0")
 
     def print_fileLists(chosen_links):
         for link in chosen_links:
@@ -348,14 +441,16 @@ def main():
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))
 
             res = f.read().replace("&nbsp;", " ")
-            files = re.findall(r"<td align=\"left\">\s*([^<]+?)\s*</td><td align=\"right\">\s*([^<]+?)\s*</tr>", res)
+            files = re.findall(r"<td align=\"left\">\s*([^<]+?)\s*</td><td ali"
+                               r"gn=\"right\">\s*([^<]+?)\s*</tr>", res)
             name = re.search("dn=([^\&]*)", mags[int(link)][0])
             torrent_name = parse.unquote(name.group(1)).replace("+", " ")
 
             print('Files in "' + torrent_name + '":', color="zebra_1")
             cur_color = "zebra_0"
+
             for f in files:
-                print ("%-11s  %s" % (f[1], f[0]), color=cur_color)
+                print("%-11s  %s" % (f[1], f[0]), color=cur_color)
                 cur_color = "zebra_0" if (cur_color == "zebra_1") else "zebra_1"
 
     print_search_results()
@@ -365,7 +460,7 @@ def main():
         choices = [0]
     elif args.download_all:
         print("Downloading all results");
-        choices = range(0, len(mags))
+        choices = range(len(mags))
     else:
         # New input loop to support different link options
         while True:
@@ -385,7 +480,7 @@ def main():
                     code = None
                 # Clean up command codes
                 l = re.sub(r"^[hdfp, ]*|[hdfp, ]*$", "", l)
-                # Substitute multiple consecutive spaces or commas for single comma
+                # Substitute multiple consecutive spaces/commas for single comma
                 l = re.sub("[ ,]+", ",", l)
                 # Remove anything that isn't an integer or comma.
                 l = re.sub("[^0-9,]", "", l)
@@ -393,12 +488,12 @@ def main():
                 choices = l.split(",")
                 # Act on option, if supplied
                 if code == 'h':
-                    print("Options:")
-                    print("<links>: Download selected torrents")
-                    print("[d<links>]: Get descriptions")
-                    print("[f<links>]: Get files")
-                    print("[p] Print search results")
-                    print("[q] Quit")
+                    print("Options:",
+                    "<links>: Download selected torrents",
+                    "[d<links>]: Get descriptions",
+                    "[f<links>]: Get files",
+                    "[p] Print search results",
+                    "[q] Quit", sep="\n")
                     continue
                 elif code == 'q':
                     print("User Cancelled.")
@@ -425,14 +520,17 @@ def main():
 
     if config.get('SaveToFile', 'enabled'):
         # Save to file is enabled
-        fileName = os.path.expanduser(config.get('SaveToFile', 'directory')) + id_generator() + '.magnet'
-        print ("Saving to File: " + fileName)
+        fileName = os.path.expanduser(
+                        config.get('SaveToFile','directory')
+                        ) + id_generator() + '.magnet'
+
+        print("Saving to File: " + fileName)
+
         f = open(fileName, 'w')
         for choice in choices:
             choice = int(choice)
             url = mags[choice][0]
             f.write(url + '\n')
-
         f.close()
 
     else:
@@ -442,8 +540,8 @@ def main():
             url = mags[choice][0]
             print(url)
             if args.transmission:
-                os.system("""transmission-remote --add "%s" """ % (url))
-                os.system("transmission-remote -l")
+                os.system('transmission-remote --add "%s" ' % (url))
+                os.system('transmission-remote -l')
             elif args.command:
                 os.system(args.command % (url))
             else:

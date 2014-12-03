@@ -438,9 +438,9 @@ def main():
         for link in chosen_links:
             path = '/ajax_details_filelist.php'
             query = '?id=' + identifiers[int(link)]
-            request = request.Request(mirror + path + query)
-            request.add_header('Accept-encoding', 'gzip')
-            f = request.urlopen(request)
+            req = request.Request(mirror + path + query)
+            req.add_header('Accept-encoding', 'gzip')
+            f = request.urlopen(req)
 
             if f.info().get('Content-Encoding') == 'gzip':
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))

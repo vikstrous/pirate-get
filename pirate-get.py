@@ -131,8 +131,8 @@ def main():
                         action='store_true',
                         help="download all results")
     parser.add_argument('--color', dest='color',
-                        action='store_true', default=True,
-                        help="use colored output")
+                        action='store_false', default=True,
+                        help="disable colored output")
 
     categories = {
         "All":"0",

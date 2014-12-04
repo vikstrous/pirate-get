@@ -285,9 +285,10 @@ def print_search_results(mags, sizes, uploaded):
     columns = int(os.popen('stty size', 'r').read().split()[1]) - 55
     cur_color = 'zebra_0'
 
-    print("%5s %6s %6s %-5s %-11s %-11s  %-*s" \
-        % ( "LINK", "SEED", "LEECH", "RATIO", "SIZE", "UPLOAD", columns, "NAME"),
-        color="header")
+    print('{:>4}  {:>5}  {:>5}  {:>5}  {:9}  {:11}  {:{length}}'.format(
+          'LINK', 'SEED', 'LEECH', 'RATIO',
+          'SIZE', 'UPLOAD', 'NAME', length=columns),
+          color='header')
 
     for m, magnet in enumerate(mags):
         no_seeders = int(magnet[1])
@@ -298,16 +299,17 @@ def print_search_results(mags, sizes, uploaded):
         try:
             ratio = no_seeders / no_leechers
         except ZeroDivisionError:
-            ratio = 0
+            ratio = float('inf')
 
         # Alternate between colors
         cur_color = 'zebra_0' if (cur_color == 'zebra_1') else 'zebra_1'
 
         torrent_name = parse.unquote(name.group(1)).replace('+', ' ')
         # enhanced print output with justified columns
-        print("%5d %6d %6d %5.1f %-11s %-11s  %-*s" % (
-            m, no_seeders, no_leechers, ratio ,sizes[m],
-            uploaded[m], columns, torrent_name), color=cur_color)
+        print('{:4}  {:5}  {:5}  {:5.1f}  {:5.1f} {:3}  {:>11}  {:{length}}'.format(
+              m, no_seeders, no_leechers, ratio, float(sizes[m][0]),
+              sizes[m][1], uploaded[m], torrent_name, length=columns),
+              color=cur_color)
 
 
 def print_descriptions(chosen_links, mags, site, identifiers):
@@ -513,14 +515,12 @@ def main():
                 elif code == 'p':
                     print_search_results(mags, sizes, uploaded)
                 elif not l:
-                    print('No links entered!')
+                    print('No links entered!', color='WARN')
                 else:
                     break
             except Exception as e:
-                print('Exception:', color="ERROR")
-                print(str(e))
+                print('Exception:', e, color='ERROR')
                 choices = ()
-                sys.exit(1)
 
     if config.getboolean('SaveToFile', 'enabled'):
         # Save to file is enabled
@@ -540,8 +540,7 @@ def main():
     else:
         # use transmission as default
         for choice in choices:
-            choice = int(choice)
-            url = mags[choice][0]
+            url = mags[int(choice)][0]
             print(url)
             if args.transmission:
                 os.system('transmission-remote --add "%s" ' % (url))

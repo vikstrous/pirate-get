@@ -32,6 +32,7 @@ import urllib.request as request
 import urllib.parse as parse
 
 from html.parser import HTMLParser
+from urllib.error import URLError
 from io import BytesIO
 
 categories = {
@@ -153,9 +154,7 @@ def print(*args, **kwargs):
         try:
             c = color_dict[kwargs.pop("color")]
             args = (c + args[0],) + args[1:] + (colorama.Style.RESET_ALL,)
-        except KeyError as e:
-            pass
-        except IndexError as e:
+        except (KeyError, IndexError):
             pass
         return builtins.print(*args, **kwargs)
     else:
@@ -166,13 +165,10 @@ def print(*args, **kwargs):
 #todo: redo this with html parser instead of regex
 def remote(args, mirror):
     res_l = []
-    try:
-        pages = int(args.pages)
-        if pages < 1:
-            raise Exception('')
-    except Exception:
-        raise Exception("Please provide an integer greater than 0"
-                        "for the number of pages to fetch.")
+    pages = int(args.pages)
+    if pages < 1:
+        raise ValueError("Please provide an integer greater than 0 "
+                         "for the number of pages to fetch.")
 
     if str(args.category) in categories.values():
         category = args.category
@@ -216,7 +212,7 @@ def remote(args, mirror):
 
             req = request.Request(mirror + path)
             req.add_header('Accept-encoding', 'gzip')
-            f = request.urlopen(req)
+            f = request.urlopen(req, timeout=2)
             if f.info().get('Content-Encoding') == 'gzip':
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))
             res = f.read().decode('utf-8')
@@ -230,7 +226,7 @@ def remote(args, mirror):
                 # but the page didn't say there were no results.
                 # The page is probably not actually the pirate bay,
                 # so let's try another mirror
-                raise Exception("Blocked mirror detected.")
+                raise IOError("Blocked mirror detected.")
 
             # get sizes as well and substitute the &nbsp; character
             sizes.extend([match.replace("&nbsp;", " ")
@@ -438,29 +434,28 @@ def main():
     if args.database:
         mags = local(args)
     else:
-        mirrors = ["https://pirateproxy.sx"]
+        mirrors = ["http://thepiratebay.se"]
         try:
             opener = request.build_opener(NoRedirection)
-            f = opener.open("https://proxybay.info/list.txt")
+            f = opener.open("https://proxybay.info/list.txt", timeout=5)
             if f.getcode() != 200:
                 raise IOError("The pirate bay responded with an error.")
-            res = f.read().decode('utf8')
-            mirrors.append(res.split("\n")[3:])
+            res = f.read().decode('utf-8')
+            mirrors.extend(res.split("\n")[3:])
         except IOError:
             print("Could not fetch additional mirrors", color="WARN")
         for mirror in mirrors:
             try:
-                print("Trying " + mirror)
+                print("Trying", mirror, end="... ")
                 mags, sizes, uploaded, identifiers = remote(args, mirror)
                 site = mirror
+                print("Ok", color="alt")
                 break
-            except Exception as e:
-                print(format(e))
-                print("Could not contact", mirror, color="WARN")
-
+            except URLError:
+                print("Failed", color="WARN")
 
     if not mags or len(mags) == 0:
-        print("no results")
+        print("No results")
         return
 
     print_search_results(mags, sizes, uploaded)

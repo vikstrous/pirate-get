@@ -282,7 +282,7 @@ def config_to_load():
 
 # enhanced print output with column titles
 def print_search_results(mags, sizes, uploaded):
-    columns = int(os.popen('stty size', 'r').read().split()[1]) - 55
+    columns = int(os.popen('stty size', 'r').read().split()[1]) - 52
     cur_color = 'zebra_0'
 
     print('{:>4}  {:>5}  {:>5}  {:>5}  {:9}  {:11}  {:{length}}'.format(
@@ -306,9 +306,12 @@ def print_search_results(mags, sizes, uploaded):
 
         torrent_name = parse.unquote(name.group(1)).replace('+', ' ')
         # enhanced print output with justified columns
-        print('{:4}  {:5}  {:5}  {:5.1f}  {:5.1f} {:3}  {:>11}  {:{length}}'.format(
-              m, no_seeders, no_leechers, ratio, float(sizes[m][0]),
-              sizes[m][1], uploaded[m], torrent_name, length=columns),
+        print('{:4}  {:5}  {:5}  {:5.1f}  {:5.1f} {:3}'
+              '  {:<11}  {:{length}}'.format(m, no_seeders, no_leechers,
+                                             ratio, float(sizes[m][0]),
+                                             sizes[m][1], uploaded[m],
+                                             torrent_name[:columns],
+                                             length=columns),
               color=cur_color)
 
 

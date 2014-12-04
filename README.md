@@ -1,28 +1,26 @@
 # pirate-get
-
 pirate-get is a convenient command line tool (inspired by APT) to speed up your trip to the Pirate Bay and get your completely legal torrents more quickly.
 
-Tested on Arch Linux mostly. It should work on any other Linux too. Let me know if it doesn't. Also tested on OSX (works fine on yosemite) `--local` option hasn't been tested recently.
-
+Tested on Arch Linux mostly. It should work on any other Linux too. Let me know if it doesn't.  
+Also tested on OSX (works fine on yosemite) `--local` option hasn't been tested recently.
 
 ## Installation
 Make sure you have python 3 installed.
 Requires `colorama` for colored output.
 
-If you're using Arch Linux there's a package avalaible at the AUR:
-https://aur.archlinux.org/packages/pirate-get-git/
+Run `./install`
 
 ## Usage
-See `pirate-get -h` for help
+See `pirate-get -h` for help.
+
+Watch [this](http://showterm.io/d6f7a0c2a5de1da9ea317) for an example usage.
+
 
 ## Configuration file
 You can use a file to override pirate-get's default settings.  
-Default is `$XDG_CONFIG_HOME/pirate-get`. If it does not exist then
-`$HOME/.config/pirate-get`.
-
+Default is `$XDG_CONFIG_HOME/pirate-get`. If it does not exist then `$HOME/.config/pirate-get`.
 
 ### SaveToFile
-
 **Currently this is the only way to save magnet urls to a file**
 
 A config file would look something like:

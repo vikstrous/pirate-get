@@ -33,6 +33,7 @@ import urllib.parse as parse
 
 from html.parser import HTMLParser
 from urllib.error import URLError
+from socket import timeout
 from io import BytesIO
 
 categories = {
@@ -106,7 +107,7 @@ class NoRedirection(request.HTTPErrorProcessor):
 
 
 # create a subclass and override the handler methods
-class MyHTMLParser(HTMLParser):
+class BayParser(HTMLParser):
     title = ''
     q = ''
     state = 'looking'
@@ -185,7 +186,6 @@ def remote(args, mirror):
     else:
         sort = '99'
         print('Invalid sort ignored', color='WARN')
-
     # Catch the Ctrl-C exception and exit cleanly
     try:
         sizes = []
@@ -221,7 +221,7 @@ def remote(args, mirror):
 
             # check for a blocked mirror
             no_results = re.search(r'"No hits\.', res)
-            if found == [] and not no_results is None:
+            if found == [] and no_results is None:
                 # Contradiction - we found no results,
                 # but the page didn't say there were no results.
                 # The page is probably not actually the pirate bay,
@@ -263,13 +263,11 @@ def remote(args, mirror):
     return res_l, sizes, uploaded, identifiers
 
 
-def local(args):
-    xml_str = ''
-    with open(args.database, 'r') as f:
-        xml_str += f.read()
-    htmlparser = MyHTMLParser(args.q)
-    htmlparser.feed(xml_str)
-    return htmlparser.results
+def local(db, search):
+    xml = open(db).read()
+    parser = BaParser(search)
+    parser.feed(xml)
+    return parser.results
 
 
 # load user options, to override default ones
@@ -405,7 +403,7 @@ def main():
     parser.add_argument('--custom', dest='command',
                         help='call custom command, %%s will be replaced with'
                                                                     'the url')
-    parser.add_argument('--local', dest='database',
+    parser.add_argument('-L', '--local', dest='database',
                         help='an xml file containing the Pirate Bay database')
     parser.add_argument('-p', dest='pages', default=1,
                         help="the number of pages to fetch (doesn't work with"
@@ -436,7 +434,7 @@ def main():
         return
 
     if args.database:
-        mags = local(args)
+        mags = local(args.database, args.search)
     else:
         mags, mirrors = [], ['http://thepiratebay.se']
         try:
@@ -444,10 +442,11 @@ def main():
             f = opener.open('https://proxybay.info/list.txt', timeout=5)
             if f.getcode() != 200:
                 raise IOError('The pirate bay responded with an error.')
-            res = f.read().decode('utf-8')
-            mirrors.extend(res.split('\n')[3:])
+            mirrors.extend([i.decode('utf-8').strip() 
+                            for i in f.readlines()][3:])
         except IOError:
             print('Could not fetch additional mirrors', color='WARN')
+        print(*mirrors, sep="\n")
         for mirror in mirrors:
             try:
                 print('Trying', mirror, end='... ')
@@ -455,8 +454,11 @@ def main():
                 site = mirror
                 print('Ok', color='alt')
                 break
-            except URLError:
+            except (URLError, IOError, ValueError, timeout) as e:
                 print('Failed', color='WARN')
+        else:
+          print('No available mirrors :(', color='WARN')
+          return
 
     if not mags:
         print('No results')

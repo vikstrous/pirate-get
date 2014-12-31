@@ -7,7 +7,7 @@ Tested on Arch Linux mostly. It should work on any other Linux too. Let me know 
 
 ## Installation
 
-Make sure you have python 2 installed.
+Make sure you have python 2 and pip installed.
 
 Run install.sh
 

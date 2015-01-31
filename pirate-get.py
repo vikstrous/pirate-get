@@ -36,6 +36,8 @@ from urllib.error import URLError
 from socket import timeout
 from io import BytesIO
 
+headers = {'User-Agent': 'pirate get'}
+
 categories = {
     'All': 0,
     'Applications': 300,
@@ -210,9 +212,9 @@ def remote(args, mirror):
                                                 page, sort,
                                                 category))
 
-            req = request.Request(mirror + path)
+            req = request.Request(mirror + path, headers=headers)
             req.add_header('Accept-encoding', 'gzip')
-            f = request.urlopen(req, timeout=2)
+            f = request.urlopen(req, timeout=5)
             if f.info().get('Content-Encoding') == 'gzip':
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))
             res = f.read().decode('utf-8')
@@ -317,7 +319,7 @@ def print_descriptions(chosen_links, mags, site, identifiers):
     for link in chosen_links:
         link = int(link)
         path = '/torrent/%s/' % identifiers[link]
-        req = request.Request(site + path)
+        req = request.Request(site + path, headers=headers)
         req.add_header('Accept-encoding', 'gzip')
         f = request.urlopen(req)
 
@@ -341,7 +343,7 @@ def print_fileLists(chosen_links, mags, site, identifiers):
     for link in chosen_links:
         path = '/ajax_details_filelist.php'
         query = '?id=' + identifiers[int(link)]
-        req = request.Request(site + path + query)
+        req = request.Request(site + path + query, headers=headers)
         req.add_header('Accept-encoding', 'gzip')
         f = request.urlopen(req)
 
@@ -436,7 +438,7 @@ def main():
     if args.database:
         mags = local(args.database, args.search)
     else:
-        mags, mirrors = [], ['http://thepiratebay.se']
+        mags, mirrors = [], ['https://thepiratebay.se']
         try:
             opener = request.build_opener(NoRedirection)
             f = opener.open('https://proxybay.info/list.txt', timeout=5)

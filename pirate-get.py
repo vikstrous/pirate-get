@@ -420,7 +420,6 @@ def main():
                         action='store_false', default=True,
                         help='disable colored output')
     args = parser.parse_args()
-
     if args.list_categories:
         cur_color = 'zebra_0'
         for key, value in sorted(categories.items()) :
@@ -448,7 +447,6 @@ def main():
                             for i in f.readlines()][3:])
         except IOError:
             print('Could not fetch additional mirrors', color='WARN')
-        print(*mirrors, sep="\n")
         for mirror in mirrors:
             try:
                 print('Trying', mirror, end='... ')

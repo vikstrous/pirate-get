@@ -266,9 +266,9 @@ def remote(args, mirror):
 
 
 def local(db, search):
-    xml = open(db).read()
-    parser = BaParser(search)
-    parser.feed(xml)
+    xml = open(db).readlines()
+    parser = BayParser(' '.join(search))
+    parser.feed(''.join(xml))
     return parser.results
 
 

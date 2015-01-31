@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2014, Viktor Stanchev and contributors
+# Copyright 2015, Viktor Stanchev and contributors
 #
 # This file is part of pirate-get.
 #

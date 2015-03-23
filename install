@@ -1,3 +1,32 @@
 #!/bin/sh
-cp $(dirname $0)/pirate-get.py /usr/local/bin/pirate-get
-chmod +x /usr/local/bin/pirate-get
+set -e
+
+TMP=$(mktemp pirate-get-XXXXXX)
+
+{
+  if [ $(which python3) ]
+  then
+    python='python3'
+  else
+    python='python'
+  fi
+
+  if [ $(which pip3) ]
+  then
+    pip='pip3'
+  else
+    pip='pip'
+  fi
+
+  echo "#!/usr/bin/env $python" > "$TMP" &&
+
+  sed 1d $(dirname $0)/pirate-get.py >> "$TMP"
+
+  cp "$TMP" /usr/bin/pirate-get &&
+  chmod +x /usr/bin/pirate-get &&
+  chmod 755 /usr/bin/pirate-get &&
+
+  $pip install -r requirements.txt &&
+
+  rm $TMP
+} || rm $TMP

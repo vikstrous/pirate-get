@@ -145,22 +145,23 @@ class BayParser(HTMLParser):
 
 def print(*args, **kwargs):
     if kwargs.get('color', False):
-        import colorama
-        colorama.init()
-        color_dict = {
-            'default': '',
-            'header':  colorama.Back.BLACK + colorama.Fore.WHITE,
-            'alt':     colorama.Fore.YELLOW,
-            'zebra_0': '',
-            'zebra_1': colorama.Fore.BLUE,
-            'WARN':    colorama.Fore.MAGENTA,
-            'ERROR':   colorama.Fore.RED}
-
         try:
+            import colorama
+            colorama.init()
+            color_dict = {
+                'default': '',
+                'header':  colorama.Back.BLACK + colorama.Fore.WHITE,
+                'alt':     colorama.Fore.YELLOW,
+                'zebra_0': '',
+                'zebra_1': colorama.Fore.BLUE,
+                'WARN':    colorama.Fore.MAGENTA,
+                'ERROR':   colorama.Fore.RED}
+
             c = color_dict[kwargs.pop('color')]
             args = (c + args[0],) + args[1:] + (colorama.Style.RESET_ALL,)
-        except (KeyError, IndexError):
+        except (KeyError, IndexError, ImportError):
             pass
+        kwargs.pop('color', None)
         return builtins.print(*args, **kwargs)
     else:
         kwargs.pop('color', None)

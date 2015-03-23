@@ -1,2 +1,2 @@
 #!/bin/sh
-rm /usr/local/bin/pirate-get
+rm /usr/bin/pirate-get

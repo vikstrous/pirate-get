@@ -196,13 +196,13 @@ def remote(args, mirror):
         for page in range(pages):
             if args.browse:
                 path = '/browse/'
-                if(category == '0'):
-                    category = '100'
+                if(category == 0):
+                    category = 100
                 path = '/browse/' + '/'.join(str(i) for i in (
                                             category, page, sort))
             elif len(args.search) == 0:
                 path = '/top/48h' if args.recent else '/top/'
-                if(category == '0'):
+                if(category == 0):
                     path += 'all'
                 else:
                     path += str(category)

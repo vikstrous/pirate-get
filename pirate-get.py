@@ -36,6 +36,8 @@ from urllib.error import URLError
 from socket import timeout
 from io import BytesIO
 
+default_timeout = 10
+
 headers = {'User-Agent': 'pirate get'}
 
 categories = {
@@ -214,7 +216,7 @@ def remote(args, mirror):
 
             req = request.Request(mirror + path, headers=headers)
             req.add_header('Accept-encoding', 'gzip')
-            f = request.urlopen(req, timeout=5)
+            f = request.urlopen(req, timeout=default_timeout)
             if f.info().get('Content-Encoding') == 'gzip':
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))
             res = f.read().decode('utf-8')
@@ -321,7 +323,7 @@ def print_descriptions(chosen_links, mags, site, identifiers):
         path = '/torrent/%s/' % identifiers[link]
         req = request.Request(site + path, headers=headers)
         req.add_header('Accept-encoding', 'gzip')
-        f = request.urlopen(req)
+        f = request.urlopen(req, timeout=default_timeout)
 
         if f.info().get('Content-Encoding') == 'gzip':
             f = gzip.GzipFile(fileobj=BytesIO(f.read()))
@@ -345,7 +347,7 @@ def print_fileLists(chosen_links, mags, site, identifiers):
         query = '?id=' + identifiers[int(link)]
         req = request.Request(site + path + query, headers=headers)
         req.add_header('Accept-encoding', 'gzip')
-        f = request.urlopen(req)
+        f = request.urlopen(req, timeout=default_timeout)
 
         if f.info().get('Content-Encoding') == 'gzip':
             f = gzip.GzipFile(fileobj=BytesIO(f.read()))
@@ -440,7 +442,7 @@ def main():
         mags, mirrors = [], ['https://thepiratebay.se']
         try:
             opener = request.build_opener(NoRedirection)
-            f = opener.open('https://proxybay.info/list.txt', timeout=5)
+            f = opener.open('https://proxybay.info/list.txt', timeout=default_timeout)
             if f.getcode() != 200:
                 raise IOError('The pirate bay responded with an error.')
             mirrors.extend([i.decode('utf-8').strip() 

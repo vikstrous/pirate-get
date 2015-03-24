@@ -380,7 +380,8 @@ def main():
     # default options so we don't die later
     config.add_section('SaveToFile')
     config.set('SaveToFile', 'enabled', 'false')
-    config.set('SaveToFile', 'directory', '~/downloads/pirate-get/')
+    config.set('SaveToFile', 'directory',
+               os.path.expanduser('~/downloads/pirate-get/'))
 
     config.read([config_to_load()])
 

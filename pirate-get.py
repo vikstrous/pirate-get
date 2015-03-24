@@ -33,7 +33,7 @@ import urllib.request as request
 import urllib.parse as parse
 
 from html.parser import HTMLParser
-from urllib.error import URLError
+from urllib.error import URLError, HTTPError
 from socket import timeout
 from io import BytesIO
 
@@ -284,6 +284,22 @@ def config_to_load():
         return os.path.expanduser('~/.config/pirate-get')
 
 
+def get_torrent(info_hash):
+    url = 'http://torcache.net/torrent/{:X}.torrent'
+    req = request.Request(url.format(info_hash))
+    req.add_header('Accept-encoding', 'gzip')
+    
+    torrent = request.urlopen(req, timeout=default_timeout)
+    if torrent.info().get('Content-Encoding') == 'gzip':
+        torrent = gzip.GzipFile(fileobj=BytesIO(torrent.read()))
+
+    return torrent.read()
+
+
+def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
+
+
 # enhanced print output with column titles
 def print_search_results(mags, sizes, uploaded):
     columns = int(os.popen('stty size', 'r').read().split()[1]) - 52
@@ -369,8 +385,20 @@ def print_file_lists(chosen_links, mags, site, identifiers):
             cur_color = 'zebra_0' if (cur_color == 'zebra_1') else 'zebra_1'
 
 
-def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
+def save_torrents(chosen_links, mags, site, identifiers, folder):
+    for link in chosen_links:
+        magnet = mags[int(link)][0]
+        name = re.search(r'dn=([^\&]*)', magnet)
+        torrent_name = parse.unquote(name.group(1)).replace('+', ' ')
+        info_hash = int(re.search(r'btih:([a-f0-9]{40})', magnet).group(1), 16)
+        file = os.path.join(folder, torrent_name + '.torrent')
+
+        try:
+            torrent = get_torrent(info_hash)
+            open(file,'wb').write(torrent)
+            print('Saved {:X} in {}'.format(info_hash, file))
+        except HTTPError:
+            print('There is no cached file for this torrent :(', color='ERROR')
 
 
 def main():
@@ -459,7 +487,7 @@ def main():
                             timeout=default_timeout)
             if f.getcode() != 200:
                 raise IOError('The pirate bay responded with an error.')
-            mirrors.extend([i.decode('utf-8').strip() 
+            mirrors.extend([i.decode('utf-8').strip()
                             for i in f.readlines()][3:])
         except IOError:
             print('Could not fetch additional mirrors', color='WARN')
@@ -523,6 +551,7 @@ def main():
                 if code == 'h':
                     print('Options:',
                           '<links>: Download selected torrents',
+                          '[s<links>]: Save torrent file',
                           '[d<links>]: Get descriptions',
                           '[f<links>]: Get files',
                           '[p] Print search results',
@@ -536,6 +565,9 @@ def main():
                     print_file_lists(choices, mags, site, identifiers)
                 elif code == 'p':
                     print_search_results(mags, sizes, uploaded)
+                elif code == 's':
+                    downloads = config.get('SaveToFile', 'directory')
+                    save_torrents(choices, mags, site, identifiers, downloads)
                 elif not l:
                     print('No links entered!', color='WARN')
                 else:

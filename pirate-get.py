@@ -385,7 +385,7 @@ def print_file_lists(chosen_links, mags, site, identifiers):
             cur_color = 'zebra_0' if (cur_color == 'zebra_1') else 'zebra_1'
 
 
-def save_torrents(chosen_links, mags, site, identifiers, folder):
+def save_torrents(chosen_links, mags, folder):
     for link in chosen_links:
         magnet = mags[int(link)][0]
         name = re.search(r'dn=([^\&]*)', magnet)
@@ -567,7 +567,7 @@ def main():
                     print_search_results(mags, sizes, uploaded)
                 elif code == 's':
                     downloads = config.get('SaveToFile', 'directory')
-                    save_torrents(choices, mags, site, identifiers, downloads)
+                    save_torrents(choices, mags, downloads)
                 elif not l:
                     print('No links entered!', color='WARN')
                 else:

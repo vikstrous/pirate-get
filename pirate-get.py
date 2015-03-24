@@ -427,11 +427,12 @@ def main():
     args = parser.parse_args()
 
     if args.transmission:
-        with open('/dev/null') as dn:
-            ret = subprocess.call(['transmission-remote', '-l'], stdout=dn, stderr=dn)
-            if ret != 0:
-                print('Transmission is not running.')
-                return
+        ret = subprocess.call(['transmission-remote', '-l'],
+                              stdout=subprocess.DEVNULL,
+                              stderr=subprocess.DEVNULL)
+        if ret != 0:
+            print('Transmission is not running.')
+            return
 
     if args.list_categories:
         cur_color = 'zebra_0'

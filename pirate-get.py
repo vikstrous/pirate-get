@@ -26,6 +26,7 @@ import gzip
 import configparser
 import argparse
 import builtins
+import subprocess
 
 import webbrowser
 import urllib.request as request
@@ -423,6 +424,14 @@ def main():
                         action='store_false', default=True,
                         help='disable colored output')
     args = parser.parse_args()
+
+    if args.transmission:
+        with open('/dev/null') as dn:
+            ret = subprocess.call(['transmission-remote', '-l'], stdout=dn, stderr=dn)
+            if ret != 0:
+                print('Transmission is not running.')
+                return
+
     if args.list_categories:
         cur_color = 'zebra_0'
         for key, value in sorted(categories.items()) :

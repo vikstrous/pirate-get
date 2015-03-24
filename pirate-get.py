@@ -340,10 +340,11 @@ def print_descriptions(chosen_links, mags, site, identifiers):
         desc = re.sub(r'<a href="\s*([^"]+?)\s*"[^>]*>(\s*)([^<]+?)(\s*'
                       r')</a>', r'\2[\3](\1)\4', desc)
 
-        print('Description for "' + torrent_name + '":', color='zebra_1')
+        print('Description for "%s":' % torrent_name, color='zebra_1')
         print(desc, color='zebra_0')
 
-def print_fileLists(chosen_links, mags, site, identifiers):
+
+def print_file_lists(chosen_links, mags, site, identifiers):
     for link in chosen_links:
         path = '/ajax_details_filelist.php'
         query = '?id=' + identifiers[int(link)]
@@ -360,7 +361,7 @@ def print_fileLists(chosen_links, mags, site, identifiers):
         name = re.search(r'dn=([^\&]*)', mags[int(link)][0])
         torrent_name = parse.unquote(name.group(1)).replace('+', ' ')
 
-        print('Files in "' + torrent_name + '":', color='zebra_1')
+        print('Files in "%s":' % torrent_name, color='zebra_1')
         cur_color = 'zebra_0'
 
         for f in files:
@@ -452,7 +453,8 @@ def main():
         mags, mirrors = [], ['https://thepiratebay.se']
         try:
             opener = request.build_opener(NoRedirection)
-            f = opener.open('https://proxybay.info/list.txt', timeout=default_timeout)
+            f = opener.open('https://proxybay.info/list.txt',
+                            timeout=default_timeout)
             if f.getcode() != 200:
                 raise IOError('The pirate bay responded with an error.')
             mirrors.extend([i.decode('utf-8').strip() 
@@ -497,8 +499,9 @@ def main():
 
             try:
                 # Very permissive handling
-                # Check for any occurances or d, f, p or q
-                cmd_code_match = re.search(r'([hdfpq])', l, flags=re.IGNORECASE)
+                # Check for any occurances or d, f, p s, or q
+                cmd_code_match = re.search(r'([hdfpsq])', l,
+                                           flags=re.IGNORECASE)
                 if cmd_code_match:
                     code = cmd_code_match.group(0).lower()
                 else:
@@ -528,7 +531,7 @@ def main():
                 elif code == 'd':
                     print_descriptions(choices, mags, site, identifiers)
                 elif code == 'f':
-                    print_fileLists(choices, mags, site, identifiers)
+                    print_file_lists(choices, mags, site, identifiers)
                 elif code == 'p':
                     print_search_results(mags, sizes, uploaded)
                 elif not l:

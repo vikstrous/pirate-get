@@ -480,7 +480,7 @@ def main():
     if args.database:
         mags = local(args.database, args.search)
     else:
-        mags, mirrors = [], ['https://thepiratebay.se']
+        mags, mirrors = [], []
         try:
             opener = request.build_opener(NoRedirection)
             f = opener.open('https://proxybay.info/list.txt',

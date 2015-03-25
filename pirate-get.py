@@ -36,6 +36,7 @@ from html.parser import HTMLParser
 from urllib.error import URLError, HTTPError
 from socket import timeout
 from io import BytesIO
+colored_output = True
 
 default_timeout = 10
 
@@ -145,7 +146,7 @@ class BayParser(HTMLParser):
 
 
 def print(*args, **kwargs):
-    if kwargs.get('color', False):
+    if kwargs.get('color', False) and colored_output:
         try:
             import colorama
             colorama.init()
@@ -455,7 +456,12 @@ def main():
                         help='disable colored output')
     args = parser.parse_args()
 
-    if args.transmission:
+    if (config.getboolean('Misc', 'colors') and not args.color
+        or not config.getboolean('Misc', 'colors')):
+        global colored_output
+        colored_output = False
+
+    if args.transmission or config.getboolean('Misc', 'transmission'):
         ret = subprocess.call(['transmission-remote', '-l'],
                               stdout=subprocess.DEVNULL,
                               stderr=subprocess.DEVNULL)
@@ -466,14 +472,14 @@ def main():
     if args.list_categories:
         cur_color = 'zebra_0'
         for key, value in sorted(categories.items()) :
-            cur_color = 'zebra_0' if (cur_color == 'zebra_1') else 'zebra_1'
+            cur_color = 'zebra_0' if cur_color == 'zebra_1' else 'zebra_1'
             print(str(value), '\t', key, sep='', color=cur_color)
         return
 
     if args.list_sorts:
         cur_color = 'zebra_0'
         for key, value in sorted(sorts.items()):
-            cur_color = 'zebra_0' if (cur_color == 'zebra_1') else 'zebra_1'
+            cur_color = 'zebra_0' if cur_color == 'zebra_1' else 'zebra_1'
             print(str(value), '\t', key, sep='', color=cur_color)
         return
 

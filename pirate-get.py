@@ -36,6 +36,8 @@ from html.parser import HTMLParser
 from urllib.error import URLError, HTTPError
 from socket import timeout
 from io import BytesIO
+from os.path import expanduser, expandvars
+
 colored_output = True
 
 default_timeout = 10
@@ -277,12 +279,39 @@ def local(db, search):
     return parser.results
 
 
-# load user options, to override default ones
-def config_to_load():
-    if os.path.isfile(os.path.expandvars('$XDG_CONFIG_HOME/pirate-get')):
-        return os.path.expandvars('$XDG_CONFIG_HOME/pirate-get')
-    else:
-        return os.path.expanduser('~/.config/pirate-get')
+def load_config():
+    config = configparser.ConfigParser()
+
+    # default options
+    config.add_section('Save')
+    config.set('Save', 'magnets', 'false')
+    config.set('Save', 'torrents', 'false')
+    config.set('Save', 'directory', expanduser('~/downloads/pirate-get'))
+
+    config.add_section('LocalDB')
+    config.set('LocalDB', 'enabled', 'false')
+    config.set('LocalDB', 'path', expanduser('~/downloads/pirate-get/db'))
+
+    config.add_section('Misc')    
+    config.set('Misc', 'openCommand', '')
+    config.set('Misc', 'transmission', 'false')
+    config.set('Misc', 'colors', 'true')
+
+    # user-defined config files
+    main = expandvars('$XDG_CONFIG_HOME/pirate-get')
+    alt = expanduser('~/.config/pirate-get')
+
+    # read config file
+    config.read([main] if os.path.isfile(main) else [alt])
+
+    # expand env variables
+    directory = expanduser(expandvars(config.get('Save', 'Directory')))
+    path = expanduser(expandvars(config.get('LocalDB', 'path')))
+
+    config.set('Save', 'Directory', directory)
+    config.set('LocalDB', 'path', path)
+
+    return config
 
 
 def get_torrent(info_hash):
@@ -402,17 +431,18 @@ def save_torrents(chosen_links, mags, folder):
             print('There is no cached file for this torrent :(', color='ERROR')
 
 
+def save_magnets(chosen_links, mags, folder):
+    filename = os.path.join(folder, id_generator() + '.magnets')
+    print('Saving magnets to', filename)
+
+    with open(filename, 'w') as f:
+        for link in chosen_links:
+            url = mags[int(link)][0]
+            f.write(url + '\n')
+
+
 def main():
-    # new ConfigParser
-    config = configparser.ConfigParser()
-
-    # default options so we don't die later
-    config.add_section('SaveToFile')
-    config.set('SaveToFile', 'enabled', 'false')
-    config.set('SaveToFile', 'directory',
-               os.path.expanduser('~/downloads/pirate-get/'))
-
-    config.read([config_to_load()])
+    config = load_config()
 
     parser = argparse.ArgumentParser(
                 description='finds and downloads torrents from the Pirate Bay')
@@ -434,9 +464,6 @@ def main():
     parser.add_argument('--list_sorts', dest='list_sorts',
                         action='store_true',
                         help='list Sortable Types')
-    parser.add_argument('-t', dest='transmission',
-                         action='store_true',
-                         help='call transmission-remote to start the download')
     parser.add_argument('--custom', dest='command',
                         help='call custom command, %%s will be replaced with'
                                                                     'the url')
@@ -451,6 +478,15 @@ def main():
     parser.add_argument('-a', dest='download_all',
                         action='store_true',
                         help='download all results')
+    parser.add_argument('-t', '--transmission',
+                         action='store_true',
+                         help='open magnets with transmission-remote')
+    parser.add_argument('-M', '--save-magnets',
+                        action='store_true', default=False,
+                        help='save magnets links into a file')
+    parser.add_argument('-T', '--save-torrents',
+                        action='store_true', default=False,
+                        help='save torrent files')
     parser.add_argument('--color', dest='color',
                         action='store_false', default=True,
                         help='disable colored output')
@@ -483,8 +519,13 @@ def main():
             print(str(value), '\t', key, sep='', color=cur_color)
         return
 
-    if args.database:
-        mags = local(args.database, args.search)
+    if args.database or config.getboolean('LocalDB', 'enabled'):
+        if args.database:
+            path = args.database
+        else:
+            path = config.get('LocalDB', 'path')
+        mags = local(path, args.search)
+
     else:
         mags, mirrors = [], []
         try:
@@ -535,8 +576,8 @@ def main():
 
             try:
                 # Very permissive handling
-                # Check for any occurances or d, f, p s, or q
-                cmd_code_match = re.search(r'([hdfpsq])', l,
+                # Check for any occurances or d, f, p, t, m, or q
+                cmd_code_match = re.search(r'([hdfpmtq])', l,
                                            flags=re.IGNORECASE)
                 if cmd_code_match:
                     code = cmd_code_match.group(0).lower()
@@ -557,7 +598,8 @@ def main():
                 if code == 'h':
                     print('Options:',
                           '<links>: Download selected torrents',
-                          '[s<links>]: Save torrent file',
+                          '[m<links>]: Save magnets in a file',
+                          '[t<links>]: Save .torrent files',
                           '[d<links>]: Get descriptions',
                           '[f<links>]: Get files',
                           '[p] Print search results',
@@ -571,9 +613,12 @@ def main():
                     print_file_lists(choices, mags, site, identifiers)
                 elif code == 'p':
                     print_search_results(mags, sizes, uploaded)
-                elif code == 's':
-                    downloads = config.get('SaveToFile', 'directory')
-                    save_torrents(choices, mags, downloads)
+                elif code == 'm':
+                    save_magnets(choices, mags,
+                                  config.get('Save', 'directory'))
+                elif code == 't':
+                    save_torrents(choices, mags,
+                                  config.get('Save', 'directory'))
                 elif not l:
                     print('No links entered!', color='WARN')
                 else:
@@ -582,33 +627,36 @@ def main():
                 print('Exception:', e, color='ERROR')
                 choices = ()
 
-    if config.getboolean('SaveToFile', 'enabled'):
-        # Save to file is enabled
-        fileName = os.path.expanduser(
-                        config.get('SaveToFile','directory')
-                        ) + id_generator() + '.magnet'
+    save_to_file = False
 
-        print('Saving to File:', fileName)
+    if args.save_magnets or config.getboolean('Save', 'magnets'):
+        print('Saving selected magnets...')
+        save_magnets(choices, mags, config.get('Save', 'directory'))
+        save_to_file = True
 
-        f = open(fileName, 'w')
-        for choice in choices:
-            choice = int(choice)
-            url = mags[choice][0]
-            f.write(url + '\n')
-        f.close()
+    if args.save_torrents or config.getboolean('Save', 'torrents'):
+        print('Saving selected torrents...')
+        save_torrents(choices, mags, config.get('Save', 'directory'))
+        save_to_file = True
 
-    else:
-        # use transmission as default
-        for choice in choices:
-            url = mags[int(choice)][0]
-            print(url)
-            if args.transmission:
-                os.system('transmission-remote --add "%s" ' % (url))
-                os.system('transmission-remote -l')
-            elif args.command:
-                os.system(args.command % (url))
-            else:
-                webbrowser.open(url)
+    if save_to_file:
+        return
+
+    for choice in choices:
+        url = mags[int(choice)][0]
+
+        if args.transmission or config.getboolean('Misc', 'transmission'):
+            os.system('transmission-remote --add "%s" ' % url)
+            os.system('transmission-remote -l')
+        
+        elif args.command or config.get('Misc', 'openCommand'):
+            command = config.get('Misc', 'openCommand')
+            if args.command:
+                command = args.command
+            os.system(command % url)
+        
+        else:
+            webbrowser.open(url)
 
 
 if __name__ == '__main__':

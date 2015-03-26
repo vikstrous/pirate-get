@@ -19,7 +19,6 @@
 
 import os
 import sys
-import random
 import re
 import string
 import gzip
@@ -326,10 +325,6 @@ def get_torrent(info_hash):
     return torrent.read()
 
 
-def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
-
-
 # enhanced print output with column titles
 def print_search_results(mags, sizes, uploaded):
     columns = int(os.popen('stty size', 'r').read().split()[1]) - 52
@@ -432,13 +427,16 @@ def save_torrents(chosen_links, mags, folder):
 
 
 def save_magnets(chosen_links, mags, folder):
-    filename = os.path.join(folder, id_generator() + '.magnets')
-    print('Saving magnets to', filename)
+    for link in chosen_links:
+        magnet = mags[int(link)][0]
+        name = re.search(r'dn=([^\&]*)', magnet)
+        torrent_name = parse.unquote(name.group(1)).replace('+', ' ')
+        info_hash = int(re.search(r'btih:([a-f0-9]{40})', magnet).group(1), 16)
+        file = os.path.join(folder,  torrent_name + '.magnet')
 
-    with open(filename, 'w') as f:
-        for link in chosen_links:
-            url = mags[int(link)][0]
-            f.write(url + '\n')
+        print('Saved {:X} in {}'.format(info_hash, file))
+        with open(file, 'w') as f:
+            f.write(magnet + '\n')
 
 
 def main():
@@ -483,7 +481,7 @@ def main():
                          help='open magnets with transmission-remote')
     parser.add_argument('-M', '--save-magnets',
                         action='store_true', default=False,
-                        help='save magnets links into a file')
+                        help='save magnets links as files')
     parser.add_argument('-T', '--save-torrents',
                         action='store_true', default=False,
                         help='save torrent files')
@@ -598,7 +596,7 @@ def main():
                 if code == 'h':
                     print('Options:',
                           '<links>: Download selected torrents',
-                          '[m<links>]: Save magnets in a file',
+                          '[m<links>]: Save magnets as files',
                           '[t<links>]: Save .torrent files',
                           '[d<links>]: Get descriptions',
                           '[f<links>]: Get files',
@@ -648,13 +646,13 @@ def main():
         if args.transmission or config.getboolean('Misc', 'transmission'):
             os.system('transmission-remote --add "%s" ' % url)
             os.system('transmission-remote -l')
-        
+
         elif args.command or config.get('Misc', 'openCommand'):
             command = config.get('Misc', 'openCommand')
             if args.command:
                 command = args.command
             os.system(command % url)
-        
+
         else:
             webbrowser.open(url)
 

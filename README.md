@@ -29,7 +29,7 @@ These are the default options:
 ```INI
 [Save]
 directory = ~/downloads/pirate-get   ; directory where to save files
-magnets = false                      ; save every selected torrent as a magnet in a single file
+magnets = false                      ; save each selected magnet link in a .magnet file
 torrents = false                     ; save each selected torrent in a .torrent file
 
 [LocalDB]

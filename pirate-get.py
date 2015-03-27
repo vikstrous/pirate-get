@@ -462,31 +462,36 @@ def main():
     parser.add_argument('--list_sorts', dest='list_sorts',
                         action='store_true',
                         help='list Sortable Types')
-    parser.add_argument('--custom', dest='command',
-                        help='call custom command, %%s will be replaced with'
-                                                                    'the url')
     parser.add_argument('-L', '--local', dest='database',
                         help='an xml file containing the Pirate Bay database')
     parser.add_argument('-p', dest='pages', default=1,
-                        help="the number of pages to fetch (doesn't work with"
-                                                                    '--local)')
+                        help='the number of pages to fetch '
+                             "(doesn't work with --local)")
     parser.add_argument('-0', dest='first',
                         action='store_true',
                         help='choose the top result')
-    parser.add_argument('-a', dest='download_all',
+    parser.add_argument('-a', '--download-all',
                         action='store_true',
                         help='download all results')
     parser.add_argument('-t', '--transmission',
-                         action='store_true',
-                         help='open magnets with transmission-remote')
+                        action='store_true',
+                        help='open magnets with transmission-remote')
+    parser.add_argument('-C', '--custom', dest='command',
+                        action='store_true',
+                        help='open magnets with a custom command'
+                              ' (%%s will be replaced with the url)')
     parser.add_argument('-M', '--save-magnets',
-                        action='store_true', default=False,
+                        action='store_true',
                         help='save magnets links as files')
     parser.add_argument('-T', '--save-torrents',
-                        action='store_true', default=False,
+                        action='store_true',
                         help='save torrent files')
-    parser.add_argument('--color', dest='color',
-                        action='store_false', default=True,
+    parser.add_argument('-S', '--save-directory',
+                        type=str, metavar='DIRECTORY',
+                        help='directory where to save downloaded files'
+                             ' (if none is given $PWD will be used)')
+    parser.add_argument('--disable-colors', dest='color',
+                        action='store_false',
                         help='disable colored output')
     args = parser.parse_args()
 
@@ -494,6 +499,12 @@ def main():
         or not config.getboolean('Misc', 'colors')):
         global colored_output
         colored_output = False
+
+    if args.save_directory:
+        config.set('Save', 'directory', args.save_directory)
+    if not (args.save_directory or config.get('Save', 'directory')):
+        config.set('Save', 'directory', os.getcwd)
+
 
     if args.transmission or config.getboolean('Misc', 'transmission'):
         ret = subprocess.call(['transmission-remote', '-l'],
@@ -583,8 +594,8 @@ def main():
                     code = None
 
                 # Clean up command codes
-                # Substitute multiple consecutive spaces/commas for single comma
-                # Remove anything that isn't an integer or comma.
+                # Substitute multiple consecutive spaces/commas for single
+                # comma remove anything that isn't an integer or comma.
                 # Turn into list
                 l = re.sub(r'^[hdfp, ]*|[hdfp, ]*$', '', l)
                 l = re.sub('[ ,]+', ',', l)

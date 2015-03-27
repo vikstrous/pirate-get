@@ -1,3 +1,5 @@
+
+
 #!/usr/bin/env python
 #
 # Copyright 2015, Viktor Stanchev and contributors
@@ -285,7 +287,7 @@ def load_config():
     config.add_section('Save')
     config.set('Save', 'magnets', 'false')
     config.set('Save', 'torrents', 'false')
-    config.set('Save', 'directory', expanduser('~/downloads/pirate-get'))
+    config.set('Save', 'directory', os.getcwd())
 
     config.add_section('LocalDB')
     config.set('LocalDB', 'enabled', 'false')
@@ -502,8 +504,6 @@ def main():
 
     if args.save_directory:
         config.set('Save', 'directory', args.save_directory)
-    if not (args.save_directory or config.get('Save', 'directory')):
-        config.set('Save', 'directory', os.getcwd)
 
     if args.transmission or config.getboolean('Misc', 'transmission'):
         ret = subprocess.call(['transmission-remote', '-l'],

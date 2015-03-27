@@ -505,7 +505,6 @@ def main():
     if not (args.save_directory or config.get('Save', 'directory')):
         config.set('Save', 'directory', os.getcwd)
 
-
     if args.transmission or config.getboolean('Misc', 'transmission'):
         ret = subprocess.call(['transmission-remote', '-l'],
                               stdout=subprocess.DEVNULL,

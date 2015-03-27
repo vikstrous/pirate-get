@@ -1,5 +1,3 @@
-
-
 #!/usr/bin/env python
 #
 # Copyright 2015, Viktor Stanchev and contributors
@@ -327,39 +325,49 @@ def get_torrent(info_hash):
     return torrent.read()
 
 
-# enhanced print output with column titles
-def print_search_results(mags, sizes, uploaded):
-    columns = int(os.popen('stty size', 'r').read().split()[1]) - 52
+def print_search_results(mags, sizes, uploaded, local):
+    columns = int(os.popen('stty size', 'r').read().split()[1])
     cur_color = 'zebra_0'
 
-    print('{:>4}  {:>5}  {:>5}  {:>5}  {:9}  {:11}  {:{length}}'.format(
-          'LINK', 'SEED', 'LEECH', 'RATIO',
-          'SIZE', 'UPLOAD', 'NAME', length=columns),
-          color='header')
+    if local:
+        print('{:>4}   {:{length}}'.format(
+              'LINK', 'NAME', length=columns - 8),
+              color='header')
+    else:
+        print('{:>4}  {:>5}  {:>5}  {:>5}  {:9}  {:11}  {:{length}}'.format(
+              'LINK', 'SEED', 'LEECH', 'RATIO',
+              'SIZE', 'UPLOAD', 'NAME', length=columns - 52),
+              color='header')
 
     for m, magnet in enumerate(mags):
-        no_seeders = int(magnet[1])
-        no_leechers = int(magnet[2])
-        name = re.search(r'dn=([^\&]*)', magnet[0])
-
-        # compute the S/L ratio (Higher is better)
-        try:
-            ratio = no_seeders / no_leechers
-        except ZeroDivisionError:
-            ratio = float('inf')
-
         # Alternate between colors
-        cur_color = 'zebra_0' if (cur_color == 'zebra_1') else 'zebra_1'
+        cur_color = 'zebra_0' if cur_color == 'zebra_1' else 'zebra_1'
 
+        name = re.search(r'dn=([^\&]*)', magnet[0])
         torrent_name = parse.unquote(name.group(1)).replace('+', ' ')
+
+        if local:
+            line = '{:5}  {:{length}}'
+            content = [m, torrent_name[:columns]]
+        else:
+            no_seeders, no_leechers = map(int, magnet[1:])
+            size = float(sizes[m][0])
+            unit = sizes[m][1]
+            date = uploaded[m]
+
+            # compute the S/L ratio (Higher is better)
+            try:
+                ratio = no_seeders / no_leechers
+            except ZeroDivisionError:
+                ratio = float('inf')
+
+            line = ('{:4}  {:5}  {:5}  {:5.1f}  {:5.1f}'
+                   ' {:3}  {:<11}  {:{length}}')
+            content = [m, no_seeders, no_leechers, ratio,
+                       size, unit, date, torrent_name[:columns - 52]]
+
         # enhanced print output with justified columns
-        print('{:4}  {:5}  {:5}  {:5.1f}  {:5.1f} {:3}  '
-              '{:<11}  {:{length}}'.format(m, no_seeders, no_leechers,
-                                           ratio, float(sizes[m][0]),
-                                           sizes[m][1], uploaded[m],
-                                           torrent_name[:columns],
-                                           length=columns),
-               color=cur_color)
+        print(line.format(*content, length=columns - 52), color=cur_color)
 
 
 def print_descriptions(chosen_links, mags, site, identifiers):
@@ -533,6 +541,7 @@ def main():
         else:
             path = config.get('LocalDB', 'path')
         mags = local(path, args.search)
+        sizes, uploaded = [], []
 
     else:
         mags, mirrors = [], []
@@ -563,7 +572,7 @@ def main():
         print('No results')
         return
 
-    print_search_results(mags, sizes, uploaded)
+    print_search_results(mags, sizes, uploaded, local=args.database)
 
     if args.first:
         print('Choosing first result')

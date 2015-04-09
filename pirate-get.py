@@ -150,6 +150,9 @@ def print(*args, **kwargs):
     if kwargs.get('color', False) and colored_output:
         try:
             import colorama
+        except (ImportError):
+            pass
+        else:
             colorama.init()
             color_dict = {
                 'default': '',
@@ -162,8 +165,6 @@ def print(*args, **kwargs):
 
             c = color_dict[kwargs.pop('color')]
             args = (c + args[0],) + args[1:] + (colorama.Style.RESET_ALL,)
-        except (KeyError, IndexError, ImportError):
-            pass
         kwargs.pop('color', None)
         return builtins.print(*args, **kwargs)
     else:
@@ -430,10 +431,11 @@ def save_torrents(chosen_links, mags, folder):
 
         try:
             torrent = get_torrent(info_hash)
-            open(file,'wb').write(torrent)
-            print('Saved {:X} in {}'.format(info_hash, file))
         except HTTPError:
             print('There is no cached file for this torrent :(', color='ERROR')
+        else:
+            open(file,'wb').write(torrent)
+            print('Saved {:X} in {}'.format(info_hash, file))
 
 
 def save_magnets(chosen_links, mags, folder):
@@ -544,26 +546,29 @@ def main():
         sizes, uploaded = [], []
 
     else:
-        mags, mirrors = [], []
+        mags, mirrors = [], set(['https://thepiratebay.se'])
         try:
             opener = request.build_opener(NoRedirection)
             f = opener.open('https://proxybay.info/list.txt',
                             timeout=default_timeout)
-            if f.getcode() != 200:
-                raise IOError('The pirate bay responded with an error.')
-            mirrors.extend([i.decode('utf-8').strip()
-                            for i in f.readlines()][3:])
         except IOError:
             print('Could not fetch additional mirrors', color='WARN')
+        else:
+            if f.getcode() != 200:
+                raise IOError('The pirate bay responded with an error.')
+            mirrors.union([i.decode('utf-8').strip()
+                            for i in f.readlines()][3:])
+
         for mirror in mirrors:
             try:
                 print('Trying', mirror, end='... ')
                 mags, sizes, uploaded, identifiers = remote(args, mirror)
+            except (URLError, IOError, ValueError, timeout) as e:
+                print('Failed', color='WARN')
+            else:
                 site = mirror
                 print('Ok', color='alt')
                 break
-            except (URLError, IOError, ValueError, timeout) as e:
-                print('Failed', color='WARN')
         else:
           print('No available mirrors :(', color='WARN')
           return
@@ -583,9 +588,9 @@ def main():
     else:
         # New input loop to support different link options
         while True:
+            print("\nSelect links (Type 'h' for more options"
+                  ", 'q' to quit)", end='\b', color='alt')
             try:
-                print("\nSelect links (Type 'h' for more options"
-                      ", 'q' to quit)", end='\b', color='alt')
                 l=input(': ')
             except KeyboardInterrupt :
                 print('\nCancelled.')

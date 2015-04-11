@@ -229,7 +229,7 @@ def remote(args, mirror):
                                                      r'([^<]+)</td>', res)
 
             # check for a blocked mirror
-            no_results = re.search(r'"No hits\.', res)
+            no_results = re.search(r'No hits\. Try adding an asterisk in you search phrase\.', res)
             if found == [] and no_results is None:
                 # Contradiction - we found no results,
                 # but the page didn't say there were no results.

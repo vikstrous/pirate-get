@@ -556,7 +556,7 @@ def main():
         else:
             if f.getcode() != 200:
                 raise IOError('The pirate bay responded with an error.')
-            mirrors.union([i.decode('utf-8').strip()
+            mirrors = mirrors.union([i.decode('utf-8').strip()
                             for i in f.readlines()][3:])
 
         for mirror in mirrors:

@@ -113,6 +113,13 @@ class NoRedirection(request.HTTPErrorProcessor):
     https_response = http_response
 
 
+cmd_args_regex = '''(('[^']*'|"[^"]*"|(\\\\\\s|[^\\s])+)+ *)'''
+def parse_cmd(cmd, url):
+    ret = re.findall(cmd_args_regex, cmd)
+    ret2 = list(map(lambda x: x[0].strip(), ret))
+    ret3 = list(map(lambda x: x.replace('%s', url), ret2))
+    return ret3
+
 # create a subclass and override the handler methods
 class BayParser(HTMLParser):
     title = ''
@@ -489,7 +496,6 @@ def main():
                         action='store_true',
                         help='open magnets with transmission-remote')
     parser.add_argument('-C', '--custom', dest='command',
-                        action='store_true',
                         help='open magnets with a custom command'
                               ' (%%s will be replaced with the url)')
     parser.add_argument('-M', '--save-magnets',
@@ -675,7 +681,7 @@ def main():
             command = config.get('Misc', 'openCommand')
             if args.command:
                 command = args.command
-            os.system(command % url)
+            subprocess.call(parse_cmd(command, url), shell=False)
 
         else:
             webbrowser.open(url)

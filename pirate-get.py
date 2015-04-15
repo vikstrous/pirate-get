@@ -668,8 +668,8 @@ def main():
         url = mags[int(choice)][0]
 
         if args.transmission or config.getboolean('Misc', 'transmission'):
-            os.system('transmission-remote --add "%s" ' % url)
-            os.system('transmission-remote -l')
+            subprocess.call(['transmission-remote', '--add', url], shell=False)
+            subprocess.call(['transmission-remote', '-l'])
 
         elif args.command or config.get('Misc', 'openCommand'):
             command = config.get('Misc', 'openCommand')

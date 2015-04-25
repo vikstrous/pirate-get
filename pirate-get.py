@@ -41,7 +41,6 @@ colored_output = True
 
 default_timeout = 10
 
-headers = {'User-Agent': 'pirate get'}
 default_headers = {'User-Agent': 'pirate get'}
 
 categories = {
@@ -105,13 +104,6 @@ sorts = {
     'LeechersDsc': 9, 'LeechersAsc': 10,
     'CategoryDsc': 13, 'CategoryAsc': 14,
     'Default': 99}
-
-
-class NoRedirection(request.HTTPErrorProcessor):
-    def http_response(self, _, res):
-        return res
-
-    https_response = http_response
 
 
 # create a subclass and override the handler methods
@@ -556,9 +548,9 @@ def main():
     else:
         mags, mirrors = [], {'https://thepiratebay.se'}
         try:
-            opener = request.build_opener(NoRedirection)
-            f = opener.open('https://proxybay.info/list.txt',
-                            timeout=default_timeout)
+            req = request.Request('https://proxybay.co/list.txt',
+                                  headers=default_headers)
+            f = request.urlopen(req, timeout=default_timeout)
         except IOError:
             print('Could not fetch additional mirrors', color='WARN')
         else:

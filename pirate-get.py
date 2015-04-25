@@ -42,6 +42,7 @@ colored_output = True
 default_timeout = 10
 
 headers = {'User-Agent': 'pirate get'}
+default_headers = {'User-Agent': 'pirate get'}
 
 categories = {
     'All': 0,
@@ -113,13 +114,6 @@ class NoRedirection(request.HTTPErrorProcessor):
     https_response = http_response
 
 
-cmd_args_regex = '''(('[^']*'|"[^"]*"|(\\\\\\s|[^\\s])+)+ *)'''
-def parse_cmd(cmd, url):
-    ret = re.findall(cmd_args_regex, cmd)
-    ret2 = list(map(lambda x: x[0].strip(), ret))
-    ret3 = list(map(lambda x: x.replace('%s', url), ret2))
-    return ret3
-
 # create a subclass and override the handler methods
 class BayParser(HTMLParser):
     title = ''
@@ -179,6 +173,13 @@ def print(*args, **kwargs):
         return builtins.print(*args, **kwargs)
 
 
+def parse_cmd(cmd, url):
+    cmd_args_regex = r'''(('[^']*'|"[^"]*"|(\\\s|[^\s])+)+ *)'''
+    ret = re.findall(cmd_args_regex, cmd)
+    ret = [i[0].strip().replace('%s', url) for i in ret]
+    return ret
+
+
 #todo: redo this with html parser instead of regex
 def remote(args, mirror):
     res_l = []
@@ -226,7 +227,7 @@ def remote(args, mirror):
                                                 page, sort,
                                                 category))
 
-            req = request.Request(mirror + path, headers=headers)
+            req = request.Request(mirror + path, headers=default_headers)
             req.add_header('Accept-encoding', 'gzip')
             f = request.urlopen(req, timeout=default_timeout)
             if f.info().get('Content-Encoding') == 'gzip':
@@ -236,7 +237,8 @@ def remote(args, mirror):
                                                      r'([^<]+)</td>', res)
 
             # check for a blocked mirror
-            no_results = re.search(r'No hits\. Try adding an asterisk in you search phrase\.', res)
+            no_results = re.search(r'No hits\. Try adding an asterisk in '
+                                   r'you search phrase\.', res)
             if found == [] and no_results is None:
                 # Contradiction - we found no results,
                 # but the page didn't say there were no results.
@@ -323,7 +325,7 @@ def load_config():
 
 def get_torrent(info_hash):
     url = 'http://torcache.net/torrent/{:X}.torrent'
-    req = request.Request(url.format(info_hash))
+    req = request.Request(url.format(info_hash), headers=default_headers)
     req.add_header('Accept-encoding', 'gzip')
     
     torrent = request.urlopen(req, timeout=default_timeout)
@@ -382,7 +384,7 @@ def print_descriptions(chosen_links, mags, site, identifiers):
     for link in chosen_links:
         link = int(link)
         path = '/torrent/%s/' % identifiers[link]
-        req = request.Request(site + path, headers=headers)
+        req = request.Request(site + path, headers=default_headers)
         req.add_header('Accept-encoding', 'gzip')
         f = request.urlopen(req, timeout=default_timeout)
 
@@ -407,7 +409,7 @@ def print_file_lists(chosen_links, mags, site, identifiers):
     for link in chosen_links:
         path = '/ajax_details_filelist.php'
         query = '?id=' + identifiers[int(link)]
-        req = request.Request(site + path + query, headers=headers)
+        req = request.Request(site + path + query, headers=default_headers)
         req.add_header('Accept-encoding', 'gzip')
         f = request.urlopen(req, timeout=default_timeout)
 
@@ -552,7 +554,7 @@ def main():
         sizes, uploaded = [], []
 
     else:
-        mags, mirrors = [], set(['https://thepiratebay.se'])
+        mags, mirrors = [], {'https://thepiratebay.se'}
         try:
             opener = request.build_opener(NoRedirection)
             f = opener.open('https://proxybay.info/list.txt',
@@ -561,15 +563,15 @@ def main():
             print('Could not fetch additional mirrors', color='WARN')
         else:
             if f.getcode() != 200:
-                raise IOError('The pirate bay responded with an error.')
+                raise IOError('The proxy bay responded with an error.')
             mirrors = mirrors.union([i.decode('utf-8').strip()
-                            for i in f.readlines()][3:])
+                                    for i in f.readlines()][3:])
 
         for mirror in mirrors:
             try:
                 print('Trying', mirror, end='... ')
                 mags, sizes, uploaded, identifiers = remote(args, mirror)
-            except (URLError, IOError, ValueError, timeout) as e:
+            except (URLError, IOError, ValueError, timeout):
                 print('Failed', color='WARN')
             else:
                 site = mirror

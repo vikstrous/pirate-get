@@ -169,7 +169,13 @@ def parse_cmd(cmd, url):
     cmd_args_regex = r'''(('[^']*'|"[^"]*"|(\\\s|[^\s])+)+ *)'''
     ret = re.findall(cmd_args_regex, cmd)
     ret = [i[0].strip().replace('%s', url) for i in ret]
-    return ret
+    ret_no_quotes = []
+    for item in ret:
+        if (item[0] == "'" and item[-1] == "'") or (item[0] == '"' and item[-1] == '"'):
+            ret_no_quotes.append(item[1:-1])
+        else:
+            ret_no_quotes.append(item)
+    return ret_no_quotes
 
 
 #todo: redo this with html parser instead of regex

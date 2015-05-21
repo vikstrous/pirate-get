@@ -488,6 +488,8 @@ def main():
     parser.add_argument('-t', '--transmission',
                         action='store_true',
                         help='open magnets with transmission-remote')
+    parser.add_argument('-P', '--port', dest='port',
+                        help='transmission-remote rpc port. default is 9091')
     parser.add_argument('-C', '--custom', dest='command',
                         help='open magnets with a custom command'
                               ' (%%s will be replaced with the url)')
@@ -514,8 +516,12 @@ def main():
     if args.save_directory:
         config.set('Save', 'directory', args.save_directory)
 
+    transmission_command = ['transmission-remote']
+    if args.port:
+        transmission_command.append(args.port)
+
     if args.transmission or config.getboolean('Misc', 'transmission'):
-        ret = subprocess.call(['transmission-remote', '-l'],
+        ret = subprocess.call(transmission_command + ['-l'],
                               stdout=subprocess.DEVNULL,
                               stderr=subprocess.DEVNULL)
         if ret != 0:
@@ -667,8 +673,8 @@ def main():
         url = mags[int(choice)][0]
 
         if args.transmission or config.getboolean('Misc', 'transmission'):
-            subprocess.call(['transmission-remote', '--add', url], shell=False)
-            subprocess.call(['transmission-remote', '-l'])
+            subprocess.call(transmission_command + ['-l', '--add', url], shell=False)
+            subprocess.call(transmission_command + ['-l'])
 
         elif args.command or config.get('Misc', 'openCommand'):
             command = config.get('Misc', 'openCommand')

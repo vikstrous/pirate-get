@@ -24,29 +24,43 @@ Default is `$XDG_CONFIG_HOME/pirate-get`.
 If it does not exist then `$HOME/.config/pirate-get`.
 
 ### Default config file
-These are the default options:
+If not existing a new config file will be created when you start
+pirate-get. Here the available options and their behaviors are when unset:
 
 ```INI
 [Save]
-directory = $PWD                     ; directory where to save files
-magnets = false                      ; save each selected magnet link in a .magnet file
-torrents = false                     ; save each selected torrent in a .torrent file
+; directory where to save files
+directory = $PWD
+
+; save each selected magnet link in a .magnet file
+magnets = false
+
+; save each selected torrent in a .torrent file
+torrents = false                     
 
 [LocalDB]
-enabled = false                      ; use a local copy of the pirate bay database
-path = ~/downloads/pirate-get/db     ; path of the database
+; use a local copy of the pirate bay database
+enabled = false                 
+
+; path of the database     
+path = ~/downloads/pirate-get/db
 
 [Misc]
-openCommand =                        ; specify a custom command for opening the magnet
-                                     ; ex. myprogram --open %s
-                                     ; %s represent the magnet uri
+; specify a custom command for opening the magnet
+; ex. myprogram --open %s
+; %s represent the magnet uri
+openCommand = 
 
-transmission = false                 ; open magnets with transmission-remote client
-colors = true                        ; use colored output
+; open magnets with transmission-remote client
+transmission = false
+
+; use colored output
+colors = true
 ```
 
-Note:
-Any command line option will override its respective setting in the config file.
+Note:  
+Any command line option will override its respective setting in the config file.  
+
 
 ## Notes
 If you want to use a local copy of the Pirate Bay database download a copy here (or wherever the latest version is currently):

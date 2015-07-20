@@ -221,7 +221,7 @@ def remote(args, mirror):
                     path += str(category)
             else:
                 path = '/search/' + '/'.join(str(i) for i in (
-                                                '+'.join(args.search),
+                                                '+'.join(args.search[1:]), # the result before the fix was: /search/search+query/0/7/0, now ignoring the search subcommand
                                                 page, sort,
                                                 category))
 
@@ -299,7 +299,7 @@ def load_config():
     config.set('LocalDB', 'enabled', 'false')
     config.set('LocalDB', 'path', expanduser('~/downloads/pirate-get/db'))
 
-    config.add_section('Misc')    
+    config.add_section('Misc')
     config.set('Misc', 'openCommand', '')
     config.set('Misc', 'transmission', 'false')
     config.set('Misc', 'colors', 'true')
@@ -325,7 +325,7 @@ def get_torrent(info_hash):
     url = 'http://torcache.net/torrent/{:X}.torrent'
     req = request.Request(url.format(info_hash), headers=default_headers)
     req.add_header('Accept-encoding', 'gzip')
-    
+
     torrent = request.urlopen(req, timeout=default_timeout)
     if torrent.info().get('Content-Encoding') == 'gzip':
         torrent = gzip.GzipFile(fileobj=BytesIO(torrent.read()))

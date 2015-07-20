@@ -13,6 +13,9 @@ Requires `colorama` for colored output.
 Run `./install`
 
 ## Usage
+
+To search use `pirate get [search term]`.
+
 See `pirate-get -h` for help.
 
 Watch [this](http://showterm.io/d6f7a0c2a5de1da9ea317) for an example usage.

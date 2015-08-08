@@ -623,8 +623,19 @@ def main():
                 # Turn into list
                 l = re.sub(r'^[hdfp, ]*|[hdfp, ]*$', '', l)
                 l = re.sub('[ ,]+', ',', l)
-                l = re.sub('[^0-9,]', '', l)
-                choices = l.split(',')
+                l = re.sub('[^0-9,-]', '', l)
+                parsed_input = l.split(',')
+
+                # expand ranges
+                choices = []
+                for elem in parsed_input: # loop will generate a list of lists
+                    left, sep, right = elem.partition('-')
+                    if right:
+                        choices.append(list(range(int(left), int(right) + 1)))
+                    else:
+                        choices.append([int(left)])
+                choices = sum(choices, []) # flatten list
+                choices = [str(elem) for elem in choices] # the current code stores the choices as strings instead of ints. not sure if necessary
 
                 # Act on option, if supplied
                 print('')

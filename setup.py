@@ -1,4 +1,5 @@
-from setuptools import setup
+#!/usr/bin/env python3
+from setuptools import setup, find_packages
 
 setup(name='pirate-get',
     version='0.2.5',
@@ -7,7 +8,7 @@ setup(name='pirate-get',
     author='vikstrous',
     author_email='me@viktorstanchev.com',
     license='GPL',
-    packages=['pirate'],
+    packages=find_packages(),
     entry_points={
         'console_scripts': ['pirate-get = pirate.pirate:main']
     },

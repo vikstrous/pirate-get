@@ -165,7 +165,7 @@ def main():
         sizes, uploaded = [], []
 
     else:
-        mags, mirrors = [], {'https://thepiratebay.se'}
+        mags, mirrors = [], {'https://thepiratebay.mn'}
         try:
             req = request.Request('https://proxybay.co/list.txt',
                                   headers=pirate.data.default_headers)
@@ -177,6 +177,8 @@ def main():
                 raise IOError('The proxy bay responded with an error.')
             mirrors = mirrors.union([i.decode('utf-8').strip()
                                     for i in f.readlines()][3:])
+            # This mirror messes up links in the search results page - you need to load a second page to get the magnet link
+            mirrors.discard('https://thebay.tv')
 
         for mirror in mirrors:
             try:

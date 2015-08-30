@@ -152,7 +152,7 @@ def main():
 
     if args.list_sorts:
         cur_color = 'zebra_0'
-        for key, value in sorted(sorts.items()):
+        for key, value in sorted(pirate.data.sorts.items()):
             cur_color = 'zebra_0' if cur_color == 'zebra_1' else 'zebra_1'
             print(str(value), '\t', key, sep='', color=cur_color)
         return
@@ -257,11 +257,11 @@ def main():
                 elif code == 'p':
                     pirate.print.search_results(mags, sizes, uploaded)
                 elif code == 'm':
-                    save_magnets(choices, mags,
-                                  config.get('Save', 'directory'))
+                    pirate.torrent.save_magnets(choices, mags, config.get(
+                        'Save', 'directory'))
                 elif code == 't':
-                    save_torrents(choices, mags,
-                                  config.get('Save', 'directory'))
+                    pirate.torrent.save_torrents(choices, mags, config.get(
+                        'Save', 'directory'))
                 elif not l:
                     print('No links entered!', color='WARN')
                 else:
@@ -274,14 +274,14 @@ def main():
 
     if args.save_magnets or config.getboolean('Save', 'magnets'):
         print('Saving selected magnets...')
-        pirate.torrent.save_magnets(choices, mags,
-                  config.get('Save', 'directory'))
+        pirate.torrent.save_magnets(choices, mags, config.get(
+            'Save', 'directory'))
         save_to_file = True
 
     if args.save_torrents or config.getboolean('Save', 'torrents'):
         print('Saving selected torrents...')
-        pirate.torrent.save_torrents(choices, mags,
-                   config.get('Save', 'directory'))
+        pirate.torrent.save_torrents(choices, mags, config.get(
+            'Save', 'directory'))
         save_to_file = True
 
     if save_to_file:

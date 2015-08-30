@@ -80,9 +80,9 @@ def descriptions(chosen_links, mags, site, identifiers):
     for link in chosen_links:
         link = int(link)
         path = '/torrent/%s/' % identifiers[link]
-        req = request.Request(site + path, headers=default_headers)
+        req = request.Request(site + path, headers=pirate.data.default_headers)
         req.add_header('Accept-encoding', 'gzip')
-        f = request.urlopen(req, timeout=default_timeout)
+        f = request.urlopen(req, timeout=pirate.data.default_timeout)
 
         if f.info().get('Content-Encoding') == 'gzip':
             f = gzip.GzipFile(fileobj=BytesIO(f.read()))
@@ -105,9 +105,10 @@ def file_lists(chosen_links, mags, site, identifiers):
     for link in chosen_links:
         path = '/ajax_details_filelist.php'
         query = '?id=' + identifiers[int(link)]
-        req = request.Request(site + path + query, headers=default_headers)
+        req = request.Request(site + path + query,
+                              headers=pirate.data.default_headers)
         req.add_header('Accept-encoding', 'gzip')
-        f = request.urlopen(req, timeout=default_timeout)
+        f = request.urlopen(req, timeout=pirate.data.default_timeout)
 
         if f.info().get('Content-Encoding') == 'gzip':
             f = gzip.GzipFile(fileobj=BytesIO(f.read()))

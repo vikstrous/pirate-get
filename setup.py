@@ -5,7 +5,7 @@ setup(name='pirate-get',
     description='A command line interface for The Pirate Bay',
     url='https://github.com/vikstrous/pirate-get',
     author='vikstrous',
-    author_email='',
+    author_email='me@viktorstanchev.com',
     license='GPL',
     packages=['pirate'],
     entry_points={
@@ -14,9 +14,9 @@ setup(name='pirate-get',
     install_requires=['colorama'],
     keywords=['torrent', 'magnet', 'download', 'tpb', 'client'],
     classifiers=[
-        'Topic :: Utilities'
-        'Topic :: Terminals'
-        'Topic :: System :: Networking'
-        'Programming Language :: Python :: 3 :: Only'
+        'Topic :: Utilities',
+        'Topic :: Terminals',
+        'Topic :: System :: Networking',
+        'Programming Language :: Python :: 3 :: Only',
         'License :: OSI Approved :: GNU General Public License (GPL)',
     ])

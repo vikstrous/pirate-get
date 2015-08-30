@@ -293,8 +293,7 @@ def main():
         url = mags[int(choice)][0]
 
         if args.transmission or config.getboolean('Misc', 'transmission'):
-            subprocess.call(transmission_command + ['-l', '--add', url])
-            subprocess.call(transmission_command + ['-l'])
+            subprocess.call(transmission_command + ['--add', url])
 
         elif args.command or config.get('Misc', 'openCommand'):
             command = config.get('Misc', 'openCommand')
@@ -305,6 +304,8 @@ def main():
         else:
             webbrowser.open(url)
 
+    if args.transmission or config.getboolean('Misc', 'transmission'):
+        subprocess.call(transmission_command + ['-l'])
 
 if __name__ == '__main__':
     main()

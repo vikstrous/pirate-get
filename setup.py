@@ -12,7 +12,7 @@ setup(name='pirate-get',
     entry_points={
         'console_scripts': ['pirate-get = pirate.pirate:main']
     },
-    install_requires=['colorama'],
+    install_requires=['colorama>=0.3.3'],
     keywords=['torrent', 'magnet', 'download', 'tpb', 'client'],
     classifiers=[
         'Topic :: Utilities',

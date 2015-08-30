@@ -7,11 +7,16 @@ setup(name='pirate-get',
     author='vikstrous',
     author_email='',
     license='GPL',
-    packages=['pirate-get'],
+    packages=['pirate'],
     entry_points={
-        'console_scripts': ['pirate-get = src.main:main']
+        'console_scripts': ['pirate-get = pirate.pirate:main']
     },
-    keywords=['server'],
+    install_requires=['colorama'],
+    keywords=['torrent', 'magnet', 'download', 'tpb', 'client'],
     classifiers=[
+        'Topic :: Utilities'
+        'Topic :: Terminals'
+        'Topic :: System :: Networking'
+        'Programming Language :: Python :: 3 :: Only'
         'License :: OSI Approved :: GNU General Public License (GPL)',
     ])

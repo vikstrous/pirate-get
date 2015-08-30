@@ -3,7 +3,7 @@ import os
 import argparse
 import subprocess
 import configparser
-import socket 
+import socket
 import urllib.request as request
 import urllib.error
 import webbrowser
@@ -30,7 +30,7 @@ def load_config():
     config.set('LocalDB', 'enabled', 'false')
     config.set('LocalDB', 'path', expanduser('~/downloads/pirate-get/db'))
 
-    config.add_section('Misc')    
+    config.add_section('Misc')
     config.set('Misc', 'openCommand', '')
     config.set('Misc', 'transmission', 'false')
     config.set('Misc', 'colors', 'true')
@@ -58,8 +58,8 @@ def parse_cmd(cmd, url):
     ret = [i[0].strip().replace('%s', url) for i in ret]
     ret_no_quotes = []
     for item in ret:
-        if ((item[0] == "'" and item[-1] == "'") or (
-            item[0] == '"' and item[-1] == '"')):
+        if ((item[0] == "'" and item[-1] == "'") or
+           (item[0] == '"' and item[-1] == '"')):
             ret_no_quotes.append(item[1:-1])
         else:
             ret_no_quotes.append(item)
@@ -70,7 +70,7 @@ def main():
     config = load_config()
 
     parser = argparse.ArgumentParser(
-                description='finds and downloads torrents from the Pirate Bay')
+        description='finds and downloads torrents from the Pirate Bay')
     parser.add_argument('-b', dest='browse',
                         action='store_true',
                         help='display in Browse mode')
@@ -82,7 +82,7 @@ def main():
                         help='specify a sort option', default='SeedersDsc')
     parser.add_argument('-R', dest='recent',  action='store_true',
                         help='torrents uploaded in the last 48hours.'
-                                                '*ignored in searches*')
+                             '*ignored in searches*')
     parser.add_argument('-l', dest='list_categories',
                         action='store_true',
                         help='list categories')
@@ -124,8 +124,7 @@ def main():
     args = parser.parse_args()
 
     if (config.getboolean('Misc', 'colors') and not args.color
-        or not config.getboolean('Misc', 'colors')):
-        #global colored_output
+       or not config.getboolean('Misc', 'colors')):
         pirate.data.colored_output = False
 
     if args.save_directory:
@@ -182,17 +181,18 @@ def main():
         for mirror in mirrors:
             try:
                 print('Trying', mirror, end='... ')
-                mags, sizes, uploaded, ids = pirate.torrent.remote(args, mirror)
+                mags, sizes, uploaded, ids = pirate.torrent.remote(args,
+                                                                   mirror)
             except (urllib.error.URLError, socket.timeout,
-                                      IOError, ValueError):
+                    IOError, ValueError):
                 print('Failed', color='WARN')
             else:
                 site = mirror
                 print('Ok', color='alt')
                 break
         else:
-          print('No available mirrors :(', color='WARN')
-          return
+            print('No available mirrors :(', color='WARN')
+            return
 
     if not mags:
         print('No results')
@@ -212,8 +212,8 @@ def main():
             print("\nSelect links (Type 'h' for more options"
                   ", 'q' to quit)", end='\b', color='alt')
             try:
-                l=input(': ')
-            except KeyboardInterrupt :
+                l = input(': ')
+            except KeyboardInterrupt:
                 print('\nCancelled.')
                 return
 

@@ -1,7 +1,7 @@
 import urllib.parse as parse
 import html.parser as parser
 
-# create a subclass and override the handler methods
+
 class BayParser(parser.HTMLParser):
     title = ''
     q = ''

@@ -58,7 +58,7 @@ def search_results(mags, sizes, uploaded, local):
         else:
             no_seeders, no_leechers = map(int, magnet[1:])
             size, unit = (float(sizes[m][0]),
-                         sizes[m][1]) if sizes else (0, '???')
+                          sizes[m][1]) if sizes else (0, '???')
             date = uploaded[m]
 
             # compute the S/L ratio (Higher is better)
@@ -68,7 +68,7 @@ def search_results(mags, sizes, uploaded, local):
                 ratio = float('inf')
 
             line = ('{:4}  {:5}  {:5}  {:5.1f}  {:5.1f}'
-                   ' {:3}  {:<11}  {:{length}}')
+                    ' {:3}  {:<11}  {:{length}}')
             content = [m, no_seeders, no_leechers, ratio,
                        size, unit, date, torrent_name[:columns - 52]]
 

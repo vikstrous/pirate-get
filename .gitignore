@@ -57,3 +57,9 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# vim
+*.swp
+
+# setup.py
+publish/*

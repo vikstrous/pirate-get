@@ -10,7 +10,7 @@ Also tested on OSX (works fine on yosemite)
 Make sure you have python 3 installed.
 Requires `colorama` for colored output.
 
-Run `./install`
+Run `pip install pirate-get` or `pip3 install pirate-get`
 
 ## Usage
 

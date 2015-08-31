@@ -244,7 +244,7 @@ def main():
                     left, sep, right = elem.partition('-')
                     if right:
                         choices.append(list(range(int(left), int(right) + 1)))
-                    else:
+                    elif left != '':
                         choices.append([int(left)])
 
                 # flatten list

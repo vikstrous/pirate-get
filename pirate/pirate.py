@@ -239,15 +239,19 @@ def main():
 
                 # expand ranges
                 choices = []
-                for elem in parsed_input: # loop will generate a list of lists
+                # loop will generate a list of lists
+                for elem in parsed_input:
                     left, sep, right = elem.partition('-')
                     if right:
                         choices.append(list(range(int(left), int(right) + 1)))
                     else:
                         choices.append([int(left)])
-                choices = sum(choices, []) # flatten list
-                choices = [str(elem) for elem in choices] # the current code stores the choices as strings instead of ints. not sure if necessary
 
+                # flatten list
+                choices = sum(choices, [])
+                # the current code stores the choices as strings
+                # instead of ints. not sure if necessary
+                choices = [str(elem) for elem in choices]
 
                 # Act on option, if supplied
                 print('')

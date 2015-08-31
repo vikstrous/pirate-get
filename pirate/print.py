@@ -31,7 +31,7 @@ def print(*args, **kwargs):
         return builtins.print(*args, **kwargs)
 
 
-def search_results(mags, sizes, uploaded, local):
+def search_results(mags, sizes, uploaded, local=None):
     columns = int(os.popen('stty size', 'r').read().split()[1])
     cur_color = 'zebra_0'
 

@@ -4,8 +4,10 @@ import gzip
 import urllib.request as request
 import urllib.parse as parse
 import urllib.error
+import os.path
 
 import pirate.data
+from pirate.print import print
 
 from io import BytesIO
 

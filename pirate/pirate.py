@@ -176,9 +176,8 @@ def main():
             if f.getcode() != 200:
                 raise IOError('The proxy bay responded with an error.')
             mirrors = mirrors.union([i.decode('utf-8').strip()
-                                    for i in f.readlines()][3:])
-            # This mirror messes up links in the search results page - you need to load a second page to get the magnet link
-            mirrors.discard('https://thebay.tv')
+                                    for i in f.readlines()][3:]
+                                    ).difference(pirate.data.blacklist)
 
         for mirror in mirrors:
             try:

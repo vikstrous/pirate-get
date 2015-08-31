@@ -9,6 +9,7 @@ setup(name='pirate-get',
     author_email='me@viktorstanchev.com',
     license='GPL',
     packages=find_packages(),
+    package_data={'': ["data/*.json"]},
     entry_points={
         'console_scripts': ['pirate-get = pirate.pirate:main']
     },

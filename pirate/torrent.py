@@ -13,7 +13,11 @@ from io import BytesIO
 
 
 def parse_category(category):
-    if str(category) in pirate.data.categories.values():
+    try:
+        category = int(category)
+    except ValueError:
+        pass
+    if category in pirate.data.categories.values():
         return category
     elif category in pirate.data.categories.keys():
         return pirate.data.categories[category]
@@ -23,7 +27,11 @@ def parse_category(category):
 
 
 def parse_sort(sort):
-    if str(sort) in pirate.data.sorts.values():
+    try:
+        sort = int(sort)
+    except ValueError:
+        pass
+    if sort in pirate.data.sorts.values():
         return sort
     elif sort in pirate.data.sorts.keys():
         return pirate.data.sorts[sort]
@@ -32,7 +40,11 @@ def parse_sort(sort):
         return '99'
 
 
-#todo: redo this with html parser instead of regex
+#TODO: redo this with html parser instead of regex
+#TODO: warn users when using a sort in a mode that doesn't accept sorts
+#TODO: warn users when using search terms in a mode that doesn't accept search terms
+#TODO: same with page parameter for top and top48h
+#TODO: warn the user if trying to use a minor category with top48h
 def remote(pages, category, sort, mode, terms, mirror):
     res_l = []
     pages = int(pages)
@@ -54,6 +66,7 @@ def remote(pages, category, sort, mode, terms, mirror):
             elif mode == 'recent':
                 # This is not a typo. There is no / between 48h and the category.
                 path = '/top/48h'
+                # only major categories can be used with this mode
                 if(category == 0):
                     path += 'all'
                 else:

@@ -123,6 +123,16 @@ def main():
                         help='disable colored output')
     args = parser.parse_args()
 
+    # figure out the mode - browse, search, top or recent
+    if args.browse:
+        args.mode = 'browse'
+    elif args.recent:
+        args.mode = 'recent'
+    elif len(args.search) == 0:
+        args.mode = 'top'
+    else:
+        args.mode = 'search'
+
     if (config.getboolean('Misc', 'colors') and not args.color
        or not config.getboolean('Misc', 'colors')):
         pirate.data.colored_output = False
@@ -182,8 +192,14 @@ def main():
         for mirror in mirrors:
             try:
                 print('Trying', mirror, end='... ')
-                mags, sizes, uploaded, ids = pirate.torrent.remote(args,
-                                                                   mirror)
+                mags, sizes, uploaded, ids = pirate.torrent.remote(
+                    pages=args.pages,
+                    category=pirate.torrent.parse_category(args.category),
+                    sort=pirate.torrent.parse_sort(args.sort),
+                    mode=args.mode,
+                    terms=args.search,
+                    mirror=mirror
+                )
             except (urllib.error.URLError, socket.timeout,
                     IOError, ValueError):
                 print('Failed', color='WARN')

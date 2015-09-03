@@ -11,52 +11,64 @@ from pirate.print import print
 
 from io import BytesIO
 
+
+def parse_category(category):
+    if str(category) in pirate.data.categories.values():
+        return category
+    elif category in pirate.data.categories.keys():
+        return pirate.data.categories[category]
+    else:
+        print('Invalid category ignored', color='WARN')
+        return '0'
+
+
+def parse_sort(sort):
+    if str(sort) in pirate.data.sorts.values():
+        return sort
+    elif sort in pirate.data.sorts.keys():
+        return pirate.data.sorts[sort]
+    else:
+        print('Invalid sort ignored', color='WARN')
+        return '99'
+
+
 #todo: redo this with html parser instead of regex
-def remote(args, mirror):
+def remote(pages, category, sort, mode, terms, mirror):
     res_l = []
-    pages = int(args.pages)
+    pages = int(pages)
     if pages < 1:
         raise ValueError('Please provide an integer greater than 0 '
                          'for the number of pages to fetch.')
 
-    if str(args.category) in pirate.data.categories.values():
-        category = args.category
-    elif args.category in pirate.data.categories.keys():
-        category = pirate.data.categories[args.category]
-    else:
-        category = '0'
-        print('Invalid category ignored', color='WARN')
-
-    if str(args.sort) in pirate.data.sorts.values():
-        sort = args.sort
-    elif args.sort in pirate.data.sorts.keys():
-        sort = pirate.data.sorts[args.sort]
-    else:
-        sort = '99'
-        print('Invalid sort ignored', color='WARN')
     # Catch the Ctrl-C exception and exit cleanly
     try:
         sizes = []
         uploaded = []
         identifiers = []
         for page in range(pages):
-            if args.browse:
+            if mode == 'browse':
                 path = '/browse/'
                 if(category == 0):
                     category = 100
-                path = '/browse/' + '/'.join(str(i) for i in (
-                                            category, page, sort))
-            elif len(args.search) == 0:
-                path = '/top/48h' if args.recent else '/top/'
+                path = '/browse/{}/{}/{}'.format(category, page, sort)
+            elif mode == 'recent':
+                # This is not a typo. There is no / between 48h and the category.
+                path = '/top/48h'
                 if(category == 0):
                     path += 'all'
                 else:
                     path += str(category)
+            elif mode == 'top':
+                path = '/top/'
+                if(category == 0):
+                    path += 'all'
+                else:
+                    path += str(category)
+            elif mode == 'search':
+                query = urllib.parse.quote_plus(' '.join(terms))
+                path = '/search/{}/{}/{}/{}'.format(query, page, sort, category)
             else:
-                path = '/search/' + '/'.join(str(i) for i in (
-                                                '+'.join(args.search),
-                                                page, sort,
-                                                category))
+                raise Exception('Unknown mode.')
 
             req = request.Request(mirror + path,
                                   headers=pirate.data.default_headers)

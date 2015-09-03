@@ -12,6 +12,9 @@ from pirate.print import print
 from io import BytesIO
 
 
+parser_regex = r'"(magnet\:\?xt=[^"]*)|<td align="right">([^<]+)</td>'
+
+
 def parse_category(category):
     try:
         category = int(category)
@@ -38,6 +41,25 @@ def parse_sort(sort):
     else:
         print('Invalid sort ignored', color='WARN')
         return '99'
+
+
+def parse_magnets_seeds_leechers(found):
+    res = []
+    state = 'seeds'
+    curr = ['', 0, 0] #magnet, seeds, leeches
+    for f in found:
+        if f[1] == '':
+            curr[0] = f[0]
+        else:
+            if state == 'seeds':
+                curr[1] = f[1]
+                state = 'leeches'
+            else:
+                curr[2] = f[1]
+                state = 'seeds'
+                res.append(curr)
+                curr = ['', 0, 0]
+    return res
 
 
 #TODO: redo this with html parser instead of regex
@@ -90,8 +112,7 @@ def remote(pages, category, sort, mode, terms, mirror):
             if f.info().get('Content-Encoding') == 'gzip':
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))
             res = f.read().decode('utf-8')
-            found = re.findall(r'"(magnet\:\?xt=[^"]*)|<td align="right">'
-                                                     r'([^<]+)</td>', res)
+            found = re.findall(parser_regex, res)
 
             # check for a blocked mirror
             no_results = re.search(r'No hits\. Try adding an asterisk in '
@@ -104,6 +125,7 @@ def remote(pages, category, sort, mode, terms, mirror):
                 raise IOError('Blocked mirror detected.')
 
             # get sizes as well and substitute the &nbsp; character
+            # TODO: use actual html decode
             sizes.extend([match.replace('&nbsp;', ' ').split()
                          for match in re.findall(r'(?<=Size )[0-9.]'
                          r'+\&nbsp\;[KMGT]*[i ]*B', res)])
@@ -116,27 +138,14 @@ def remote(pages, category, sort, mode, terms, mirror):
                             for match in re.findall('(?<=/torrent/)'
                             '[0-9]+(?=/)',res)])
 
-            state = 'seeds'
-            curr = ['', 0, 0] #magnet, seeds, leeches
-            for f in found:
-                if f[1] == '':
-                    curr[0] = f[0]
-                else:
-                    if state == 'seeds':
-                        curr[1] = f[1]
-                        state = 'leeches'
-                    else:
-                        curr[2] = f[1]
-                        state = 'seeds'
-                        res_l.append(curr)
-                        curr = ['', 0, 0]
+            res_l += parse_magnets_seeds_leechers(found)
+
     except KeyboardInterrupt :
         print('\nCancelled.')
         sys.exit(0)
 
     # return the sizes in a spearate list
     return res_l, sizes, uploaded, identifiers
-
 
 
 def get_torrent(info_hash):

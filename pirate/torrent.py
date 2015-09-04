@@ -6,6 +6,8 @@ import urllib.parse as parse
 import urllib.error
 import os.path
 
+from pyquery import PyQuery as pq
+
 import pirate.data
 from pirate.print import print
 
@@ -43,25 +45,6 @@ def parse_sort(sort):
         return '99'
 
 
-def parse_magnets_seeds_leechers(found):
-    res = []
-    state = 'seeds'
-    curr = ['', 0, 0] #magnet, seeds, leeches
-    for f in found:
-        if f[1] == '':
-            curr[0] = f[0]
-        else:
-            if state == 'seeds':
-                curr[1] = f[1]
-                state = 'leeches'
-            else:
-                curr[2] = f[1]
-                state = 'seeds'
-                res.append(curr)
-                curr = ['', 0, 0]
-    return res
-
-
 #TODO: warn users when using a sort in a mode that doesn't accept sorts
 #TODO: warn users when using search terms in a mode that doesn't accept search terms
 #TODO: same with page parameter for top and top48h
@@ -92,37 +75,40 @@ def build_request_path(page, category, sort, mode, terms):
         raise Exception('Unknown mode.')
 
 
-#TODO: redo this with html parser instead of regex
-def parse_page(res):
-    found = re.findall(parser_regex, res)
+def parse_page(html):
+    d = pq(html)
+
+    # first get the magnet links and make sure there are results
+    magnets = list(map(lambda l: pq(l).attr('href'), 
+        d('table#searchResult tr>td:nth-child(2)>a:nth-child(2)')))
 
     # check for a blocked mirror
     no_results = re.search(r'No hits\. Try adding an asterisk in '
-                           r'you search phrase\.', res)
-    if found == [] and no_results is None:
+                           r'you search phrase\.', html)
+    if len(magnets) == 0 and no_results is None:
         # Contradiction - we found no results,
         # but the page didn't say there were no results.
         # The page is probably not actually the pirate bay,
         # so let's try another mirror
         raise IOError('Blocked mirror detected.')
 
-    # get sizes as well and substitute the &nbsp; character
-    # TODO: use actual html decode
-    sizes = [match.replace('&nbsp;', ' ').split()
-                 for match in re.findall(r'(?<=Size )[0-9.]'
-                 r'+\&nbsp\;[KMGT]*[i ]*B', res)]
+    # next get more info
+    seeds = list(map(lambda l: pq(l).text(), 
+        d('table#searchResult tr>td:nth-child(3)')))
+    leechers = list(map(lambda l: pq(l).text(), 
+        d('table#searchResult tr>td:nth-child(4)')))
+    identifiers = list(map(lambda l: pq(l).attr('href').split('/')[2],
+        d('table#searchResult .detLink')))
 
-    uploaded = [match.replace('&nbsp;', ' ')
-                    for match in re.findall(r'(?<=Uploaded )'
-                    r'.+(?=\, Size)',res)]
+    sizes = []
+    uploaded = []
+    # parse descriptions separately
+    for node in d('font.detDesc'):
+        text = pq(node).text()
+        sizes.append(re.findall(r'(?<=Size )[0-9.]+\s[KMGT]*[i ]*B', text)[0].split())
+        uploaded.append(re.findall(r'(?<=Uploaded ).+(?=\, Size)', text)[0])
 
-    identifiers = [match.replace('&nbsp;', ' ')
-                    for match in re.findall('(?<=/torrent/)'
-                    '[0-9]+(?=/)',res)]
-
-    res_l = parse_magnets_seeds_leechers(found)
-
-    return res_l, sizes, uploaded, identifiers
+    return list(zip(magnets,seeds,leechers)), sizes, uploaded, identifiers
 
 
 def remote(pages, category, sort, mode, terms, mirror):

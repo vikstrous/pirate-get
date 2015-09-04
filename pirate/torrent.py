@@ -62,48 +62,83 @@ def parse_magnets_seeds_leechers(found):
     return res
 
 
-#TODO: redo this with html parser instead of regex
 #TODO: warn users when using a sort in a mode that doesn't accept sorts
 #TODO: warn users when using search terms in a mode that doesn't accept search terms
 #TODO: same with page parameter for top and top48h
 #TODO: warn the user if trying to use a minor category with top48h
+def build_request_path(page, category, sort, mode, terms):
+    if mode == 'browse':
+        if(category == 0):
+            category = 100
+        return '/browse/{}/{}/{}'.format(category, page, sort)
+    elif mode == 'recent':
+        # This is not a typo. There is no / between 48h and the category.
+        path = '/top/48h'
+        # only major categories can be used with this mode
+        if(category == 0):
+            return path + 'all'
+        else:
+            return path + str(category)
+    elif mode == 'top':
+        path = '/top/'
+        if(category == 0):
+            return path + 'all'
+        else:
+            return path + str(category)
+    elif mode == 'search':
+        query = urllib.parse.quote_plus(' '.join(terms))
+        return '/search/{}/{}/{}/{}'.format(query, page, sort, category)
+    else:
+        raise Exception('Unknown mode.')
+
+
+#TODO: redo this with html parser instead of regex
+def parse_page(res):
+    found = re.findall(parser_regex, res)
+
+    # check for a blocked mirror
+    no_results = re.search(r'No hits\. Try adding an asterisk in '
+                           r'you search phrase\.', res)
+    if found == [] and no_results is None:
+        # Contradiction - we found no results,
+        # but the page didn't say there were no results.
+        # The page is probably not actually the pirate bay,
+        # so let's try another mirror
+        raise IOError('Blocked mirror detected.')
+
+    # get sizes as well and substitute the &nbsp; character
+    # TODO: use actual html decode
+    sizes = [match.replace('&nbsp;', ' ').split()
+                 for match in re.findall(r'(?<=Size )[0-9.]'
+                 r'+\&nbsp\;[KMGT]*[i ]*B', res)]
+
+    uploaded = [match.replace('&nbsp;', ' ')
+                    for match in re.findall(r'(?<=Uploaded )'
+                    r'.+(?=\, Size)',res)]
+
+    identifiers = [match.replace('&nbsp;', ' ')
+                    for match in re.findall('(?<=/torrent/)'
+                    '[0-9]+(?=/)',res)]
+
+    res_l = parse_magnets_seeds_leechers(found)
+
+    return res_l, sizes, uploaded, identifiers
+
+
 def remote(pages, category, sort, mode, terms, mirror):
     res_l = []
-    pages = int(pages)
+    sizes = []
+    uploaded = []
+    identifiers = []
+
     if pages < 1:
         raise ValueError('Please provide an integer greater than 0 '
                          'for the number of pages to fetch.')
 
     # Catch the Ctrl-C exception and exit cleanly
     try:
-        sizes = []
-        uploaded = []
-        identifiers = []
         for page in range(pages):
-            if mode == 'browse':
-                path = '/browse/'
-                if(category == 0):
-                    category = 100
-                path = '/browse/{}/{}/{}'.format(category, page, sort)
-            elif mode == 'recent':
-                # This is not a typo. There is no / between 48h and the category.
-                path = '/top/48h'
-                # only major categories can be used with this mode
-                if(category == 0):
-                    path += 'all'
-                else:
-                    path += str(category)
-            elif mode == 'top':
-                path = '/top/'
-                if(category == 0):
-                    path += 'all'
-                else:
-                    path += str(category)
-            elif mode == 'search':
-                query = urllib.parse.quote_plus(' '.join(terms))
-                path = '/search/{}/{}/{}/{}'.format(query, page, sort, category)
-            else:
-                raise Exception('Unknown mode.')
+            path = build_request_path(page, category, sort, mode, terms)
 
             req = request.Request(mirror + path,
                                   headers=pirate.data.default_headers)
@@ -112,39 +147,18 @@ def remote(pages, category, sort, mode, terms, mirror):
             if f.info().get('Content-Encoding') == 'gzip':
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))
             res = f.read().decode('utf-8')
-            found = re.findall(parser_regex, res)
 
-            # check for a blocked mirror
-            no_results = re.search(r'No hits\. Try adding an asterisk in '
-                                   r'you search phrase\.', res)
-            if found == [] and no_results is None:
-                # Contradiction - we found no results,
-                # but the page didn't say there were no results.
-                # The page is probably not actually the pirate bay,
-                # so let's try another mirror
-                raise IOError('Blocked mirror detected.')
+            page_res_l, page_sizes, page_uploaded, page_identifiers = parse_page(res)
+            res_l += page_res_l
+            sizes += page_sizes
+            uploaded += page_uploaded
+            identifiers += page_identifiers
 
-            # get sizes as well and substitute the &nbsp; character
-            # TODO: use actual html decode
-            sizes.extend([match.replace('&nbsp;', ' ').split()
-                         for match in re.findall(r'(?<=Size )[0-9.]'
-                         r'+\&nbsp\;[KMGT]*[i ]*B', res)])
-
-            uploaded.extend([match.replace('&nbsp;', ' ')
-                            for match in re.findall(r'(?<=Uploaded )'
-                            r'.+(?=\, Size)',res)])
-
-            identifiers.extend([match.replace('&nbsp;', ' ')
-                            for match in re.findall('(?<=/torrent/)'
-                            '[0-9]+(?=/)',res)])
-
-            res_l += parse_magnets_seeds_leechers(found)
-
-    except KeyboardInterrupt :
+    except KeyboardInterrupt:
         print('\nCancelled.')
         sys.exit(0)
 
-    # return the sizes in a spearate list
+    # return the sizes in a separate list
     return res_l, sizes, uploaded, identifiers
 
 

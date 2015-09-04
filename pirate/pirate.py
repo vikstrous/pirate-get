@@ -91,7 +91,7 @@ def main():
                         help='list Sortable Types')
     parser.add_argument('-L', '--local', dest='database',
                         help='an xml file containing the Pirate Bay database')
-    parser.add_argument('-p', dest='pages', default=1,
+    parser.add_argument('-p', dest='pages', default=1, type=int,
                         help='the number of pages to fetch '
                              "(doesn't work with --local)")
     parser.add_argument('-0', dest='first',

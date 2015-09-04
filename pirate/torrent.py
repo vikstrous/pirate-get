@@ -163,7 +163,6 @@ def get_torrent(info_hash):
 
 def save_torrents(chosen_links, results, folder):
     for link in chosen_links:
-        link = int(link)
         magnet = results[link]['magnet']
         name = re.search(r'dn=([^\&]*)', magnet)
         torrent_name = parse.unquote(name.group(1)).replace('+', ' ')
@@ -181,7 +180,6 @@ def save_torrents(chosen_links, results, folder):
 
 def save_magnets(chosen_links, mags, folder):
     for link in chosen_links:
-        link = int(link)
         magnet = results[link]['magnet']
         name = re.search(r'dn=([^\&]*)', magnet)
         torrent_name = parse.unquote(name.group(1)).replace('+', ' ')

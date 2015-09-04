@@ -66,6 +66,43 @@ def parse_cmd(cmd, url):
     return ret_no_quotes
 
 
+def parse_torrent_command(l):
+    # Very permissive handling
+    # Check for any occurances or d, f, p, t, m, or q
+    cmd_code_match = re.search(r'([hdfpmtq])', l,
+                               flags=re.IGNORECASE)
+    if cmd_code_match:
+        code = cmd_code_match.group(0).lower()
+    else:
+        code = None
+
+    # Clean up command codes
+    # Substitute multiple consecutive spaces/commas for single
+    # comma remove anything that isn't an integer or comma.
+    # Turn into list
+    l = re.sub(r'^[hdfp, ]*|[hdfp, ]*$', '', l)
+    l = re.sub('[ ,]+', ',', l)
+    l = re.sub('[^0-9,-]', '', l)
+    parsed_input = l.split(',')
+
+    # expand ranges
+    choices = []
+    # loop will generate a list of lists
+    for elem in parsed_input:
+        left, sep, right = elem.partition('-')
+        if right:
+            choices.append(list(range(int(left), int(right) + 1)))
+        elif left != '':
+            choices.append([int(left)])
+
+    # flatten list
+    choices = sum(choices, [])
+    # the current code stores the choices as strings
+    # instead of ints. not sure if necessary
+    choices = [elem for elem in choices]
+    return code, choices
+
+
 def main():
     config = load_config()
 
@@ -235,40 +272,7 @@ def main():
                 return
 
             try:
-                # Very permissive handling
-                # Check for any occurances or d, f, p, t, m, or q
-                cmd_code_match = re.search(r'([hdfpmtq])', l,
-                                           flags=re.IGNORECASE)
-                if cmd_code_match:
-                    code = cmd_code_match.group(0).lower()
-                else:
-                    code = None
-
-                # Clean up command codes
-                # Substitute multiple consecutive spaces/commas for single
-                # comma remove anything that isn't an integer or comma.
-                # Turn into list
-                l = re.sub(r'^[hdfp, ]*|[hdfp, ]*$', '', l)
-                l = re.sub('[ ,]+', ',', l)
-                l = re.sub('[^0-9,-]', '', l)
-                parsed_input = l.split(',')
-
-                # expand ranges
-                choices = []
-                # loop will generate a list of lists
-                for elem in parsed_input:
-                    left, sep, right = elem.partition('-')
-                    if right:
-                        choices.append(list(range(int(left), int(right) + 1)))
-                    elif left != '':
-                        choices.append([int(left)])
-
-                # flatten list
-                choices = sum(choices, [])
-                # the current code stores the choices as strings
-                # instead of ints. not sure if necessary
-                choices = [str(elem) for elem in choices]
-
+                code, choices = parse_torrent_command(l)
                 # Act on option, if supplied
                 print('')
                 if code == 'h':

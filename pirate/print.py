@@ -83,7 +83,6 @@ def search_results(results, local=None):
 
 def descriptions(chosen_links, results, site):
     for link in chosen_links:
-        link = int(link)
         path = '/torrent/%s/' % results[link]['id']
         req = request.Request(site + path, headers=pirate.data.default_headers)
         req.add_header('Accept-encoding', 'gzip')
@@ -108,7 +107,6 @@ def descriptions(chosen_links, results, site):
 
 def file_lists(chosen_links, results, site):
     for link in chosen_links:
-        link = int(link)
         path = '/ajax_details_filelist.php'
         query = '?id=' + results[link]['id']
         req = request.Request(site + path + query,

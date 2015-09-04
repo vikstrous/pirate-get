@@ -79,39 +79,44 @@ def build_request_path(page, category, sort, mode, terms):
 def parse_page(html):
     d = pq(html)
 
-    # first get the magnet links and make sure there are results
-    magnets = list(map(lambda l: pq(l).attr('href'), 
-        d('table#searchResult tr>td:nth-child(2)>a:nth-child(2)')))
+    results = []
+    # parse the rows one by one
+    for row in d('table#searchResult tr'):
+        drow = d(row)
+        if len(drow('th')) > 0:
+            continue
+
+        # grab info about the row
+        magnet = pq(drow(':eq(0)>td:nth-child(2)>a:nth-child(2)')[0]).attr('href')
+        seeds = pq(drow(':eq(0)>td:nth-child(3)')).text()
+        leechers = pq(drow(':eq(0)>td:nth-child(4)')).text()
+        id_ = pq(drow('.detLink')).attr('href').split('/')[2]
+
+        # parse descriptions separately
+        desc_text = pq(drow('font.detDesc')[0]).text()
+        size = re.findall(r'(?<=Size )[0-9.]+\s[KMGT]*[i ]*B', desc_text)[0].split()
+        uploaded = re.findall(r'(?<=Uploaded ).+(?=\, Size)', desc_text)[0]
+
+        results.append({
+            'magnet': magnet,
+            'seeds': seeds,
+            'leechers': leechers,
+            'size': size,
+            'uploaded': uploaded,
+            'id': id_
+        })
 
     # check for a blocked mirror
     no_results = re.search(r'No hits\. Try adding an asterisk in '
                            r'you search phrase\.', html)
-    if len(magnets) == 0 and no_results is None:
+    if len(results) == 0 and no_results is None:
         # Contradiction - we found no results,
         # but the page didn't say there were no results.
         # The page is probably not actually the pirate bay,
         # so let's try another mirror
         raise IOError('Blocked mirror detected.')
 
-    # next get more info
-    seeds = list(map(lambda l: pq(l).text(), 
-        d('table#searchResult tr>td:nth-child(3)')))
-    leechers = list(map(lambda l: pq(l).text(), 
-        d('table#searchResult tr>td:nth-child(4)')))
-    ids = list(map(lambda l: pq(l).attr('href').split('/')[2],
-        d('table#searchResult .detLink')))
-
-    sizes = []
-    uploaded = []
-    # parse descriptions separately
-    for node in d('font.detDesc'):
-        text = pq(node).text()
-        sizes.append(re.findall(r'(?<=Size )[0-9.]+\s[KMGT]*[i ]*B', text)[0].split())
-        uploaded.append(re.findall(r'(?<=Uploaded ).+(?=\, Size)', text)[0])
-
-    titles = ('magnet', 'seeds', 'leechers', 'size', 'uploaded', 'id')
-    rows = list(zip(magnets, seeds, leechers, sizes, uploaded, ids))
-    return [dict(zip(titles,row)) for row in rows]
+    return results
 
 
 def remote(pages, category, sort, mode, terms, mirror):

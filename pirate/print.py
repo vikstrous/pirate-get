@@ -5,6 +5,7 @@ import gzip
 import colorama
 import urllib.parse as parse
 import urllib.request as request
+import shutil
 from io import BytesIO
 
 import pirate.data
@@ -31,8 +32,9 @@ def print(*args, **kwargs):
         return builtins.print(*args, **kwargs)
 
 
+# TODO: extract the name from the search results instead of the magnet link when possible
 def search_results(results, local=None):
-    columns = int(os.popen('stty size', 'r').read().split()[1])
+    columns = shutil.get_terminal_size((80, 20)).columns
     cur_color = 'zebra_0'
 
     if local:

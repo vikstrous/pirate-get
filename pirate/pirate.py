@@ -171,11 +171,11 @@ def main():
             path = args.database
         else:
             path = config.get('LocalDB', 'path')
-        mags = pirate.local.search(path, args.search)
+        results = pirate.local.search(path, args.search)
         sizes, uploaded = [], []
 
     else:
-        mags, mirrors = [], {'https://thepiratebay.mn'}
+        results, mirrors = [], {'https://thepiratebay.mn'}
         try:
             req = request.Request('https://proxybay.co/list.txt',
                                   headers=pirate.data.default_headers)
@@ -192,7 +192,7 @@ def main():
         for mirror in mirrors:
             try:
                 print('Trying', mirror, end='... \n')
-                mags, sizes, uploaded, ids = pirate.torrent.remote(
+                results = pirate.torrent.remote(
                     pages=args.pages,
                     category=pirate.torrent.parse_category(args.category),
                     sort=pirate.torrent.parse_sort(args.sort),
@@ -211,18 +211,18 @@ def main():
             print('No available mirrors :(', color='WARN')
             return
 
-    if not mags:
+    if len(results) == 0:
         print('No results')
         return
 
-    pirate.print.search_results(mags, sizes, uploaded, local=args.database)
+    pirate.print.search_results(results, local=args.database)
 
     if args.first:
         print('Choosing first result')
         choices = [0]
     elif args.download_all:
         print('Downloading all results')
-        choices = range(len(mags))
+        choices = range(len(results))
     else:
         # New input loop to support different link options
         while True:
@@ -284,16 +284,16 @@ def main():
                     print('Bye.', color='alt')
                     return
                 elif code == 'd':
-                    pirate.print.descriptions(choices, mags, site, ids)
+                    pirate.print.descriptions(choices, results, site)
                 elif code == 'f':
-                    pirate.print.file_lists(choices, mags, site, ids)
+                    pirate.print.file_lists(choices, results, site)
                 elif code == 'p':
-                    pirate.print.search_results(mags, sizes, uploaded)
+                    pirate.print.search_results(results)
                 elif code == 'm':
-                    pirate.torrent.save_magnets(choices, mags, config.get(
+                    pirate.torrent.save_magnets(choices, results, config.get(
                         'Save', 'directory'))
                 elif code == 't':
-                    pirate.torrent.save_torrents(choices, mags, config.get(
+                    pirate.torrent.save_torrents(choices, results, config.get(
                         'Save', 'directory'))
                 elif not l:
                     print('No links entered!', color='WARN')
@@ -307,13 +307,13 @@ def main():
 
     if args.save_magnets or config.getboolean('Save', 'magnets'):
         print('Saving selected magnets...')
-        pirate.torrent.save_magnets(choices, mags, config.get(
+        pirate.torrent.save_magnets(choices, results, config.get(
             'Save', 'directory'))
         save_to_file = True
 
     if args.save_torrents or config.getboolean('Save', 'torrents'):
         print('Saving selected torrents...')
-        pirate.torrent.save_torrents(choices, mags, config.get(
+        pirate.torrent.save_torrents(choices, results, config.get(
             'Save', 'directory'))
         save_to_file = True
 
@@ -321,7 +321,7 @@ def main():
         return
 
     for choice in choices:
-        url = mags[int(choice)][0]
+        url = results[int(choice)]['magnet']
 
         if args.transmission or config.getboolean('Misc', 'transmission'):
             subprocess.call(transmission_command + ['--add', url])

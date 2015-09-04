@@ -75,6 +75,7 @@ def build_request_path(page, category, sort, mode, terms):
         raise Exception('Unknown mode.')
 
 
+# this returns a list of dictionaries
 def parse_page(html):
     d = pq(html)
 
@@ -97,7 +98,7 @@ def parse_page(html):
         d('table#searchResult tr>td:nth-child(3)')))
     leechers = list(map(lambda l: pq(l).text(), 
         d('table#searchResult tr>td:nth-child(4)')))
-    identifiers = list(map(lambda l: pq(l).attr('href').split('/')[2],
+    ids = list(map(lambda l: pq(l).attr('href').split('/')[2],
         d('table#searchResult .detLink')))
 
     sizes = []
@@ -108,14 +109,13 @@ def parse_page(html):
         sizes.append(re.findall(r'(?<=Size )[0-9.]+\s[KMGT]*[i ]*B', text)[0].split())
         uploaded.append(re.findall(r'(?<=Uploaded ).+(?=\, Size)', text)[0])
 
-    return list(zip(magnets,seeds,leechers)), sizes, uploaded, identifiers
+    titles = ('magnet', 'seeds', 'leechers', 'size', 'uploaded', 'id')
+    rows = list(zip(magnets, seeds, leechers, sizes, uploaded, ids))
+    return [dict(zip(titles,row)) for row in rows]
 
 
 def remote(pages, category, sort, mode, terms, mirror):
     res_l = []
-    sizes = []
-    uploaded = []
-    identifiers = []
 
     if pages < 1:
         raise ValueError('Please provide an integer greater than 0 '
@@ -134,18 +134,13 @@ def remote(pages, category, sort, mode, terms, mirror):
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))
             res = f.read().decode('utf-8')
 
-            page_res_l, page_sizes, page_uploaded, page_identifiers = parse_page(res)
-            res_l += page_res_l
-            sizes += page_sizes
-            uploaded += page_uploaded
-            identifiers += page_identifiers
+            res_l += parse_page(res)
 
     except KeyboardInterrupt:
         print('\nCancelled.')
         sys.exit(0)
 
-    # return the sizes in a separate list
-    return res_l, sizes, uploaded, identifiers
+    return res_l
 
 
 def get_torrent(info_hash):
@@ -161,9 +156,10 @@ def get_torrent(info_hash):
     return torrent.read()
 
 
-def save_torrents(chosen_links, mags, folder):
+def save_torrents(chosen_links, results, folder):
     for link in chosen_links:
-        magnet = mags[int(link)][0]
+        link = int(link)
+        magnet = results[link]['magnet']
         name = re.search(r'dn=([^\&]*)', magnet)
         torrent_name = parse.unquote(name.group(1)).replace('+', ' ')
         info_hash = int(re.search(r'btih:([a-f0-9]{40})', magnet).group(1), 16)
@@ -180,7 +176,8 @@ def save_torrents(chosen_links, mags, folder):
 
 def save_magnets(chosen_links, mags, folder):
     for link in chosen_links:
-        magnet = mags[int(link)][0]
+        link = int(link)
+        magnet = results[link]['magnet']
         name = re.search(r'dn=([^\&]*)', magnet)
         torrent_name = parse.unquote(name.group(1)).replace('+', ' ')
         info_hash = int(re.search(r'btih:([a-f0-9]{40})', magnet).group(1), 16)

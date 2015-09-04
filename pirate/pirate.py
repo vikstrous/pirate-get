@@ -191,7 +191,7 @@ def main():
 
         for mirror in mirrors:
             try:
-                print('Trying', mirror, end='... ')
+                print('Trying', mirror, end='... \n')
                 mags, sizes, uploaded, ids = pirate.torrent.remote(
                     pages=args.pages,
                     category=pirate.torrent.parse_category(args.category),

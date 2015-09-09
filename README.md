@@ -1,5 +1,5 @@
 # pirate-get
-Tests: [![Circle CI](https://circleci.com/gh/vikstrous/pirate-get/tree/master.svg?style=svg)](https://circleci.com/gh/vikstrous/pirate-get/tree/master)
+![](https://circleci.com/gh/vikstrous/pirate-get/tree/master.svg?style=shield)
 
 pirate-get is a convenient command line tool (inspired by APT) to speed up your trip to the Pirate Bay and get your completely legal torrents more quickly.
 

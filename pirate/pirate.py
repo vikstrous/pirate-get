@@ -66,6 +66,43 @@ def parse_cmd(cmd, url):
     return ret_no_quotes
 
 
+def parse_torrent_command(l):
+    # Very permissive handling
+    # Check for any occurances or d, f, p, t, m, or q
+    cmd_code_match = re.search(r'([hdfpmtq])', l,
+                               flags=re.IGNORECASE)
+    if cmd_code_match:
+        code = cmd_code_match.group(0).lower()
+    else:
+        code = None
+
+    # Clean up command codes
+    # Substitute multiple consecutive spaces/commas for single
+    # comma remove anything that isn't an integer or comma.
+    # Turn into list
+    l = re.sub(r'^[hdfp, ]*|[hdfp, ]*$', '', l)
+    l = re.sub('[ ,]+', ',', l)
+    l = re.sub('[^0-9,-]', '', l)
+    parsed_input = l.split(',')
+
+    # expand ranges
+    choices = []
+    # loop will generate a list of lists
+    for elem in parsed_input:
+        left, sep, right = elem.partition('-')
+        if right:
+            choices.append(list(range(int(left), int(right) + 1)))
+        elif left != '':
+            choices.append([int(left)])
+
+    # flatten list
+    choices = sum(choices, [])
+    # the current code stores the choices as strings
+    # instead of ints. not sure if necessary
+    choices = [elem for elem in choices]
+    return code, choices
+
+
 def main():
     config = load_config()
 
@@ -91,7 +128,7 @@ def main():
                         help='list Sortable Types')
     parser.add_argument('-L', '--local', dest='database',
                         help='an xml file containing the Pirate Bay database')
-    parser.add_argument('-p', dest='pages', default=1,
+    parser.add_argument('-p', dest='pages', default=1, type=int,
                         help='the number of pages to fetch '
                              "(doesn't work with --local)")
     parser.add_argument('-0', dest='first',
@@ -122,6 +159,16 @@ def main():
                         action='store_false',
                         help='disable colored output')
     args = parser.parse_args()
+
+    # figure out the mode - browse, search, top or recent
+    if args.browse:
+        args.mode = 'browse'
+    elif args.recent:
+        args.mode = 'recent'
+    elif len(args.search) == 0:
+        args.mode = 'top'
+    else:
+        args.mode = 'search'
 
     if (config.getboolean('Misc', 'colors') and not args.color
        or not config.getboolean('Misc', 'colors')):
@@ -161,11 +208,11 @@ def main():
             path = args.database
         else:
             path = config.get('LocalDB', 'path')
-        mags = pirate.local.search(path, args.search)
+        results = pirate.local.search(path, args.search)
         sizes, uploaded = [], []
 
     else:
-        mags, mirrors = [], {'https://thepiratebay.mn'}
+        results, mirrors = [], {'https://thepiratebay.mn'}
         try:
             req = request.Request('https://proxybay.co/list.txt',
                                   headers=pirate.data.default_headers)
@@ -181,9 +228,15 @@ def main():
 
         for mirror in mirrors:
             try:
-                print('Trying', mirror, end='... ')
-                mags, sizes, uploaded, ids = pirate.torrent.remote(args,
-                                                                   mirror)
+                print('Trying', mirror, end='... \n')
+                results = pirate.torrent.remote(
+                    pages=args.pages,
+                    category=pirate.torrent.parse_category(args.category),
+                    sort=pirate.torrent.parse_sort(args.sort),
+                    mode=args.mode,
+                    terms=args.search,
+                    mirror=mirror
+                )
             except (urllib.error.URLError, socket.timeout,
                     IOError, ValueError):
                 print('Failed', color='WARN')
@@ -195,18 +248,18 @@ def main():
             print('No available mirrors :(', color='WARN')
             return
 
-    if not mags:
+    if len(results) == 0:
         print('No results')
         return
 
-    pirate.print.search_results(mags, sizes, uploaded, local=args.database)
+    pirate.print.search_results(results, local=args.database)
 
     if args.first:
         print('Choosing first result')
         choices = [0]
     elif args.download_all:
         print('Downloading all results')
-        choices = range(len(mags))
+        choices = range(len(results))
     else:
         # New input loop to support different link options
         while True:
@@ -219,40 +272,7 @@ def main():
                 return
 
             try:
-                # Very permissive handling
-                # Check for any occurances or d, f, p, t, m, or q
-                cmd_code_match = re.search(r'([hdfpmtq])', l,
-                                           flags=re.IGNORECASE)
-                if cmd_code_match:
-                    code = cmd_code_match.group(0).lower()
-                else:
-                    code = None
-
-                # Clean up command codes
-                # Substitute multiple consecutive spaces/commas for single
-                # comma remove anything that isn't an integer or comma.
-                # Turn into list
-                l = re.sub(r'^[hdfp, ]*|[hdfp, ]*$', '', l)
-                l = re.sub('[ ,]+', ',', l)
-                l = re.sub('[^0-9,-]', '', l)
-                parsed_input = l.split(',')
-
-                # expand ranges
-                choices = []
-                # loop will generate a list of lists
-                for elem in parsed_input:
-                    left, sep, right = elem.partition('-')
-                    if right:
-                        choices.append(list(range(int(left), int(right) + 1)))
-                    elif left != '':
-                        choices.append([int(left)])
-
-                # flatten list
-                choices = sum(choices, [])
-                # the current code stores the choices as strings
-                # instead of ints. not sure if necessary
-                choices = [str(elem) for elem in choices]
-
+                code, choices = parse_torrent_command(l)
                 # Act on option, if supplied
                 print('')
                 if code == 'h':
@@ -268,16 +288,16 @@ def main():
                     print('Bye.', color='alt')
                     return
                 elif code == 'd':
-                    pirate.print.descriptions(choices, mags, site, ids)
+                    pirate.print.descriptions(choices, results, site)
                 elif code == 'f':
-                    pirate.print.file_lists(choices, mags, site, ids)
+                    pirate.print.file_lists(choices, results, site)
                 elif code == 'p':
-                    pirate.print.search_results(mags, sizes, uploaded)
+                    pirate.print.search_results(results)
                 elif code == 'm':
-                    pirate.torrent.save_magnets(choices, mags, config.get(
+                    pirate.torrent.save_magnets(choices, results, config.get(
                         'Save', 'directory'))
                 elif code == 't':
-                    pirate.torrent.save_torrents(choices, mags, config.get(
+                    pirate.torrent.save_torrents(choices, results, config.get(
                         'Save', 'directory'))
                 elif not l:
                     print('No links entered!', color='WARN')
@@ -291,13 +311,13 @@ def main():
 
     if args.save_magnets or config.getboolean('Save', 'magnets'):
         print('Saving selected magnets...')
-        pirate.torrent.save_magnets(choices, mags, config.get(
+        pirate.torrent.save_magnets(choices, results, config.get(
             'Save', 'directory'))
         save_to_file = True
 
     if args.save_torrents or config.getboolean('Save', 'torrents'):
         print('Saving selected torrents...')
-        pirate.torrent.save_torrents(choices, mags, config.get(
+        pirate.torrent.save_torrents(choices, results, config.get(
             'Save', 'directory'))
         save_to_file = True
 
@@ -305,7 +325,7 @@ def main():
         return
 
     for choice in choices:
-        url = mags[int(choice)][0]
+        url = results[int(choice)]['magnet']
 
         if args.transmission or config.getboolean('Misc', 'transmission'):
             subprocess.call(transmission_command + ['--add', url])

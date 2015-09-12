@@ -1,5 +1,5 @@
 # pirate-get
-[![Circle CI](https://circleci.com/gh/vikstrous/pirate-get/tree/master.svg?style=shield)](https://circleci.com/gh/vikstrous/pirate-get/tree/master) [![Coverage Status](https://coveralls.io/repos/vikstrous/pirate-get/badge.svg?branch=master&service=github)](https://coveralls.io/github/vikstrous/pirate-get?branch=master)
+[![Circle CI](https://img.shields.io/circleci/project/vikstrous/pirate-get.svg)](https://circleci.com/gh/vikstrous/pirate-get/tree/master) [![Coverage Status](https://img.shields.io/coveralls/vikstrous/pirate-get.svg)](https://coveralls.io/github/vikstrous/pirate-get?branch=master)
 
 pirate-get is a convenient command line tool (inspired by APT) to speed up your trip to the Pirate Bay and get your completely legal torrents more quickly.
 

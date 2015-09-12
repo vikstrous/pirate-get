@@ -21,4 +21,6 @@ setup(name='pirate-get',
         'Topic :: System :: Networking',
         'Programming Language :: Python :: 3 :: Only',
         'License :: OSI Approved :: GNU General Public License (GPL)',
-    ])
+    ],
+    test_suite='tests',
+)

@@ -6,6 +6,8 @@ import configparser
 import socket
 import urllib.request as request
 import urllib.error
+import sys
+
 import webbrowser
 
 import pirate.data
@@ -17,7 +19,7 @@ from os.path import expanduser, expandvars
 from pirate.print import print
 
 
-def load_config():
+def parse_config_file(text):
     config = configparser.ConfigParser()
 
     # default options
@@ -31,16 +33,12 @@ def load_config():
     config.set('LocalDB', 'path', expanduser('~/downloads/pirate-get/db'))
 
     config.add_section('Misc')
+    # TODO: try to use https://docs.python.org/3/library/configparser.html#configparser.BasicInterpolation for interpolating in the command
     config.set('Misc', 'openCommand', '')
     config.set('Misc', 'transmission', 'false')
     config.set('Misc', 'colors', 'true')
 
-    # user-defined config files
-    main = expandvars('$XDG_CONFIG_HOME/pirate-get')
-    alt = expanduser('~/.config/pirate-get')
-
-    # read config file
-    config.read([main] if os.path.isfile(main) else [alt])
+    config.read_string(text)
 
     # expand env variables
     directory = expanduser(expandvars(config.get('Save', 'Directory')))
@@ -50,6 +48,22 @@ def load_config():
     config.set('LocalDB', 'path', path)
 
     return config
+
+def load_config():
+    # user-defined config files
+    main = expandvars('$XDG_CONFIG_HOME/pirate-get')
+    alt = expanduser('~/.config/pirate-get')
+
+    # read config file
+    if os.path.isfile(main):
+        with open(main) as f:
+            return parse_config_file(f.read())
+
+    if os.path.isfile(alt):
+        with open(alt) as f:
+            return parse_config_file(f.read())
+
+    return parse_config_file("")
 
 
 def parse_cmd(cmd, url):
@@ -103,9 +117,7 @@ def parse_torrent_command(l):
     return code, choices
 
 
-def main():
-    config = load_config()
-
+def parse_args(args_in):
     parser = argparse.ArgumentParser(
         description='finds and downloads torrents from the Pirate Bay')
     parser.add_argument('-b', dest='browse',
@@ -158,7 +170,7 @@ def main():
     parser.add_argument('--disable-colors', dest='color',
                         action='store_false',
                         help='disable colored output')
-    args = parser.parse_args()
+    args = parser.parse_args(args_in)
 
     # figure out the mode - browse, search, top or recent
     if args.browse:
@@ -169,6 +181,14 @@ def main():
         args.mode = 'top'
     else:
         args.mode = 'search'
+
+    return args
+
+
+def main():
+    config = load_config()
+
+    args = parse_args(sys.argv[1:])
 
     if (config.getboolean('Misc', 'colors') and not args.color
        or not config.getboolean('Misc', 'colors')):

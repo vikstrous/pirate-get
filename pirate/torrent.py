@@ -28,7 +28,7 @@ def parse_category(category):
         return pirate.data.categories[category]
     else:
         print('Invalid category ignored', color='WARN')
-        return '0'
+        return 0
 
 
 def parse_sort(sort):
@@ -42,7 +42,7 @@ def parse_sort(sort):
         return pirate.data.sorts[sort]
     else:
         print('Invalid sort ignored', color='WARN')
-        return '99'
+        return 99
 
 
 #TODO: warn users when using a sort in a mode that doesn't accept sorts
@@ -161,6 +161,7 @@ def get_torrent(info_hash):
     return torrent.read()
 
 
+# TODO: handle slashes in torrent names
 def save_torrents(chosen_links, results, folder):
     for link in chosen_links:
         magnet = results[link]['magnet']
@@ -178,7 +179,8 @@ def save_torrents(chosen_links, results, folder):
             print('Saved {:X} in {}'.format(info_hash, file))
 
 
-def save_magnets(chosen_links, mags, folder):
+# TODO: handle slashes in torrent names
+def save_magnets(chosen_links, results, folder):
     for link in chosen_links:
         magnet = results[link]['magnet']
         name = re.search(r'dn=([^\&]*)', magnet)

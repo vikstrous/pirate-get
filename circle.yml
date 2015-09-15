@@ -10,6 +10,6 @@ test:
     - coverage run -m unittest discover
   post:
     - mkdir -p $CIRCLE_ARTIFACTS/coverage
-    - cd /home/ubuntu/pirate-get && coverage html --include=`pwd`*
+    - cd /home/ubuntu/pirate-get && coverage html --include=`pwd`* --omit="*/tests/*,*__init__*"
     - cp -R /home/ubuntu/pirate-get/htmlcov/* $CIRCLE_ARTIFACTS/coverage
     - coveralls

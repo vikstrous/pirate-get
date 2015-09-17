@@ -1,0 +1,7 @@
+[run]
+branch = True
+[report]
+include = /home/ubuntu/pirate-get/*
+omit = */tests/*,*__init__*
+[html]
+directory = /home/ubuntu/pirate-get/htmlcov/

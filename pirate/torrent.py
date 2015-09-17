@@ -45,10 +45,10 @@ def parse_sort(sort):
         return 99
 
 
-#TODO: warn users when using a sort in a mode that doesn't accept sorts
-#TODO: warn users when using search terms in a mode that doesn't accept search terms
-#TODO: same with page parameter for top and top48h
-#TODO: warn the user if trying to use a minor category with top48h
+# TODO: warn users when using a sort in a mode that doesn't accept sorts
+# TODO: warn users when using search terms in a mode that doesn't accept search terms
+# TODO: same with page parameter for top and top48h
+# TODO: warn the user if trying to use a minor category with top48h
 def build_request_path(page, category, sort, mode, terms):
     if mode == 'browse':
         if(category == 0):
@@ -151,9 +151,9 @@ def remote(pages, category, sort, mode, terms, mirror):
 def get_torrent(info_hash):
     url = 'http://torcache.net/torrent/{:X}.torrent'
     req = request.Request(url.format(info_hash),
-            headers=pirate.data.default_headers)
+                          headers=pirate.data.default_headers)
     req.add_header('Accept-encoding', 'gzip')
-    
+
     torrent = request.urlopen(req, timeout=pirate.data.default_timeout)
     if torrent.info().get('Content-Encoding') == 'gzip':
         torrent = gzip.GzipFile(fileobj=BytesIO(torrent.read()))
@@ -175,7 +175,7 @@ def save_torrents(chosen_links, results, folder):
         except urllib.error.HTTPError:
             print('There is no cached file for this torrent :(', color='ERROR')
         else:
-            open(file,'wb').write(torrent)
+            open(file, 'wb').write(torrent)
             print('Saved {:X} in {}'.format(info_hash, file))
 
 

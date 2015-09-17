@@ -83,16 +83,18 @@ class TestPirate(unittest.TestCase):
 
     def test_parse_args(self):
         tests = [
-            (['-b'], {'mode': 'browse'}),
-            ([], {'mode': 'top'}),
-            (['-R'], {'mode': 'recent'}),
-            (['internets'], {'mode': 'search', 'search': ['internets']}),
-            (['internets lol', 'lel'], {'mode': 'search', 'search': ['internets lol', 'lel']}),
+            (['-b'], {'action': 'browse'}),
+            ([], {'action': 'top'}),
+            (['-R'], {'action': 'recent'}),
+            (['internets'], {'action': 'search', 'search': ['internets']}),
+            (['internets lol', 'lel'], {'action': 'search', 'search': ['internets lol', 'lel']}),
         ]
         for test in tests:
-            config = pirate.pirate.parse_args(test[0])
+            args = pirate.pirate.parse_args(test[0])
+            config = pirate.pirate.parse_config_file('')
+            args = pirate.pirate.combine_configs(config, args)
             for option in test[1].keys():
-                value = getattr(config, option)
+                value = getattr(args, option)
                 self.assertEqual(test[1][option], value)
 
 if __name__ == '__main__':

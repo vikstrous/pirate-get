@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 import unittest
 from unittest import mock
-from unittest.mock import patch
-import pirate.torrent
-import pirate.data
+from unittest.mock import patch, MagicMock
 import os
 import io
 import urllib
 
+import pirate.torrent
+import pirate.data
+from pirate.print import Printer
 from tests import util
-
 
 class TestTorrent(unittest.TestCase):
 
@@ -47,25 +47,25 @@ class TestTorrent(unittest.TestCase):
         self.assertEqual(actual, expected)
 
     def test_parse_category(self):
-        category = pirate.torrent.parse_category('Audio')
+        category = pirate.torrent.parse_category(MagicMock(Printer), 'Audio')
         self.assertEqual(100, category)
-        category = pirate.torrent.parse_category('Video')
+        category = pirate.torrent.parse_category(MagicMock(Printer), 'Video')
         self.assertEqual(200, category)
-        category = pirate.torrent.parse_category('100')
+        category = pirate.torrent.parse_category(MagicMock(Printer), '100')
         self.assertEqual(100, category)
-        category = pirate.torrent.parse_category('asdf')
+        category = pirate.torrent.parse_category(MagicMock(Printer), 'asdf')
         self.assertEqual(0, category)
-        category = pirate.torrent.parse_category('9001')
+        category = pirate.torrent.parse_category(MagicMock(Printer), '9001')
         self.assertEqual(0, category)
 
     def test_parse_sort(self):
-        sort = pirate.torrent.parse_sort('SeedersDsc')
+        sort = pirate.torrent.parse_sort(MagicMock(Printer), 'SeedersDsc')
         self.assertEqual(7, sort)
-        sort = pirate.torrent.parse_sort('7')
+        sort = pirate.torrent.parse_sort(MagicMock(Printer), '7')
         self.assertEqual(7, sort)
-        sort = pirate.torrent.parse_sort('asdf')
+        sort = pirate.torrent.parse_sort(MagicMock(Printer), 'asdf')
         self.assertEqual(99, sort)
-        sort = pirate.torrent.parse_sort('7000')
+        sort = pirate.torrent.parse_sort(MagicMock(Printer), '7000')
         self.assertEqual(99, sort)
 
     def test_request_path(self):
@@ -94,19 +94,19 @@ class TestTorrent(unittest.TestCase):
     def test_save_torrents(self, get_torrent):
         with patch('pirate.torrent.open', mock.mock_open(), create=True) as open_:
             magnet = 'magnet:?xt=urn:btih:335fcd3cfbecc85554616d73de888033c6c16d37&dn=Test+Drive+Unlimited+%5BPC+Version%5D&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=udp%3A%2F%2Fopen.demonii.com%3A1337&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Fexodus.desync.com%3A6969'
-            pirate.torrent.save_torrents([0], [{'magnet':magnet}], 'path')
+            pirate.torrent.save_torrents(MagicMock(Printer), [0], [{'magnet':magnet}], 'path')
             get_torrent.assert_called_once_with(293294978876299923284263767676068334936407502135)
             open_.assert_called_once_with('path/Test Drive Unlimited [PC Version].torrent', 'wb')
 
     @patch('pirate.torrent.get_torrent', side_effect=urllib.error.HTTPError('', '', '', '', io.StringIO()))
     def test_save_torrents_fail(self, get_torrent):
         magnet = 'magnet:?xt=urn:btih:335fcd3cfbecc85554616d73de888033c6c16d37&dn=Test+Drive+Unlimited+%5BPC+Version%5D&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=udp%3A%2F%2Fopen.demonii.com%3A1337&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Fexodus.desync.com%3A6969'
-        pirate.torrent.save_torrents([0], [{'magnet':magnet}], 'path')
+        pirate.torrent.save_torrents(MagicMock(Printer), [0], [{'magnet':magnet}], 'path')
 
     def test_save_magnets(self):
         with patch('pirate.torrent.open', mock.mock_open(), create=True) as open_:
             magnet = 'magnet:?xt=urn:btih:335fcd3cfbecc85554616d73de888033c6c16d37&dn=Test+Drive+Unlimited+%5BPC+Version%5D&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=udp%3A%2F%2Fopen.demonii.com%3A1337&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Fexodus.desync.com%3A6969'
-            pirate.torrent.save_magnets([0], [{'magnet':magnet}], 'path')
+            pirate.torrent.save_magnets(MagicMock(Printer), [0], [{'magnet':magnet}], 'path')
             open_.assert_called_once_with('path/Test Drive Unlimited [PC Version].magnet', 'w')
 
     @patch('urllib.request.urlopen')
@@ -129,7 +129,7 @@ class TestTorrent(unittest.TestCase):
         response_obj = MockResponse()
         with patch('urllib.request.Request', return_value=request_obj) as request:
             with patch('urllib.request.urlopen', return_value=response_obj) as urlopen:
-                res = pirate.torrent.remote(1, 100, 10, 'browse', [], 'http://example.com')
+                res = pirate.torrent.remote(MagicMock(Printer), 1, 100, 10, 'browse', [], 'http://example.com')
                 request.assert_called_once_with('http://example.com/browse/100/0/10', headers=pirate.data.default_headers)
                 urlopen.assert_called_once_with(request_obj, timeout=pirate.data.default_timeout)
                 self.assertEqual(res, [])

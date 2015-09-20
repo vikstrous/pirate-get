@@ -9,7 +9,6 @@ import os.path
 from pyquery import PyQuery as pq
 
 import pirate.data
-from pirate.print import print
 
 from io import BytesIO
 
@@ -17,7 +16,7 @@ from io import BytesIO
 parser_regex = r'"(magnet\:\?xt=[^"]*)|<td align="right">([^<]+)</td>'
 
 
-def parse_category(category):
+def parse_category(printer, category):
     try:
         category = int(category)
     except ValueError:
@@ -27,11 +26,11 @@ def parse_category(category):
     elif category in pirate.data.categories.keys():
         return pirate.data.categories[category]
     else:
-        print('Invalid category ignored', color='WARN')
+        printer.print('Invalid category ignored', color='WARN')
         return 0
 
 
-def parse_sort(sort):
+def parse_sort(printer, sort):
     try:
         sort = int(sort)
     except ValueError:
@@ -41,7 +40,7 @@ def parse_sort(sort):
     elif sort in pirate.data.sorts.keys():
         return pirate.data.sorts[sort]
     else:
-        print('Invalid sort ignored', color='WARN')
+        printer.print('Invalid sort ignored', color='WARN')
         return 99
 
 
@@ -119,7 +118,7 @@ def parse_page(html):
     return results
 
 
-def remote(pages, category, sort, mode, terms, mirror):
+def remote(printer, pages, category, sort, mode, terms, mirror):
     res_l = []
 
     if pages < 1:
@@ -142,7 +141,7 @@ def remote(pages, category, sort, mode, terms, mirror):
             res_l += parse_page(res)
 
     except KeyboardInterrupt:
-        print('\nCancelled.')
+        printer.print('\nCancelled.')
         sys.exit(0)
 
     return res_l
@@ -162,7 +161,7 @@ def get_torrent(info_hash):
 
 
 # TODO: handle slashes in torrent names
-def save_torrents(chosen_links, results, folder):
+def save_torrents(printer, chosen_links, results, folder):
     for link in chosen_links:
         magnet = results[link]['magnet']
         name = re.search(r'dn=([^\&]*)', magnet)
@@ -173,14 +172,14 @@ def save_torrents(chosen_links, results, folder):
         try:
             torrent = get_torrent(info_hash)
         except urllib.error.HTTPError:
-            print('There is no cached file for this torrent :(', color='ERROR')
+            printer.print('There is no cached file for this torrent :(', color='ERROR')
         else:
             open(file, 'wb').write(torrent)
-            print('Saved {:X} in {}'.format(info_hash, file))
+            printer.print('Saved {:X} in {}'.format(info_hash, file))
 
 
 # TODO: handle slashes in torrent names
-def save_magnets(chosen_links, results, folder):
+def save_magnets(printer, chosen_links, results, folder):
     for link in chosen_links:
         magnet = results[link]['magnet']
         name = re.search(r'dn=([^\&]*)', magnet)
@@ -188,6 +187,6 @@ def save_magnets(chosen_links, results, folder):
         info_hash = int(re.search(r'btih:([a-f0-9]{40})', magnet).group(1), 16)
         file = os.path.join(folder,  torrent_name + '.magnet')
 
-        print('Saved {:X} in {}'.format(info_hash, file))
+        printer.print('Saved {:X} in {}'.format(info_hash, file))
         with open(file, 'w') as f:
             f.write(magnet + '\n')

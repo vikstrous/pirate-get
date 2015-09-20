@@ -14,10 +14,9 @@ import webbrowser
 import pirate.data
 import pirate.torrent
 import pirate.local
-import pirate.print
 
 from os.path import expanduser, expandvars
-from pirate.print import print
+from pirate.print import Printer
 
 
 def parse_config_file(text):
@@ -227,7 +226,7 @@ def combine_configs(config, args):
     return args
 
 
-def search_mirrors(pages, category, sort, action, search):
+def search_mirrors(printer, pages, category, sort, action, search):
     mirror_sources = [None, 'https://proxybay.co/list.txt']
     for mirror_source in mirror_sources:
         mirrors = OrderedDict()
@@ -239,7 +238,7 @@ def search_mirrors(pages, category, sort, action, search):
                                       headers=pirate.data.default_headers)
                 f = request.urlopen(req, timeout=pirate.data.default_timeout)
             except IOError:
-                print('Could not fetch additional mirrors', color='WARN')
+                printer.print('Could not fetch additional mirrors', color='WARN')
             else:
                 if f.getcode() != 200:
                     raise IOError('The proxy bay responded with an error.')
@@ -251,28 +250,31 @@ def search_mirrors(pages, category, sort, action, search):
 
         for mirror in mirrors.keys():
             try:
-                print('Trying', mirror, end='... \n')
+                printer.print('Trying', mirror, end='... \n')
                 results = pirate.torrent.remote(
+                    printer=printer,
                     pages=pages,
-                    category=pirate.torrent.parse_category(category),
-                    sort=pirate.torrent.parse_sort(sort),
+                    category=pirate.torrent.parse_category(printer, category),
+                    sort=pirate.torrent.parse_sort(printer, sort),
                     mode=action,
                     terms=search,
                     mirror=mirror
                 )
             except (urllib.error.URLError, socket.timeout,
                     IOError, ValueError):
-                print('Failed', color='WARN')
+                printer.print('Failed', color='WARN')
             else:
-                print('Ok', color='alt')
+                printer.print('Ok', color='alt')
                 return results, mirror
     else:
-        print('No available mirrors :(', color='WARN')
+        printer.print('No available mirrors :(', color='WARN')
         return [], None
 
 
 def main():
     args = combine_configs(load_config(), parse_args(sys.argv[1:]))
+
+    printer = Printer(args.color)
 
     # check it transmission is running
     if args.transmission:
@@ -280,7 +282,7 @@ def main():
                               stdout=subprocess.DEVNULL,
                               stderr=subprocess.DEVNULL)
         if ret != 0:
-            print('Transmission is not running.')
+            printer.print('Transmission is not running.')
             sys.exit(1)
 
     # non-torrent fetching actions
@@ -289,14 +291,14 @@ def main():
         cur_color = 'zebra_0'
         for key, value in sorted(pirate.data.categories.items()):
             cur_color = 'zebra_0' if cur_color == 'zebra_1' else 'zebra_1'
-            print(str(value), '\t', key, sep='', color=cur_color)
+            printer.print(str(value), '\t', key, sep='', color=cur_color)
         return
 
     if args.action == 'list_sorts':
         cur_color = 'zebra_0'
         for key, value in sorted(pirate.data.sorts.items()):
             cur_color = 'zebra_0' if cur_color == 'zebra_1' else 'zebra_1'
-            print(str(value), '\t', key, sep='', color=cur_color)
+            printer.print(str(value), '\t', key, sep='', color=cur_color)
         return
 
     # fetch torrents
@@ -304,38 +306,38 @@ def main():
     if args.source == 'local_tpb':
         results = pirate.local.search(args.database, args.search)
     elif args.source == 'tpb':
-        results, site = search_mirrors(args.pages, args.category, args.sort, args.action, args.search)
+        results, site = search_mirrors(printer, args.pages, args.category, args.sort, args.action, args.search)
 
     if len(results) == 0:
-        print('No results')
+        printer.print('No results')
         return
 
-    pirate.print.search_results(results, local=args.source == 'local_tpb')
+    printer.search_results(results, local=args.source == 'local_tpb')
 
     # number of results to pick
     if args.first:
-        print('Choosing first result')
+        printer.print('Choosing first result')
         choices = [0]
     elif args.download_all:
-        print('Downloading all results')
+        printer.print('Downloading all results')
         choices = range(len(results))
     else:
         # interactive loop for per-torrent actions
         while True:
-            print("\nSelect links (Type 'h' for more options"
+            printer.print("\nSelect links (Type 'h' for more options"
                   ", 'q' to quit)", end='\b', color='alt')
             try:
                 l = input(': ')
             except (KeyboardInterrupt, EOFError):
-                print('\nCancelled.')
+                printer.print('\nCancelled.')
                 return
 
             try:
                 code, choices = parse_torrent_command(l)
                 # Act on option, if supplied
-                print('')
+                printer.print('')
                 if code == 'h':
-                    print('Options:',
+                    printer.print('Options:',
                           '<links>: Download selected torrents',
                           '[m<links>]: Save magnets as files',
                           '[t<links>]: Save .torrent files',
@@ -344,35 +346,35 @@ def main():
                           '[p] Print search results',
                           '[q] Quit', sep='\n')
                 elif code == 'q':
-                    print('Bye.', color='alt')
+                    printer.print('Bye.', color='alt')
                     return
                 elif code == 'd':
-                    pirate.print.descriptions(choices, results, site)
+                    printer.descriptions(choices, results, site)
                 elif code == 'f':
-                    pirate.print.file_lists(choices, results, site)
+                    printer.file_lists(choices, results, site)
                 elif code == 'p':
-                    pirate.print.search_results(results)
+                    printer.search_results(results)
                 elif code == 'm':
-                    pirate.torrent.save_magnets(choices, results, args.save_directory)
+                    pirate.torrent.save_magnets(printer, choices, results, args.save_directory)
                 elif code == 't':
-                    pirate.torrent.save_torrents(choices, results, args.save_directory)
+                    pirate.torrent.save_torrents(printer, choices, results, args.save_directory)
                 elif not l:
-                    print('No links entered!', color='WARN')
+                    printer.print('No links entered!', color='WARN')
                 else:
                     break
             except Exception as e:
-                print('Exception:', e, color='ERROR')
+                printer.print('Exception:', e, color='ERROR')
                 return
 
     # output
 
     if args.output == 'save_magnet_files':
-        print('Saving selected magnets...')
+        printer.print('Saving selected magnets...')
         pirate.torrent.save_magnets(choices, results, args.save_directory)
         return
 
     if args.output == 'save_torrent_files':
-        print('Saving selected torrents...')
+        printer.print('Saving selected torrents...')
         pirate.torrent.save_torrents(choices, results, args.save_directory)
         return
 

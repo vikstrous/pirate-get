@@ -2,7 +2,7 @@
 import unittest
 from unittest.mock import patch, call, MagicMock
 
-import pirate.print
+from pirate.print import Printer
 
 
 class TestPrint(unittest.TestCase):
@@ -12,6 +12,8 @@ class TestPrint(unittest.TestCase):
             add_row = MagicMock()
             align = {}
         mock = MockTable()
+        printer = Printer(False)
+        printer.print = MagicMock()
         with patch('prettytable.PrettyTable', return_value=mock) as prettytable:
             results = [{
                 'magnet': 'dn=name',
@@ -20,7 +22,7 @@ class TestPrint(unittest.TestCase):
                 'size': ['3','MiB'],
                 'uploaded': 'never'
             }]
-            pirate.print.search_results(results)
+            printer.search_results(results)
             prettytable.assert_called_once_with(['LINK', 'SEED', 'LEECH', 'RATIO', 'SIZE', '', 'UPLOAD', 'NAME'])
             mock.add_row.assert_has_calls([call([0, 1, 2, '0.5', '3.0', 'MiB', 'never', 'name'])])
 
@@ -29,12 +31,14 @@ class TestPrint(unittest.TestCase):
             add_row = MagicMock()
             align = {}
         mock = MockTable()
+        printer = Printer(False)
+        printer.print = MagicMock()
         with patch('veryprettytable.VeryPrettyTable', return_value=mock) as prettytable:
             results = [{
                 'magnet': 'dn=name',
                 'Name': 'name',
             }]
-            pirate.print.search_results(results, local=True)
+            printer.search_results(results, local=True)
             prettytable.assert_called_once_with(['LINK', 'NAME'])
             mock.add_row.assert_has_calls([call([0, 'name'])])
 

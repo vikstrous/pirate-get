@@ -2,9 +2,10 @@
 import socket
 import unittest
 from unittest import mock
-from unittest.mock import patch, call
+from unittest.mock import patch, call, MagicMock
 
 import pirate.pirate
+from pirate.print import Printer
 
 
 class TestPirate(unittest.TestCase):
@@ -119,19 +120,20 @@ class TestPirate(unittest.TestCase):
             info = mock.MagicMock()
             getcode = mock.MagicMock(return_value=200)
         response_obj = MockResponse()
+        printer = MagicMock(Printer)
         with patch('urllib.request.urlopen', return_value=response_obj) as urlopen:
             with patch('pirate.torrent.remote', return_value=[]) as remote:
-                results, mirror = pirate.pirate.search_mirrors(pages, category, sort, action, search)
+                results, mirror = pirate.pirate.search_mirrors(printer, pages, category, sort, action, search)
                 self.assertEqual(results, [])
                 self.assertEqual(mirror, 'https://thepiratebay.mn')
-                remote.assert_called_once_with(pages=1, category=100, sort=10, mode='browse', terms=[], mirror='https://thepiratebay.mn')
+                remote.assert_called_once_with(printer=printer, pages=1, category=100, sort=10, mode='browse', terms=[], mirror='https://thepiratebay.mn')
             with patch('pirate.torrent.remote', side_effect=[socket.timeout, []]) as remote:
-                results, mirror = pirate.pirate.search_mirrors(pages, category, sort, action, search)
+                results, mirror = pirate.pirate.search_mirrors(printer, pages, category, sort, action, search)
                 self.assertEqual(results, [])
                 self.assertEqual(mirror, 'https://example.com')
                 remote.assert_has_calls([
-                    call(pages=1, category=100, sort=10, mode='browse', terms=[], mirror='https://thepiratebay.mn'),
-                    call(pages=1, category=100, sort=10, mode='browse', terms=[], mirror='https://example.com')
+                    call(printer=printer, pages=1, category=100, sort=10, mode='browse', terms=[], mirror='https://thepiratebay.mn'),
+                    call(printer=printer, pages=1, category=100, sort=10, mode='browse', terms=[], mirror='https://example.com')
                 ])
 
 if __name__ == '__main__':

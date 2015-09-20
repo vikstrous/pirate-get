@@ -228,40 +228,44 @@ def combine_configs(config, args):
 
 
 def search_mirrors(pages, category, sort, action, search):
-    mirrors = OrderedDict()
-    mirrors['https://thepiratebay.mn'] = None
-    try:
-        req = request.Request('https://proxybay.co/list.txt',
-                              headers=pirate.data.default_headers)
-        f = request.urlopen(req, timeout=pirate.data.default_timeout)
-    except IOError:
-        print('Could not fetch additional mirrors', color='WARN')
-    else:
-        if f.getcode() != 200:
-            raise IOError('The proxy bay responded with an error.')
-        for mirror in [i.decode('utf-8').strip() for i in f.readlines()][3:]:
-            mirrors[mirror] = None
-    for mirror in pirate.data.blacklist:
-        if mirror in mirrors:
-            del mirrors[mirror]
-
-    for mirror in mirrors.keys():
-        try:
-            print('Trying', mirror, end='... \n')
-            results = pirate.torrent.remote(
-                pages=pages,
-                category=pirate.torrent.parse_category(category),
-                sort=pirate.torrent.parse_sort(sort),
-                mode=action,
-                terms=search,
-                mirror=mirror
-            )
-        except (urllib.error.URLError, socket.timeout,
-                IOError, ValueError):
-            print('Failed', color='WARN')
+    mirror_sources = [None, 'https://proxybay.co/list.txt']
+    for mirror_source in mirror_sources:
+        mirrors = OrderedDict()
+        if mirror_source is None:
+            mirrors['https://thepiratebay.mn'] = None
         else:
-            print('Ok', color='alt')
-            return results, mirror
+            try:
+                req = request.Request(mirror_source,
+                                      headers=pirate.data.default_headers)
+                f = request.urlopen(req, timeout=pirate.data.default_timeout)
+            except IOError:
+                print('Could not fetch additional mirrors', color='WARN')
+            else:
+                if f.getcode() != 200:
+                    raise IOError('The proxy bay responded with an error.')
+                for mirror in [i.decode('utf-8').strip() for i in f.readlines()][3:]:
+                    mirrors[mirror] = None
+            for mirror in pirate.data.blacklist:
+                if mirror in mirrors:
+                    del mirrors[mirror]
+
+        for mirror in mirrors.keys():
+            try:
+                print('Trying', mirror, end='... \n')
+                results = pirate.torrent.remote(
+                    pages=pages,
+                    category=pirate.torrent.parse_category(category),
+                    sort=pirate.torrent.parse_sort(sort),
+                    mode=action,
+                    terms=search,
+                    mirror=mirror
+                )
+            except (urllib.error.URLError, socket.timeout,
+                    IOError, ValueError):
+                print('Failed', color='WARN')
+            else:
+                print('Ok', color='alt')
+                return results, mirror
     else:
         print('No available mirrors :(', color='WARN')
         return [], None

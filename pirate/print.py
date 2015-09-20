@@ -8,7 +8,7 @@ import shutil
 from io import BytesIO
 
 import colorama
-import prettytable
+import veryprettytable
 
 import pirate.data
 
@@ -37,12 +37,12 @@ def print(*args, **kwargs):
 # TODO: extract the name from the search results instead of from the magnet link when possible
 def search_results(results, local=None):
     columns = shutil.get_terminal_size((80, 20)).columns
-    cur_color = 'zebra_0'
+    even = True
 
     if local:
-        table = prettytable.PrettyTable(['LINK', 'NAME'])
+        table = veryprettytable.VeryPrettyTable(['LINK', 'NAME'])
     else:
-        table = prettytable.PrettyTable(['LINK', 'SEED', 'LEECH', 'RATIO', 'SIZE', '', 'UPLOAD', 'NAME'])
+        table = veryprettytable.VeryPrettyTable(['LINK', 'SEED', 'LEECH', 'RATIO', 'SIZE', '', 'UPLOAD', 'NAME'])
         table.align['NAME'] = 'l'
         table.align['SEED'] = 'r'
         table.align['LEECH'] = 'r'
@@ -55,8 +55,6 @@ def search_results(results, local=None):
     table.padding_width = 1
 
     for n, result in enumerate(results):
-        # Alternate between colors
-        cur_color = 'zebra_0' if cur_color == 'zebra_1' else 'zebra_1'
 
         name = re.search(r'dn=([^\&]*)', result['magnet'])
         torrent_name = parse.unquote_plus(name.group(1))
@@ -80,10 +78,16 @@ def search_results(results, local=None):
             except ZeroDivisionError:
                 ratio = float('inf')
 
-            content = [n, no_seeders, no_leechers, '{0:.1f}'.format(ratio),
-                       '{0:.1f}'.format(size), unit, date, torrent_name[:columns - 53]]
+            content = [n, no_seeders, no_leechers, '{:.1f}'.format(ratio),
+                       '{:.1f}'.format(size), unit, date, torrent_name[:columns - 53]]
 
-        table.add_row(content)
+        if even:
+            table.add_row(content)
+        else:
+            table.add_row(content, fore_color='blue')
+
+        # Alternate between colors
+        even = not even
     print(table)
 
 

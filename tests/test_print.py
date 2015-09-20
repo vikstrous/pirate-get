@@ -29,7 +29,7 @@ class TestPrint(unittest.TestCase):
             add_row = MagicMock()
             align = {}
         mock = MockTable()
-        with patch('prettytable.PrettyTable', return_value=mock) as prettytable:
+        with patch('veryprettytable.VeryPrettyTable', return_value=mock) as prettytable:
             results = [{
                 'magnet': 'dn=name',
                 'Name': 'name',

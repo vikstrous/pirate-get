@@ -271,9 +271,7 @@ def search_mirrors(printer, pages, category, sort, action, search):
         return [], None
 
 
-def main():
-    args = combine_configs(load_config(), parse_args(sys.argv[1:]))
-
+def pirate_main(args):
     printer = Printer(args.color)
 
     # check it transmission is running
@@ -390,6 +388,11 @@ def main():
 
     if args.output == 'transmission':
         subprocess.call(args.transmission_command + ['-l'])
+
+
+def main():
+    args = combine_configs(load_config(), parse_args(sys.argv[1:]))
+    pirate_main(args)
 
 
 if __name__ == '__main__':

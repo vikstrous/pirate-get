@@ -109,15 +109,30 @@ class TestTorrent(unittest.TestCase):
             pirate.torrent.save_magnets([0], [{'magnet':magnet}], 'path')
             open_.assert_called_once_with('path/Test Drive Unlimited [PC Version].magnet', 'w')
 
-    def test_get_torrent(self):
-        with patch('urllib.request.urlopen') as urlopen:
-            class MockResponse():
-                add_header = mock.MagicMock()
-            response = MockResponse()
-            with patch('urllib.request.Request', return_value=response) as request:
-                pirate.torrent.get_torrent(100000000000000)
-                request.assert_called_once_with('http://torcache.net/torrent/5AF3107A4000.torrent', headers=pirate.data.default_headers)
-                urlopen.assert_called_once_with(response, timeout=pirate.data.default_timeout)
+    @patch('urllib.request.urlopen')
+    def test_get_torrent(self, urlopen):
+        class MockRequest():
+            add_header = mock.MagicMock()
+        request_obj = MockRequest()
+        with patch('urllib.request.Request', return_value=request_obj) as request:
+            pirate.torrent.get_torrent(100000000000000)
+            request.assert_called_once_with('http://torcache.net/torrent/5AF3107A4000.torrent', headers=pirate.data.default_headers)
+            urlopen.assert_called_once_with(request_obj, timeout=pirate.data.default_timeout)
+
+    def test_remote(self):
+        class MockRequest():
+            add_header = mock.MagicMock()
+        request_obj = MockRequest()
+        class MockResponse():
+            read = mock.MagicMock(return_value='<html>No hits. Try adding an asterisk in you search phrase.</html>'.encode('utf8'))
+            info = mock.MagicMock()
+        response_obj = MockResponse()
+        with patch('urllib.request.Request', return_value=request_obj) as request:
+            with patch('urllib.request.urlopen', return_value=response_obj) as urlopen:
+                res = pirate.torrent.remote(1, 100, 10, 'browse', [], 'http://example.com')
+                request.assert_called_once_with('http://example.com/browse/100/0/10', headers=pirate.data.default_headers)
+                urlopen.assert_called_once_with(request_obj, timeout=pirate.data.default_timeout)
+                self.assertEqual(res, [])
 
 if __name__ == '__main__':
     unittest.main()

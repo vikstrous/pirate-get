@@ -2,11 +2,13 @@ import builtins
 import re
 import os
 import gzip
-import colorama
 import urllib.parse as parse
 import urllib.request as request
 import shutil
 from io import BytesIO
+
+import colorama
+import prettytable
 
 import pirate.data
 
@@ -32,20 +34,25 @@ def print(*args, **kwargs):
         return builtins.print(*args, **kwargs)
 
 
-# TODO: extract the name from the search results instead of the magnet link when possible
+# TODO: extract the name from the search results instead of from the magnet link when possible
 def search_results(results, local=None):
     columns = shutil.get_terminal_size((80, 20)).columns
     cur_color = 'zebra_0'
 
     if local:
-        print('{:>4}   {:{length}}'.format(
-              'LINK', 'NAME', length=columns - 8),
-              color='header')
+        table = prettytable.PrettyTable(['LINK', 'NAME'])
     else:
-        print('{:>4}  {:>5}  {:>5}  {:>5}  {:9}  {:11}  {:{length}}'.format(
-              'LINK', 'SEED', 'LEECH', 'RATIO',
-              'SIZE', 'UPLOAD', 'NAME', length=columns - 52),
-              color='header')
+        table = prettytable.PrettyTable(['LINK', 'SEED', 'LEECH', 'RATIO', 'SIZE', '', 'UPLOAD', 'NAME'])
+        table.align['NAME'] = 'l'
+        table.align['SEED'] = 'r'
+        table.align['LEECH'] = 'r'
+        table.align['RATIO'] = 'r'
+        table.align['SIZE'] = 'r'
+        table.align['UPLOAD'] = 'l'
+
+    table.max_width = columns
+    table.border = False
+    table.padding_width = 1
 
     for n, result in enumerate(results):
         # Alternate between colors
@@ -55,8 +62,7 @@ def search_results(results, local=None):
         torrent_name = parse.unquote_plus(name.group(1))
 
         if local:
-            line = '{:5}  {:{length}}'
-            content = [n, torrent_name[:columns]]
+            content = [n, torrent_name[:columns - 7]]
         else:
             no_seeders = int(result['seeds'])
             no_leechers = int(result['leechers'])
@@ -74,13 +80,11 @@ def search_results(results, local=None):
             except ZeroDivisionError:
                 ratio = float('inf')
 
-            line = ('{:4}  {:5}  {:5}  {:5.1f}  {:5.1f}'
-                    ' {:3}  {:<11}  {:{length}}')
-            content = [n, no_seeders, no_leechers, ratio,
-                       size, unit, date, torrent_name[:columns - 52]]
+            content = [n, no_seeders, no_leechers, '{0:.1f}'.format(ratio),
+                       '{0:.1f}'.format(size), unit, date, torrent_name[:columns - 53]]
 
-        # enhanced print output with justified columns
-        print(line.format(*content, length=columns - 52), color=cur_color)
+        table.add_row(content)
+    print(table)
 
 
 def descriptions(chosen_links, results, site):

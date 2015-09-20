@@ -37,10 +37,32 @@ class TestPrint(unittest.TestCase):
             results = [{
                 'magnet': 'dn=name',
                 'Name': 'name',
+            },{
+                'magnet': 'dn=name2',
+                'Name': 'name2',
             }]
             printer.search_results(results, local=True)
             prettytable.assert_called_once_with(['LINK', 'NAME'])
-            mock.add_row.assert_has_calls([call([0, 'name'])])
+            mock.add_row.assert_has_calls([call([0, 'name']), call([1, 'name2'])])
+
+    def test_print_results_local(self):
+        class MockTable:
+            add_row = MagicMock()
+            align = {}
+        mock = MockTable()
+        printer = Printer(True)
+        printer.print = MagicMock()
+        with patch('veryprettytable.VeryPrettyTable', return_value=mock) as prettytable:
+            results = [{
+                'magnet': 'dn=name',
+                'Name': 'name',
+            },{
+                'magnet': 'dn=name2',
+                'Name': 'name2',
+            }]
+            printer.search_results(results, local=True)
+            prettytable.assert_called_once_with(['LINK', 'NAME'])
+            mock.add_row.assert_has_calls([call([0, 'name']), call([1, 'name2'], fore_color='blue')])
 
     def test_print_descriptions(self):
         printer = Printer(False)

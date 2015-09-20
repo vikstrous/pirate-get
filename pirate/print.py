@@ -85,7 +85,7 @@ class Printer:
                 content = [n, no_seeders, no_leechers, '{:.1f}'.format(ratio),
                            '{:.1f}'.format(size), unit, date, torrent_name[:columns - 53]]
 
-            if even:
+            if even or not self.enable_color:
                 table.add_row(content)
             else:
                 table.add_row(content, fore_color='blue')

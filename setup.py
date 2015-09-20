@@ -13,7 +13,7 @@ setup(name='pirate-get',
     entry_points={
         'console_scripts': ['pirate-get = pirate.pirate:main']
     },
-    install_requires=['colorama>=0.3.3', 'pyquery>=1.2.9'],
+    install_requires=['colorama>=0.3.3', 'pyquery>=1.2.9', 'veryprettytable>=0.8.1'],
     keywords=['torrent', 'magnet', 'download', 'tpb', 'client'],
     classifiers=[
         'Topic :: Utilities',

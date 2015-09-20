@@ -45,6 +45,16 @@ class TestPrint(unittest.TestCase):
             prettytable.assert_called_once_with(['LINK', 'NAME'])
             mock.add_row.assert_has_calls([call([0, 'name']), call([1, 'name2'])])
 
+    def test_print_color(self):
+        printer = Printer(False)
+        with patch('pirate.print.builtins.print') as mock_print:
+            printer.print('abc', color='zebra_1')
+            mock_print.assert_called_once_with('abc')
+        printer = Printer(True)
+        with patch('pirate.print.builtins.print') as mock_print:
+            printer.print('abc', color='zebra_1')
+            mock_print.assert_called_once_with('\x1b[34mabc', '\x1b[0m')
+
     def test_print_results_local(self):
         class MockTable:
             add_row = MagicMock()

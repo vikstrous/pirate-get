@@ -122,9 +122,13 @@ class TestPirate(unittest.TestCase):
         with patch('urllib.request.urlopen', return_value=response_obj) as urlopen:
             with patch('pirate.torrent.remote', return_value=[]) as remote:
                 results, mirror = pirate.pirate.search_mirrors(pages, category, sort, action, search)
+                self.assertEqual(results, [])
+                self.assertEqual(mirror, 'https://thepiratebay.mn')
                 remote.assert_called_once_with(pages=1, category=100, sort=10, mode='browse', terms=[], mirror='https://thepiratebay.mn')
             with patch('pirate.torrent.remote', side_effect=[socket.timeout, []]) as remote:
                 results, mirror = pirate.pirate.search_mirrors(pages, category, sort, action, search)
+                self.assertEqual(results, [])
+                self.assertEqual(mirror, 'https://example.com')
                 remote.assert_has_calls([
                     call(pages=1, category=100, sort=10, mode='browse', terms=[], mirror='https://thepiratebay.mn'),
                     call(pages=1, category=100, sort=10, mode='browse', terms=[], mirror='https://example.com')

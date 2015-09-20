@@ -182,12 +182,12 @@ def combine_configs(config, args):
         args.action = 'browse'
     elif args.recent:
         args.action = 'recent'
-    elif len(args.search) == 0:
-        args.action = 'top'
     elif args.list_categories:
         args.action = 'list_categories'
     elif args.list_sorts:
         args.action = 'list_sorts'
+    elif len(args.search) == 0:
+        args.action = 'top'
     else:
         args.action = 'search'
 

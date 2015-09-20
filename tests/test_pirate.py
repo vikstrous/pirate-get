@@ -83,19 +83,30 @@ class TestPirate(unittest.TestCase):
 
     def test_parse_args(self):
         tests = [
-            (['-b'], {'action': 'browse'}),
-            ([], {'action': 'top'}),
-            (['-R'], {'action': 'recent'}),
-            (['internets'], {'action': 'search', 'search': ['internets']}),
-            (['internets lol', 'lel'], {'action': 'search', 'search': ['internets lol', 'lel']}),
+            ('', ['-b'], {'action': 'browse'}),
+            ('', [], {'action': 'top'}),
+            ('', ['-R'], {'action': 'recent'}),
+            ('', ['-l'], {'action': 'list_categories'}),
+            ('', ['--list_sorts'], {'action': 'list_sorts'}),
+            ('', ['term'], {'action': 'search', 'source': 'tpb'}),
+            ('', ['-L', 'filename', 'term'], {'action': 'search', 'source': 'local_tpb', 'database': 'filename'}),
+            ('', ['term', '-S', 'dir'], {'action': 'search', 'save_directory': 'dir'}),
+            ('', ['-P', '1337'], {'transmission_command': ['transmission-remote', '1337']}),
+            ('', ['term'], {'output': 'browser_open'}),
+            ('', ['term', '-t'], {'output': 'transmission'}),
+            ('', ['term', '--save-magnets'], {'output': 'save_magnet_files'}),
+            ('', ['term', '--save-torrents'], {'output': 'save_torrent_files'}),
+            ('', ['term', '-C', 'command'], {'output': 'open_command', 'open_command': 'command'}),
+            ('', ['internets'], {'action': 'search', 'search': ['internets']}),
+            ('', ['internets lol', 'lel'], {'action': 'search', 'search': ['internets lol', 'lel']}),
         ]
         for test in tests:
-            args = pirate.pirate.parse_args(test[0])
-            config = pirate.pirate.parse_config_file('')
+            args = pirate.pirate.parse_args(test[1])
+            config = pirate.pirate.parse_config_file(test[0])
             args = pirate.pirate.combine_configs(config, args)
-            for option in test[1].keys():
+            for option in test[2].keys():
                 value = getattr(args, option)
-                self.assertEqual(test[1][option], value)
+                self.assertEqual(test[2][option], value)
 
 if __name__ == '__main__':
     unittest.main()

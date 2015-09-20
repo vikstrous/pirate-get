@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
+import socket
 import unittest
+from unittest import mock
+from unittest.mock import patch, call
+
 import pirate.pirate
 
 
@@ -107,6 +111,24 @@ class TestPirate(unittest.TestCase):
             for option in test[2].keys():
                 value = getattr(args, option)
                 self.assertEqual(test[2][option], value)
+
+    def test_search_mirrors(self):
+        pages, category, sort, action, search = (1, 100, 10, 'browse', [])
+        class MockResponse():
+            readlines = mock.MagicMock(return_value=[x.encode('utf-8') for x in ['', '', '', 'https://example.com']])
+            info = mock.MagicMock()
+            getcode = mock.MagicMock(return_value=200)
+        response_obj = MockResponse()
+        with patch('urllib.request.urlopen', return_value=response_obj) as urlopen:
+            with patch('pirate.torrent.remote', return_value=[]) as remote:
+                results, mirror = pirate.pirate.search_mirrors(pages, category, sort, action, search)
+                remote.assert_called_once_with(pages=1, category=100, sort=10, mode='browse', terms=[], mirror='https://thepiratebay.mn')
+            with patch('pirate.torrent.remote', side_effect=[socket.timeout, []]) as remote:
+                results, mirror = pirate.pirate.search_mirrors(pages, category, sort, action, search)
+                remote.assert_has_calls([
+                    call(pages=1, category=100, sort=10, mode='browse', terms=[], mirror='https://thepiratebay.mn'),
+                    call(pages=1, category=100, sort=10, mode='browse', terms=[], mirror='https://example.com')
+                ])
 
 if __name__ == '__main__':
     unittest.main()

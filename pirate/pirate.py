@@ -7,6 +7,7 @@ import socket
 import urllib.request as request
 import urllib.error
 import sys
+from collections import OrderedDict
 
 import webbrowser
 
@@ -226,8 +227,9 @@ def combine_configs(config, args):
     return args
 
 
-def search_mirrors(args):
-    mirrors = {'https://thepiratebay.mn'}
+def search_mirrors(pages, category, sort, action, search):
+    mirrors = OrderedDict()
+    mirrors['https://thepiratebay.mn'] = None
     try:
         req = request.Request('https://proxybay.co/list.txt',
                               headers=pirate.data.default_headers)
@@ -237,19 +239,21 @@ def search_mirrors(args):
     else:
         if f.getcode() != 200:
             raise IOError('The proxy bay responded with an error.')
-        mirrors = mirrors.union([i.decode('utf-8').strip()
-                                for i in f.readlines()][3:]
-                                ).difference(pirate.data.blacklist)
+        for mirror in [i.decode('utf-8').strip() for i in f.readlines()][3:]:
+            mirrors[mirror] = None
+    for mirror in pirate.data.blacklist:
+        if mirror in mirrors:
+            del mirrors[mirror]
 
-    for mirror in mirrors:
+    for mirror in mirrors.keys():
         try:
             print('Trying', mirror, end='... \n')
             results = pirate.torrent.remote(
-                pages=args.pages,
-                category=pirate.torrent.parse_category(args.category),
-                sort=pirate.torrent.parse_sort(args.sort),
-                mode=args.action,
-                terms=args.search,
+                pages=pages,
+                category=pirate.torrent.parse_category(category),
+                sort=pirate.torrent.parse_sort(sort),
+                mode=action,
+                terms=search,
                 mirror=mirror
             )
         except (urllib.error.URLError, socket.timeout,
@@ -296,7 +300,7 @@ def main():
     if args.source == 'local_tpb':
         results = pirate.local.search(args.database, args.search)
     elif args.source == 'tpb':
-        results, site = search_mirrors(args)
+        results, site = search_mirrors(args.pages, args.category, args.sort, args.action, args.search)
 
     if len(results) == 0:
         print('No results')

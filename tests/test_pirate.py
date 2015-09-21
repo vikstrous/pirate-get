@@ -34,7 +34,7 @@ class TestPirate(unittest.TestCase):
         }
         with patch('pirate.torrent.remote', return_value=[result]) as mock_remote:
             config = pirate.pirate.parse_config_file('')
-            args = pirate.pirate.combine_configs(config, pirate.pirate.parse_args(['-0', 'term', '-C', 'blah %s']))
+            args = pirate.pirate.combine_configs(config, pirate.pirate.parse_args(['-0', '-C', 'blah %s', '-o', 'command', 'search', 'term']))
             pirate.pirate.pirate_main(args)
             mock_call.assert_called_once_with(['blah', 'dn=derp'])
 
@@ -50,7 +50,7 @@ class TestPirate(unittest.TestCase):
         }
         with patch('pirate.torrent.remote', return_value=[result]) as mock_remote:
             config = pirate.pirate.parse_config_file('')
-            args = pirate.pirate.combine_configs(config, pirate.pirate.parse_args(['term', '-C', 'blah %s']))
+            args = pirate.pirate.combine_configs(config, pirate.pirate.parse_args(['-C', 'blah %s', '-o', 'command', 'search', 'term']))
             pirate.pirate.pirate_main(args)
             mock_call.assert_called_once_with(['blah', 'dn=derp'])
 
@@ -120,22 +120,22 @@ class TestPirate(unittest.TestCase):
 
     def test_parse_args(self):
         tests = [
-            ('', ['-b'], {'action': 'browse'}),
-            ('', [], {'action': 'top'}),
-            ('', ['-R'], {'action': 'recent'}),
-            ('', ['-l'], {'action': 'list_categories'}),
-            ('', ['--list_sorts'], {'action': 'list_sorts'}),
-            ('', ['term'], {'action': 'search', 'source': 'tpb'}),
-            ('', ['-L', 'filename', 'term'], {'action': 'search', 'source': 'local_tpb', 'database': 'filename'}),
-            ('', ['term', '-S', 'dir'], {'action': 'search', 'save_directory': 'dir'}),
-            ('', ['-P', '1337'], {'transmission_command': ['transmission-remote', '1337']}),
-            ('', ['term'], {'output': 'browser_open'}),
-            ('', ['term', '-t'], {'output': 'transmission'}),
-            ('', ['term', '--save-magnets'], {'output': 'save_magnet_files'}),
-            ('', ['term', '--save-torrents'], {'output': 'save_torrent_files'}),
-            ('', ['term', '-C', 'command'], {'output': 'open_command', 'open_command': 'command'}),
-            ('', ['internets'], {'action': 'search', 'search': ['internets']}),
-            ('', ['internets lol', 'lel'], {'action': 'search', 'search': ['internets lol', 'lel']}),
+            ('', ['browse'], {'action': 'browse'}),
+            ('', ['search'], {'action': 'top'}),
+            ('', ['recent'], {'action': 'recent'}),
+            ('', ['list_categories'], {'action': 'list_categories'}),
+            ('', ['list_sorts'], {'action': 'list_sorts'}),
+            ('', ['search', 'term'], {'action': 'search', 'source': 'tpb'}),
+            ('', ['-L', 'filename', 'search', 'term'], {'action': 'search', 'source': 'local_tpb', 'database': 'filename'}),
+            ('', ['-S', 'dir', 'search', 'term'], {'action': 'search', 'save_directory': 'dir'}),
+            ('', ['-P', '1337', 'search', 'term'], {'transmission_command': ['transmission-remote', '1337']}),
+            ('', ['search', 'term'], {'output': 'browser'}),
+            ('', ['-o', 'transmission', 'search', 'term'], {'output': 'transmission'}),
+            ('', ['-o', 'magnet', 'search', 'term'], {'output': 'magnet'}),
+            ('', ['-o', 'torrent', 'search', 'term'], {'output': 'torrent'}),
+            ('', ['-o', 'command', '-C', 'command', 'search', 'term'], {'output': 'command', 'command': 'command'}),
+            ('', ['search', 'internets'], {'action': 'search', 'terms': ['internets']}),
+            ('', ['search', 'internets lol', 'lel'], {'action': 'search', 'terms': ['internets lol', 'lel']}),
         ]
         for test in tests:
             args = pirate.pirate.parse_args(test[1])

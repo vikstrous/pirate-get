@@ -118,79 +118,93 @@ def parse_torrent_command(l):
     choices = [elem for elem in choices]
     return code, choices
 
+# XXX: make this a part of a class
+parser = argparse.ArgumentParser(
+    description='finds and downloads torrents from the Pirate Bay')
+
+# common options
+parser.add_argument('--disable-colors', dest='color',
+                    action='store_false',
+                    help='disable colored output')
+# XXX: this option doesn't always apply
+parser.add_argument('-c', dest='category', metavar='category',
+                    help='specify a category to search', default='All')
+# XXX: this option doesn't always apply
+parser.add_argument('-s', dest='sort', metavar='sort',
+                    help='specify a sort option', default='SeedersDsc')
+# XXX: this option doesn't always apply
+parser.add_argument('-L', '--local', dest='database',
+                    help='an xml file containing the Pirate Bay database')
+# XXX: this option doesn't always apply
+parser.add_argument('-p', dest='pages', default=1, type=int,
+                    help='the number of pages to fetch '
+                         "(doesn't work with --local)")
+parser.add_argument('-0', dest='first',
+                    action='store_true',
+                    help='choose the top result')
+parser.add_argument('-a', '--download-all',
+                    action='store_true',
+                    help='download all results')
+# XXX: this option doesn't always apply
+parser.add_argument('-C', '--command', dest='command',
+                    help='open magnets with a custom command'
+                          ' (%%s will be replaced with the url)')
+
+# XXX: this applies only for transmission
+parser.add_argument('-P', '--port', dest='port',
+                    help='transmission-remote rpc port. default is 9091')
+
+# output options
+parser.add_argument('-S', '--save-directory',
+                    help='directory to store output in')
+parser.add_argument('-o', '--output',
+                    choices=['transmission', 'command', 'magnet', 'torrent', 'browser'],
+                    default='browser',
+                    help='what to do with the chosen torrent')
+# subcommands
+subparsers = parser.add_subparsers(help='commands')
+
+# search command
+search_parser = subparsers.add_parser('search', help='search for torrents')
+search_parser.set_defaults(action='search')
+search_parser.add_argument('terms', metavar='terms',
+                           nargs='*', help='terms to search for')
+# browse command
+browse_parser = subparsers.add_parser('browse', help='browse for torrents')
+browse_parser.set_defaults(action='browse')
+
+# recent command
+recent_parser = subparsers.add_parser('recent', help='view torrents uploaded in the last 48h')
+recent_parser.set_defaults(action='recent')
+
+# categories command
+categories_parser = subparsers.add_parser('list_categories', help='list valid categories')
+categories_parser.set_defaults(action='list_categories')
+
+# sorts command
+sorts_parser = subparsers.add_parser('list_sorts', help='list valid sorts')
+sorts_parser.set_defaults(action='list_sorts')
+
+# top command
+sorts_parser = subparsers.add_parser('top', help='top recent torrents')
+sorts_parser.set_defaults(action='top')
+
 
 def parse_args(args_in):
-    parser = argparse.ArgumentParser(
-        description='finds and downloads torrents from the Pirate Bay')
-    parser.add_argument('-b', dest='browse',
-                        action='store_true',
-                        help='display in Browse mode')
-    parser.add_argument('search', metavar='search',
-                        nargs='*', help='term to search for')
-    parser.add_argument('-c', dest='category', metavar='category',
-                        help='specify a category to search', default='All')
-    parser.add_argument('-s', dest='sort', metavar='sort',
-                        help='specify a sort option', default='SeedersDsc')
-    parser.add_argument('-R', dest='recent',  action='store_true',
-                        help='torrents uploaded in the last 48hours.'
-                             '*ignored in searches*')
-    parser.add_argument('-l', dest='list_categories',
-                        action='store_true',
-                        help='list categories')
-    parser.add_argument('--list_sorts', dest='list_sorts',
-                        action='store_true',
-                        help='list Sortable Types')
-    parser.add_argument('-L', '--local', dest='database',
-                        help='an xml file containing the Pirate Bay database')
-    parser.add_argument('-p', dest='pages', default=1, type=int,
-                        help='the number of pages to fetch '
-                             "(doesn't work with --local)")
-    parser.add_argument('-0', dest='first',
-                        action='store_true',
-                        help='choose the top result')
-    parser.add_argument('-a', '--download-all',
-                        action='store_true',
-                        help='download all results')
-    parser.add_argument('-t', '--transmission',
-                        action='store_true',
-                        help='open magnets with transmission-remote')
-    parser.add_argument('-P', '--port', dest='port',
-                        help='transmission-remote rpc port. default is 9091')
-    parser.add_argument('-C', '--custom', dest='command',
-                        help='open magnets with a custom command'
-                              ' (%%s will be replaced with the url)')
-    parser.add_argument('-M', '--save-magnets',
-                        action='store_true',
-                        help='save magnets links as files')
-    parser.add_argument('-T', '--save-torrents',
-                        action='store_true',
-                        help='save torrent files')
-    parser.add_argument('-S', '--save-directory',
-                        type=str, metavar='DIRECTORY',
-                        help='directory where to save downloaded files'
-                             ' (if none is given $PWD will be used)')
-    parser.add_argument('--disable-colors', dest='color',
-                        action='store_false',
-                        help='disable colored output')
     args = parser.parse_args(args_in)
-
     return args
 
 
 def combine_configs(config, args):
-    # figure out the action - browse, search, top, etc.
-    if args.browse:
-        args.action = 'browse'
-    elif args.recent:
-        args.action = 'recent'
-    elif args.list_categories:
-        args.action = 'list_categories'
-    elif args.list_sorts:
-        args.action = 'list_sorts'
-    elif len(args.search) == 0:
+    if args.command:
+        args.action = 'command'
+
+    if getattr(args, 'action', None) is None:
+        parser.print_help()
+        sys.exit(0)
+
+    if args.action == 'search' and len(args.terms) == 0:
         args.action = 'top'
-    else:
-        args.action = 'search'
 
     args.source = 'tpb'
     if args.database or config.getboolean('LocalDB', 'enabled'):
@@ -199,9 +213,8 @@ def combine_configs(config, args):
     if not args.database:
         args.database = config.get('LocalDB', 'path')
 
-    if not args.color or not config.getboolean('Misc', 'colors'):
-        # TODO: consider how this can be moved to the args
-        pirate.data.colored_output = False
+    if args.color:
+        args.color = config.getboolean('Misc', 'colors')
 
     if not args.save_directory:
         args.save_directory = config.get('Save', 'directory')
@@ -210,16 +223,6 @@ def combine_configs(config, args):
     if args.port:
         args.transmission_command.append(args.port)
 
-    args.output = 'browser_open'
-    if args.transmission or config.getboolean('Misc', 'transmission'):
-        args.output = 'transmission'
-    elif args.save_magnets or config.getboolean('Save', 'magnets'):
-        args.output = 'save_magnet_files'
-    elif args.save_torrents or config.getboolean('Save', 'torrents'):
-        args.output = 'save_torrent_files'
-    elif args.command or config.get('Misc', 'openCommand'):
-        args.output = 'open_command'
-
     args.open_command = args.command
     if not args.open_command:
         args.open_command = config.get('Misc', 'openCommand')
@@ -227,7 +230,7 @@ def combine_configs(config, args):
     return args
 
 
-def search_mirrors(printer, pages, category, sort, action, search):
+def search_mirrors(printer, pages, category, sort, action, terms):
     mirror_sources = [None, 'https://proxybay.co/list.txt']
     for mirror_source in mirror_sources:
         mirrors = OrderedDict()
@@ -258,7 +261,7 @@ def search_mirrors(printer, pages, category, sort, action, search):
                     category=pirate.torrent.parse_category(printer, category),
                     sort=pirate.torrent.parse_sort(printer, sort),
                     mode=action,
-                    terms=search,
+                    terms=terms,
                     mirror=mirror
                 )
             except (urllib.error.URLError, socket.timeout,
@@ -276,7 +279,7 @@ def pirate_main(args):
     printer = Printer(args.color)
 
     # check it transmission is running
-    if args.transmission:
+    if args.output == 'transmission':
         ret = subprocess.call(args.transmission_command + ['-l'],
                               stdout=subprocess.DEVNULL,
                               stderr=subprocess.DEVNULL)
@@ -303,9 +306,9 @@ def pirate_main(args):
     # fetch torrents
 
     if args.source == 'local_tpb':
-        results = pirate.local.search(args.database, args.search)
+        results = pirate.local.search(args.database, args.terms)
     elif args.source == 'tpb':
-        results, site = search_mirrors(printer, args.pages, args.category, args.sort, args.action, args.search)
+        results, site = search_mirrors(printer, args.pages, args.category, args.sort, args.action, args.terms)
 
     if len(results) == 0:
         printer.print('No results')
@@ -367,12 +370,12 @@ def pirate_main(args):
 
     # output
 
-    if args.output == 'save_magnet_files':
+    if args.output == 'magnet':
         printer.print('Saving selected magnets...')
         pirate.torrent.save_magnets(choices, results, args.save_directory)
         return
 
-    if args.output == 'save_torrent_files':
+    if args.output == 'torrent':
         printer.print('Saving selected torrents...')
         pirate.torrent.save_torrents(choices, results, args.save_directory)
         return
@@ -382,9 +385,9 @@ def pirate_main(args):
 
         if args.output == 'transmission':
             subprocess.call(args.transmission_command + ['--add', url])
-        elif args.output == 'open_command':
+        elif args.output == 'command':
             subprocess.call(parse_cmd(args.open_command, url))
-        elif args.output == 'browser_open':
+        elif args.output == 'browser':
             webbrowser.open(url)
 
     if args.output == 'transmission':

@@ -7,6 +7,7 @@ import socket
 import urllib.request as request
 import urllib.error
 import sys
+import builtins
 from collections import OrderedDict
 
 import webbrowser
@@ -325,7 +326,7 @@ def pirate_main(args):
             printer.print("\nSelect links (Type 'h' for more options"
                   ", 'q' to quit)", end='\b', color='alt')
             try:
-                l = input(': ')
+                l = builtins.input(': ')
             except (KeyboardInterrupt, EOFError):
                 printer.print('\nCancelled.')
                 return

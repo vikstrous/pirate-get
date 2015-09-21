@@ -23,20 +23,36 @@ class TestPirate(unittest.TestCase):
         for test in tests:
             self.assertEqual(pirate.pirate.parse_cmd(*test[0]), test[1])
 
-    def test_main(self):
-        with patch('subprocess.call') as mock_call:
-            result = {
-                'magnet': 'dn=derp',
-                'seeds': '1',
-                'leechers': '1',
-                'size': ('1', 'mb'),
-                'uploaded': '1',
-            }
-            with patch('pirate.torrent.remote', return_value=[result]) as mock_remote:
-                config = pirate.pirate.parse_config_file('')
-                args = pirate.pirate.combine_configs(config, pirate.pirate.parse_args(['-0', 'term', '-C', 'blah %s']))
-                pirate.pirate.pirate_main(args)
-                mock_call.assert_called_once_with(['blah', 'dn=derp'])
+    @patch('subprocess.call')
+    def test_main(self, mock_call):
+        result = {
+            'magnet': 'dn=derp',
+            'seeds': '1',
+            'leechers': '1',
+            'size': ('1', 'mb'),
+            'uploaded': '1',
+        }
+        with patch('pirate.torrent.remote', return_value=[result]) as mock_remote:
+            config = pirate.pirate.parse_config_file('')
+            args = pirate.pirate.combine_configs(config, pirate.pirate.parse_args(['-0', 'term', '-C', 'blah %s']))
+            pirate.pirate.pirate_main(args)
+            mock_call.assert_called_once_with(['blah', 'dn=derp'])
+
+    @patch('pirate.pirate.builtins.input', return_value='0')
+    @patch('subprocess.call')
+    def test_main_choice(self, mock_call, mock_input):
+        result = {
+            'magnet': 'dn=derp',
+            'seeds': '1',
+            'leechers': '1',
+            'size': ('1', 'mb'),
+            'uploaded': '1',
+        }
+        with patch('pirate.torrent.remote', return_value=[result]) as mock_remote:
+            config = pirate.pirate.parse_config_file('')
+            args = pirate.pirate.combine_configs(config, pirate.pirate.parse_args(['term', '-C', 'blah %s']))
+            pirate.pirate.pirate_main(args)
+            mock_call.assert_called_once_with(['blah', 'dn=derp'])
 
     def test_parse_torrent_command(self):
         tests = [

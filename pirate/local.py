@@ -8,10 +8,6 @@ class BayParser(parser.HTMLParser):
     state = 'looking'
     results = []
 
-    def __init__(self, q):
-        super().__init__(self)
-        self.q = q.lower()
-
     def handle_starttag(self, tag, attrs):
         if tag == 'title':
             self.state = 'title'
@@ -36,6 +32,7 @@ class BayParser(parser.HTMLParser):
 
 def search(db, terms):
     xml = open(db).readlines()
-    parser = BayParser(' '.join(terms))
+    parser = BayParser()
+    parser.q = (' '.join(terms)).lower()
     parser.feed(''.join(xml))
     return parser.results

@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 setup(name='pirate-get',
-    version='0.2.7',
+    version='0.2.8',
     description='A command line interface for The Pirate Bay',
     url='https://github.com/vikstrous/pirate-get',
     author='vikstrous',

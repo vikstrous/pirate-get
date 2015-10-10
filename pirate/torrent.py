@@ -160,13 +160,13 @@ def get_torrent(info_hash):
     return torrent.read()
 
 
-# TODO: handle slashes in torrent names
 def save_torrents(printer, chosen_links, results, folder):
     for link in chosen_links:
         magnet = results[link]['magnet']
         name = re.search(r'dn=([^\&]*)', magnet)
         torrent_name = parse.unquote(name.group(1)).replace('+', ' ')
         info_hash = int(re.search(r'btih:([a-f0-9]{40})', magnet).group(1), 16)
+        torrent_name = torrent_name.replace('/', '_').replace('\\', '_')
         file = os.path.join(folder, torrent_name + '.torrent')
 
         try:
@@ -178,13 +178,13 @@ def save_torrents(printer, chosen_links, results, folder):
             printer.print('Saved {:X} in {}'.format(info_hash, file))
 
 
-# TODO: handle slashes in torrent names
 def save_magnets(printer, chosen_links, results, folder):
     for link in chosen_links:
         magnet = results[link]['magnet']
         name = re.search(r'dn=([^\&]*)', magnet)
         torrent_name = parse.unquote(name.group(1)).replace('+', ' ')
         info_hash = int(re.search(r'btih:([a-f0-9]{40})', magnet).group(1), 16)
+        torrent_name = torrent_name.replace('/', '_').replace('\\', '_')
         file = os.path.join(folder,  torrent_name + '.magnet')
 
         printer.print('Saved {:X} in {}'.format(info_hash, file))

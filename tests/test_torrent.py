@@ -93,10 +93,10 @@ class TestTorrent(unittest.TestCase):
     @patch('pirate.torrent.get_torrent')
     def test_save_torrents(self, get_torrent):
         with patch('pirate.torrent.open', mock.mock_open(), create=True) as open_:
-            magnet = 'magnet:?xt=urn:btih:335fcd3cfbecc85554616d73de888033c6c16d37&dn=Test+Drive+Unlimited+%5BPC+Version%5D&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=udp%3A%2F%2Fopen.demonii.com%3A1337&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Fexodus.desync.com%3A6969'
+            magnet = 'magnet:?xt=urn:btih:335fcd3cfbecc85554616d73de888033c6c16d37&dn=Test+Drive+Unl\im/ited+%5BPC+Version%5D&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=udp%3A%2F%2Fopen.demonii.com%3A1337&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Fexodus.desync.com%3A6969'
             pirate.torrent.save_torrents(MagicMock(Printer), [0], [{'magnet':magnet}], 'path')
             get_torrent.assert_called_once_with(293294978876299923284263767676068334936407502135)
-            open_.assert_called_once_with('path/Test Drive Unlimited [PC Version].torrent', 'wb')
+            open_.assert_called_once_with('path/Test Drive Unl_im_ited [PC Version].torrent', 'wb')
 
     @patch('pirate.torrent.get_torrent', side_effect=urllib.error.HTTPError('', '', '', '', io.StringIO()))
     def test_save_torrents_fail(self, get_torrent):
@@ -105,9 +105,9 @@ class TestTorrent(unittest.TestCase):
 
     def test_save_magnets(self):
         with patch('pirate.torrent.open', mock.mock_open(), create=True) as open_:
-            magnet = 'magnet:?xt=urn:btih:335fcd3cfbecc85554616d73de888033c6c16d37&dn=Test+Drive+Unlimited+%5BPC+Version%5D&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=udp%3A%2F%2Fopen.demonii.com%3A1337&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Fexodus.desync.com%3A6969'
+            magnet = 'magnet:?xt=urn:btih:335fcd3cfbecc85554616d73de888033c6c16d37&dn=Test+Drive+Unl\im/ited+%5BPC+Version%5D&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=udp%3A%2F%2Fopen.demonii.com%3A1337&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Fexodus.desync.com%3A6969'
             pirate.torrent.save_magnets(MagicMock(Printer), [0], [{'magnet':magnet}], 'path')
-            open_.assert_called_once_with('path/Test Drive Unlimited [PC Version].magnet', 'w')
+            open_.assert_called_once_with('path/Test Drive Unl_im_ited [PC Version].magnet', 'w')
 
     @patch('urllib.request.urlopen')
     def test_get_torrent(self, urlopen):

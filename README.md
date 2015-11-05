@@ -4,7 +4,7 @@
 pirate-get is a convenient command line tool (inspired by APT) to speed up your trip to the Pirate Bay and get your completely legal torrents more quickly.
 
 ## Installation
-Make sure you have python 3 and pip installed.
+Make sure you have python 3.4 and pip installed.
 
 Run `pip3 install pirate-get`
 

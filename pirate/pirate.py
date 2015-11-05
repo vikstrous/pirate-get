@@ -21,7 +21,7 @@ from pirate.print import Printer
 
 
 def parse_config_file(text):
-    config = configparser.ConfigParser()
+    config = configparser.RawConfigParser()
 
     # default options
     config.add_section('Save')
@@ -383,7 +383,9 @@ def pirate_main(args):
         if args.output == 'transmission':
             subprocess.call(args.transmission_command + ['--add', url])
         elif args.output == 'open_command':
-            subprocess.call(parse_cmd(args.open_command, url))
+            cmd = parse_cmd(args.open_command, url)
+            printer.print(" ".join(cmd))
+            subprocess.call(cmd)
         elif args.output == 'browser_open':
             webbrowser.open(url)
 

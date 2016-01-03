@@ -1,3 +1,9 @@
+import sys
+from distutils.version import LooseVersion
+if LooseVersion(sys.version) < LooseVersion("3.4.0"):
+    print("Python 3.4.0 required")
+    sys.exit(1)
+
 import re
 import os
 import argparse
@@ -6,7 +12,6 @@ import configparser
 import socket
 import urllib.request as request
 import urllib.error
-import sys
 import builtins
 from collections import OrderedDict
 

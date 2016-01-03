@@ -1,7 +1,7 @@
 import sys
 from distutils.version import LooseVersion
 if LooseVersion(sys.version) < LooseVersion("3.4.0"):
-    print("Python 3.4.0 required")
+    print("At least python 3.4.0 required. Your version is "+sys.version)
     sys.exit(1)
 
 import re

@@ -57,8 +57,21 @@ transmission = false
 colors = true
 ```
 
-Note:  
-Any command line option will override its respective setting in the config file.  
+Note:
+Any command line option will override its respective setting in the config file.
+
+## Set your pirate bay mirror
+
+Pirate-get will try to search torrents on
+`https://thepiratebay.mn`. If that fails, it will try to get a list of
+mirrors from 'https://proxybay.co/list.txt'. If that fails too, you
+can set a mirror that is working for you. Set it on the command line
+with the option `--mirror=<url>`, or in the config file:
+
+```
+[Mirror]
+url = http://tpb.today # without quotes
+```
 
 
 ## Local Database

@@ -24,8 +24,6 @@ import pirate.local
 from os.path import expanduser, expandvars
 from pirate.print import Printer
 
-MIRROR_DEFAULT = 'https://thepiratebay.mn'
-MIRROR_SOURCE = 'https://proxybay.co/list.txt'
 
 def parse_config_file(text):
     config = configparser.RawConfigParser()
@@ -273,14 +271,14 @@ def search_mirrors(printer, pages, category, sort, action, search, mirror):
 
     # Search on our mirror, or the default one.
     if not mirror:
-        mirror = MIRROR_DEFAULT
+        mirror = pirate.data.MIRROR_DEFAULT
 
     results, mirror = search_on_mirror(printer, pages, category, sort, action, search, mirror)
     if results:
         return results, mirror
 
     # If the default mirror failed, get some mirrors.
-    mirror_sources = [MIRROR_SOURCE]
+    mirror_sources = [pirate.data.MIRROR_SOURCE]
     for mirror_source in mirror_sources:
         mirrors = OrderedDict()
         try:
@@ -343,8 +341,8 @@ def pirate_main(args):
     if args.source == 'local_tpb':
         results = pirate.local.search(args.database, args.search)
     elif args.source == 'tpb':
-        results, site = search_mirrors(printer, args.pages, args.category,\
-                                       args.sort, args.action, args.search,\
+        results, site = search_mirrors(printer, args.pages, args.category,
+                                       args.sort, args.action, args.search,
                                        args.mirror)
 
     if len(results) == 0:

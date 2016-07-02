@@ -31,7 +31,9 @@ class BayParser(parser.HTMLParser):
 
 
 def search(db, terms):
-    xml = open(db).readlines()
+    f = open(db)
+    xml = f.readlines()
+    f.close()
     parser = BayParser()
     parser.q = (' '.join(terms)).lower()
     parser.feed(''.join(xml))

@@ -6,7 +6,7 @@ import urllib.parse as parse
 import urllib.error
 import os.path
 
-from pyquery import PyQuery as pq
+from bs4 import BeautifulSoup
 
 import pirate.data
 
@@ -76,25 +76,37 @@ def build_request_path(page, category, sort, mode, terms):
 
 # this returns a list of dictionaries
 def parse_page(html):
-    d = pq(html)
+    soup = BeautifulSoup(html, 'html.parser')
+    table = soup.find('table', id='searchResult')
 
     results = []
-    # parse the rows one by one
-    for row in d('table#searchResult tr'):
-        drow = d(row)
-        if len(drow('th')) > 0:
-            continue
+    no_results = re.search(r'No hits\. Try adding an asterisk in '
+                           r'you search phrase\.', html)
 
+    # check for a blocked mirror
+    if not table and not no_results:
+        # Contradiction - we found no results,
+        # but the page didn't say there were no results.
+        # The page is probably not actually the pirate bay,
+        # so let's try another mirror
+        raise IOError('Blocked mirror detected.')
+
+    if no_results:
+        return results
+
+    # parse the rows one by one (skipping headings)
+    for row in table('tr')[1:]:
         # grab info about the row
-        magnet = pq(drow(':eq(0)>td:nth-child(2)>a:nth-child(2)')[0]).attr('href')
-        seeds = pq(drow(':eq(0)>td:nth-child(3)')).text()
-        leechers = pq(drow(':eq(0)>td:nth-child(4)')).text()
-        id_ = pq(drow('.detLink')).attr('href').split('/')[2]
+        id_ = row.find('a', class_='detLink')['href'].split('/')[2]
+        seeds, leechers = [i.text for i in row('td')[-2:]]
+        magnet = row.find(lambda tag:
+                          tag.name == 'a' and
+                          tag['href'].startswith('magnet'))['href']
 
         # parse descriptions separately
-        desc_text = pq(drow('font.detDesc')[0]).text()
-        size = re.findall(r'(?<=Size )[0-9.]+\s[KMGT]*[i ]*B', desc_text)[0].split()
-        uploaded = re.findall(r'(?<=Uploaded ).+(?=\, Size)', desc_text)[0]
+        description = row.find('font', class_='detDesc').text
+        size = re.findall(r'(?<=Size )[0-9.]+\s[KMGT]*[i ]*B', description)[0].split()
+        uploaded = re.findall(r'(?<=Uploaded ).+(?=\, Size)', description)[0]
 
         results.append({
             'magnet': magnet,
@@ -104,16 +116,6 @@ def parse_page(html):
             'uploaded': uploaded,
             'id': id_
         })
-
-    # check for a blocked mirror
-    no_results = re.search(r'No hits\. Try adding an asterisk in '
-                           r'you search phrase\.', html)
-    if len(results) == 0 and no_results is None:
-        # Contradiction - we found no results,
-        # but the page didn't say there were no results.
-        # The page is probably not actually the pirate bay,
-        # so let's try another mirror
-        raise IOError('Blocked mirror detected.')
 
     return results
 

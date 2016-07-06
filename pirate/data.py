@@ -11,3 +11,6 @@ blacklist = set(json.loads(get_resource('blacklist.json').decode()))
 
 default_headers = {'User-Agent': 'pirate get'}
 default_timeout = 10
+
+MIRROR_DEFAULT = 'https://thepiratebay.mn'
+MIRROR_SOURCE = 'https://proxybay.co/list.txt'

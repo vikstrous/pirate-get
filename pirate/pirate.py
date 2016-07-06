@@ -39,6 +39,10 @@ def parse_config_file(text):
     config.set('Misc', 'transmission', 'false')
     config.set('Misc', 'colors', 'true')
 
+    # Additional mirror that work for the user.
+    config.add_section('Mirror')
+    config.set('Mirror', 'url', 'https://thepiratebay.mn')
+
     config.read_string(text)
 
     # expand env variables
@@ -172,6 +176,9 @@ def parse_args(args_in):
     parser.add_argument('--disable-colors', dest='color',
                         action='store_false',
                         help='disable colored output')
+    parser.add_argument('--mirror', dest='mirror',
+                        help='url of a pirate bay mirror. It will be tried first.')
+
     args = parser.parse_args(args_in)
 
     return args
@@ -224,53 +231,77 @@ def combine_configs(config, args):
     if not args.open_command:
         args.open_command = config.get('Misc', 'openCommand')
 
+    if not args.mirror and config.get('Mirror', 'url'):
+        args.mirror = config.get('Mirror', 'url')
+
     return args
 
 
-def search_mirrors(printer, pages, category, sort, action, search):
-    mirror_sources = [None, 'https://proxybay.co/list.txt']
+def search_on_mirror(printer, pages, category, sort, action, search, mirror):
+
+    try:
+        printer.print('Trying', mirror, end='... \n')
+        results = pirate.torrent.remote(
+            printer=printer,
+            pages=pages,
+            category=pirate.torrent.parse_category(printer, category),
+            sort=pirate.torrent.parse_sort(printer, sort),
+            mode=action,
+            terms=search,
+            mirror=mirror
+        )
+    except (urllib.error.URLError, socket.timeout,
+            IOError, ValueError):
+        printer.print('Failed', color='WARN')
+    else:
+        printer.print('Ok', color='alt')
+        return results, mirror
+
+    return [], None
+
+def search_mirrors(printer, pages, category, sort, action, search, mirror):
+    """Search on our mirror first. If not, get a mirror list and try again.
+    Return a tuple results, url of the working mirror.
+    """
+
+    # Search on our mirror, or the default one.
+    if not mirror:
+        mirror = pirate.data.MIRROR_DEFAULT
+
+    results, mirror = search_on_mirror(printer, pages, category, sort, action, search, mirror)
+    if results:
+        return results, mirror
+
+    # If the default mirror failed, get some mirrors.
+    mirror_sources = [pirate.data.MIRROR_SOURCE]
     for mirror_source in mirror_sources:
         mirrors = OrderedDict()
-        if mirror_source is None:
-            mirrors['https://thepiratebay.mn'] = None
+        try:
+            req = request.Request(mirror_source,
+                                    headers=pirate.data.default_headers)
+            f = request.urlopen(req, timeout=pirate.data.default_timeout)
+        except IOError:
+            printer.print('Could not fetch additional mirrors', color='WARN')
         else:
-            try:
-                req = request.Request(mirror_source,
-                                      headers=pirate.data.default_headers)
-                f = request.urlopen(req, timeout=pirate.data.default_timeout)
-            except IOError:
-                printer.print('Could not fetch additional mirrors', color='WARN')
-            else:
-                if f.getcode() != 200:
-                    raise IOError('The proxy bay responded with an error.')
-                for mirror in [i.decode('utf-8').strip() for i in f.readlines()][3:]:
-                    mirrors[mirror] = None
-            for mirror in pirate.data.blacklist:
-                if mirror in mirrors:
-                    del mirrors[mirror]
+            if f.getcode() != 200:
+                raise IOError('The proxy bay responded with an error.')
+            # Parse the list of mirrors
+            for mirror in [i.decode('utf-8').strip() for i in f.readlines()][3:]:
+                mirrors[mirror] = None
+        for mirror in pirate.data.blacklist:
+            if mirror in mirrors:
+                del mirrors[mirror]
 
-        for mirror in mirrors.keys():
-            try:
-                printer.print('Trying', mirror, end='... \n')
-                results = pirate.torrent.remote(
-                    printer=printer,
-                    pages=pages,
-                    category=pirate.torrent.parse_category(printer, category),
-                    sort=pirate.torrent.parse_sort(printer, sort),
-                    mode=action,
-                    terms=search,
-                    mirror=mirror
-                )
-            except (urllib.error.URLError, socket.timeout,
-                    IOError, ValueError):
-                printer.print('Failed', color='WARN')
-            else:
-                printer.print('Ok', color='alt')
-                return results, mirror
-    else:
-        printer.print('No available mirrors :(', color='WARN')
-        return [], None
+        if mirrors:
+            results = []
+            while not results:
+                results, mirror = search_on_mirror(printer, pages, category, sort, action, search, mirror)
 
+            return results, mirror
+
+        else:
+            printer.print('No available mirrors :(', color='WARN')
+            return [], None
 
 def pirate_main(args):
     printer = Printer(args.color)
@@ -305,7 +336,9 @@ def pirate_main(args):
     if args.source == 'local_tpb':
         results = pirate.local.search(args.database, args.search)
     elif args.source == 'tpb':
-        results, site = search_mirrors(printer, args.pages, args.category, args.sort, args.action, args.search)
+        results, site = search_mirrors(printer, args.pages, args.category,
+                                       args.sort, args.action, args.search,
+                                       args.mirror)
 
     if len(results) == 0:
         printer.print('No results')

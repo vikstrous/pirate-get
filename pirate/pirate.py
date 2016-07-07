@@ -228,51 +228,54 @@ def combine_configs(config, args):
     return args
 
 
-def search_mirrors(printer, pages, category, sort, action, search):
-    mirror_sources = [None, 'https://proxybay.co/list.txt']
-    for mirror_source in mirror_sources:
-        mirrors = OrderedDict()
-        if mirror_source is None:
-            mirrors['https://thepiratebay.mn'] = None
-        else:
-            try:
-                req = request.Request(mirror_source,
-                                      headers=pirate.data.default_headers)
-                f = request.urlopen(req, timeout=pirate.data.default_timeout)
-            except IOError:
-                printer.print('Could not fetch additional mirrors',
-                              color='WARN')
-            else:
-                if f.getcode() != 200:
-                    raise IOError('The proxy bay responded with an error.')
-                for mirror in [i.decode('utf-8').strip()
-                               for i in f.readlines()][3:]:
-                    mirrors[mirror] = None
-            for mirror in pirate.data.blacklist:
-                if mirror in mirrors:
-                    del mirrors[mirror]
-
-        for mirror in mirrors.keys():
-            try:
-                printer.print('Trying', mirror, end='... \n')
-                results = pirate.torrent.remote(
-                    printer=printer,
-                    pages=pages,
-                    category=pirate.torrent.parse_category(printer, category),
-                    sort=pirate.torrent.parse_sort(printer, sort),
-                    mode=action,
-                    terms=search,
-                    mirror=mirror
-                )
-            except (urllib.error.URLError, socket.timeout,
-                    IOError, ValueError):
-                printer.print('Failed', color='WARN')
-            else:
-                printer.print('Ok', color='alt')
-                return results, mirror
+def connect_mirror(mirror, printer, pages, category, sort, action, search):
+    try:
+        printer.print('Trying', mirror, end='... ')
+        results = pirate.torrent.remote(
+            printer=printer,
+            pages=pages,
+            category=pirate.torrent.parse_category(printer, category),
+            sort=pirate.torrent.parse_sort(printer, sort),
+            mode=action,
+            terms=search,
+            mirror=mirror)
+    except (urllib.error.URLError, socket.timeout, IOError, ValueError):
+        printer.print('Failed', color='WARN')
     else:
-        printer.print('No available mirrors :(', color='WARN')
-        return [], None
+        printer.print('Ok', color='alt')
+        return results, mirror
+
+
+def search_mirrors(printer, *args):
+    # try official site
+    result = connect_mirror('https://thepiratebay.mn', printer, *args)
+    if result:
+        return result
+
+    # download mirror list
+    try:
+        req = request.Request('https://proxybay.co/list.txt',
+                              headers=pirate.data.default_headers)
+        f = request.urlopen(req, timeout=pirate.data.default_timeout)
+    except IOError:
+        printer.print('Could not fetch mirrors :(', color='ERROR')
+        sys.exit(1)
+
+    if f.getcode() != 200:
+        raise IOError('The proxy bay responded with an error')
+
+    mirrors = [i.decode('utf-8').strip() for i in f.readlines()][3:]
+
+    # try mirrors
+    for mirror in mirrors:
+        if mirror in pirate.data.blacklist:
+            continue
+        result = connect_mirror(mirror, printer, *args)
+        if result:
+            return result
+    else:
+        printer.print('No more available mirrors :(', color='ERROR')
+        sys.exit(1)
 
 
 def pirate_main(args):

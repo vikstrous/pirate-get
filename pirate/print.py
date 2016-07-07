@@ -1,6 +1,5 @@
 import builtins
 import re
-import os
 import gzip
 import urllib.parse as parse
 import urllib.request as request
@@ -37,8 +36,8 @@ class Printer:
             kwargs.pop('color', None)
             return builtins.print(*args, **kwargs)
 
-
-    # TODO: extract the name from the search results instead of from the magnet link when possible
+    # TODO: extract the name from the search results
+    #       instead of from the magnet link when possible
     def search_results(self, results, local=None):
         columns = shutil.get_terminal_size((80, 20)).columns
         even = True
@@ -46,7 +45,9 @@ class Printer:
         if local:
             table = veryprettytable.VeryPrettyTable(['LINK', 'NAME'])
         else:
-            table = veryprettytable.VeryPrettyTable(['LINK', 'SEED', 'LEECH', 'RATIO', 'SIZE', '', 'UPLOAD', 'NAME'])
+            table = veryprettytable.VeryPrettyTable(['LINK', 'SEED', 'LEECH',
+                                                     'RATIO', 'SIZE', '',
+                                                     'UPLOAD', 'NAME'])
             table.align['NAME'] = 'l'
             table.align['SEED'] = 'r'
             table.align['LEECH'] = 'r'
@@ -82,8 +83,10 @@ class Printer:
                 except ZeroDivisionError:
                     ratio = float('inf')
 
-                content = [n, no_seeders, no_leechers, '{:.1f}'.format(ratio),
-                           '{:.1f}'.format(size), unit, date, torrent_name[:columns - 53]]
+                content = [n, no_seeders, no_leechers,
+                           '{:.1f}'.format(ratio),
+                           '{:.1f}'.format(size),
+                           unit, date, torrent_name[:columns - 53]]
 
             if even or not self.enable_color:
                 table.add_row(content)
@@ -94,11 +97,11 @@ class Printer:
             even = not even
         self.print(table)
 
-
     def descriptions(self, chosen_links, results, site):
         for link in chosen_links:
             path = '/torrent/%s/' % results[link]['id']
-            req = request.Request(site + path, headers=pirate.data.default_headers)
+            req = request.Request(site + path,
+                                  headers=pirate.data.default_headers)
             req.add_header('Accept-encoding', 'gzip')
             f = request.urlopen(req, timeout=pirate.data.default_timeout)
 
@@ -117,7 +120,6 @@ class Printer:
 
             self.print('Description for "%s":' % torrent_name, color='zebra_1')
             self.print(desc, color='zebra_0')
-
 
     def file_lists(self, chosen_links, results, site):
         for link in chosen_links:
@@ -146,4 +148,4 @@ class Printer:
 
             for f in files:
                 self.print('{0[0]:>11}  {0[1]}'.format(f), color=cur_color)
-                cur_color = 'zebra_0' if (cur_color == 'zebra_1') else 'zebra_1'
+                cur_color = 'zebra_0' if cur_color == 'zebra_1' else 'zebra_1'

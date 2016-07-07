@@ -44,10 +44,12 @@ def parse_sort(printer, sort):
         return 99
 
 
-# TODO: warn users when using a sort in a mode that doesn't accept sorts
-# TODO: warn users when using search terms in a mode that doesn't accept search terms
-# TODO: same with page parameter for top and top48h
-# TODO: warn the user if trying to use a minor category with top48h
+# TODO:
+# * warn users when using a sort in a mode that doesn't accept sorts
+# * warn users when using search terms in a mode
+#   that doesn't accept search terms
+# * same with page parameter for top and top48h
+# * warn the user if trying to use a minor category with top48h
 def build_request_path(page, category, sort, mode, terms):
     if mode == 'browse':
         if(category == 0):
@@ -105,8 +107,10 @@ def parse_page(html):
 
         # parse descriptions separately
         description = row.find('font', class_='detDesc').text
-        size = re.findall(r'(?<=Size )[0-9.]+\s[KMGT]*[i ]*B', description)[0].split()
-        uploaded = re.findall(r'(?<=Uploaded ).+(?=\, Size)', description)[0]
+        size = re.findall(r'(?<=Size )[0-9.]+\s[KMGT]*[i ]*B',
+                          description)[0].split()
+        uploaded = re.findall(r'(?<=Uploaded ).+(?=\, Size)',
+                              description)[0]
 
         results.append({
             'magnet': magnet,
@@ -174,7 +178,8 @@ def save_torrents(printer, chosen_links, results, folder):
         try:
             torrent = get_torrent(info_hash)
         except urllib.error.HTTPError:
-            printer.print('There is no cached file for this torrent :(', color='ERROR')
+            printer.print('There is no cached file for this torrent :(',
+                          color='ERROR')
         else:
             open(file, 'wb').write(torrent)
             printer.print('Saved {:X} in {}'.format(info_hash, file))

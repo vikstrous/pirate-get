@@ -34,7 +34,8 @@ def parse_config_file(text):
     config.set('LocalDB', 'path', expanduser('~/downloads/pirate-get/db'))
 
     config.add_section('Misc')
-    # TODO: try to use https://docs.python.org/3/library/configparser.html#configparser.BasicInterpolation for interpolating in the command
+    # TODO: try to use configparser.BasicInterpolation
+    #       for interpolating in the command
     config.set('Misc', 'openCommand', '')
     config.set('Misc', 'transmission', 'false')
     config.set('Misc', 'colors', 'true')
@@ -239,11 +240,13 @@ def search_mirrors(printer, pages, category, sort, action, search):
                                       headers=pirate.data.default_headers)
                 f = request.urlopen(req, timeout=pirate.data.default_timeout)
             except IOError:
-                printer.print('Could not fetch additional mirrors', color='WARN')
+                printer.print('Could not fetch additional mirrors',
+                              color='WARN')
             else:
                 if f.getcode() != 200:
                     raise IOError('The proxy bay responded with an error.')
-                for mirror in [i.decode('utf-8').strip() for i in f.readlines()][3:]:
+                for mirror in [i.decode('utf-8').strip()
+                               for i in f.readlines()][3:]:
                     mirrors[mirror] = None
             for mirror in pirate.data.blacklist:
                 if mirror in mirrors:
@@ -305,7 +308,8 @@ def pirate_main(args):
     if args.source == 'local_tpb':
         results = pirate.local.search(args.database, args.search)
     elif args.source == 'tpb':
-        results, site = search_mirrors(printer, args.pages, args.category, args.sort, args.action, args.search)
+        results, site = search_mirrors(printer, args.pages, args.category,
+                                       args.sort, args.action, args.search)
 
     if len(results) == 0:
         printer.print('No results')
@@ -324,7 +328,7 @@ def pirate_main(args):
         # interactive loop for per-torrent actions
         while True:
             printer.print("\nSelect links (Type 'h' for more options"
-                  ", 'q' to quit)", end='\b', color='alt')
+                          ", 'q' to quit)", end='\b', color='alt')
             try:
                 l = builtins.input(': ')
             except (KeyboardInterrupt, EOFError):
@@ -337,13 +341,13 @@ def pirate_main(args):
                 printer.print('')
                 if code == 'h':
                     printer.print('Options:',
-                          '<links>: Download selected torrents',
-                          '[m<links>]: Save magnets as files',
-                          '[t<links>]: Save .torrent files',
-                          '[d<links>]: Get descriptions',
-                          '[f<links>]: Get files',
-                          '[p] Print search results',
-                          '[q] Quit', sep='\n')
+                                  '<links>: Download selected torrents',
+                                  '[m<links>]: Save magnets as files',
+                                  '[t<links>]: Save .torrent files',
+                                  '[d<links>]: Get descriptions',
+                                  '[f<links>]: Get files',
+                                  '[p] Print search results',
+                                  '[q] Quit', sep='\n')
                 elif code == 'q':
                     printer.print('Bye.', color='alt')
                     return
@@ -354,9 +358,11 @@ def pirate_main(args):
                 elif code == 'p':
                     printer.search_results(results)
                 elif code == 'm':
-                    pirate.torrent.save_magnets(printer, choices, results, args.save_directory)
+                    pirate.torrent.save_magnets(printer, choices, results,
+                                                args.save_directory)
                 elif code == 't':
-                    pirate.torrent.save_torrents(printer, choices, results, args.save_directory)
+                    pirate.torrent.save_torrents(printer, choices, results,
+                                                 args.save_directory)
                 elif not l:
                     printer.print('No links entered!', color='WARN')
                 else:

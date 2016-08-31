@@ -241,6 +241,7 @@ def connect_mirror(mirror, printer, pages, category, sort, action, search):
             mirror=mirror)
     except (urllib.error.URLError, socket.timeout, IOError, ValueError):
         printer.print('Failed', color='WARN')
+        return None
     else:
         printer.print('Ok', color='alt')
         return results, mirror
@@ -248,21 +249,21 @@ def connect_mirror(mirror, printer, pages, category, sort, action, search):
 
 def search_mirrors(printer, *args):
     # try official site
-    result = connect_mirror('https://thepiratebay.mn', printer, *args)
+    result = connect_mirror(pirate.data.default_mirror, printer, *args)
     if result:
         return result
 
     # download mirror list
     try:
-        req = request.Request('https://proxybay.co/list.txt',
+        req = request.Request(pirate.data.mirror_list,
                               headers=pirate.data.default_headers)
         f = request.urlopen(req, timeout=pirate.data.default_timeout)
-    except IOError:
-        printer.print('Could not fetch mirrors :(', color='ERROR')
-        sys.exit(1)
+    except urllib.error.URLError as e:
+        raise IOError('Could not fetch mirrors', e.reason)
 
     if f.getcode() != 200:
-        raise IOError('The proxy bay responded with an error')
+        raise IOError('The proxy bay responded with an error',
+                      f.read().decode('utf-8'))
 
     mirrors = [i.decode('utf-8').strip() for i in f.readlines()][3:]
 
@@ -274,8 +275,7 @@ def search_mirrors(printer, *args):
         if result:
             return result
     else:
-        printer.print('No more available mirrors :(', color='ERROR')
-        sys.exit(1)
+        raise IOError('No more available mirrors')
 
 
 def pirate_main(args):
@@ -311,8 +311,14 @@ def pirate_main(args):
     if args.source == 'local_tpb':
         results = pirate.local.search(args.database, args.search)
     elif args.source == 'tpb':
-        results, site = search_mirrors(printer, args.pages, args.category,
-                                       args.sort, args.action, args.search)
+        try:
+            results, site = search_mirrors(printer, args.pages, args.category,
+                                           args.sort, args.action, args.search)
+        except IOError as e:
+            printer.print(e.args[0] + ' :( ', color='ERROR')
+            if len(e.args) > 1:
+                printer.print(e.args[1])
+            sys.exit(1)
 
     if len(results) == 0:
         printer.print('No results')

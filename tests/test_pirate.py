@@ -6,6 +6,7 @@ from unittest import mock
 from unittest.mock import patch, call, MagicMock
 
 import pirate.pirate
+import pirate.data
 from pirate.print import Printer
 
 
@@ -157,14 +158,14 @@ class TestPirate(unittest.TestCase):
             with patch('pirate.torrent.remote', return_value=[]) as remote:
                 results, mirror = pirate.pirate.search_mirrors(printer, pages, category, sort, action, search)
                 self.assertEqual(results, [])
-                self.assertEqual(mirror, 'https://thepiratebay.mn')
-                remote.assert_called_once_with(printer=printer, pages=1, category=100, sort=10, mode='browse', terms=[], mirror='https://thepiratebay.mn')
+                self.assertEqual(mirror, pirate.data.default_mirror)
+                remote.assert_called_once_with(printer=printer, pages=1, category=100, sort=10, mode='browse', terms=[], mirror=pirate.data.default_mirror)
             with patch('pirate.torrent.remote', side_effect=[socket.timeout, []]) as remote:
                 results, mirror = pirate.pirate.search_mirrors(printer, pages, category, sort, action, search)
                 self.assertEqual(results, [])
                 self.assertEqual(mirror, 'https://example.com')
                 remote.assert_has_calls([
-                    call(printer=printer, pages=1, category=100, sort=10, mode='browse', terms=[], mirror='https://thepiratebay.mn'),
+                    call(printer=printer, pages=1, category=100, sort=10, mode='browse', terms=[], mirror=pirate.data.default_mirror),
                     call(printer=printer, pages=1, category=100, sort=10, mode='browse', terms=[], mirror='https://example.com')
                 ])
 

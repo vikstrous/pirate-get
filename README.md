@@ -55,6 +55,10 @@ transmission = false
 
 ; use colored output
 colors = true
+
+; the pirate bay mirror(s) to use:
+; one or more space separated URLs
+mirror = http://thepiratebay.org
 ```
 
 Note:  

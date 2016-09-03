@@ -2,6 +2,7 @@
 import socket
 import unittest
 import subprocess
+from argparse import Namespace
 from unittest import mock
 from unittest.mock import patch, call, MagicMock
 
@@ -147,7 +148,9 @@ class TestPirate(unittest.TestCase):
                 self.assertEqual(test[2][option], value)
 
     def test_search_mirrors(self):
-        pages, category, sort, action, search = (1, 100, 10, 'browse', [])
+        args = Namespace(pages=1, category=100, sort=10,
+                         action='browse', search=[],
+                         mirror=[pirate.data.default_mirror])
         class MockResponse():
             readlines = mock.MagicMock(return_value=[x.encode('utf-8') for x in ['', '', '', 'https://example.com']])
             info = mock.MagicMock()
@@ -156,12 +159,12 @@ class TestPirate(unittest.TestCase):
         printer = MagicMock(Printer)
         with patch('urllib.request.urlopen', return_value=response_obj) as urlopen:
             with patch('pirate.torrent.remote', return_value=[]) as remote:
-                results, mirror = pirate.pirate.search_mirrors(printer, pages, category, sort, action, search)
+                results, mirror = pirate.pirate.search_mirrors(printer, args)
                 self.assertEqual(results, [])
                 self.assertEqual(mirror, pirate.data.default_mirror)
                 remote.assert_called_once_with(printer=printer, pages=1, category=100, sort=10, mode='browse', terms=[], mirror=pirate.data.default_mirror)
             with patch('pirate.torrent.remote', side_effect=[socket.timeout, []]) as remote:
-                results, mirror = pirate.pirate.search_mirrors(printer, pages, category, sort, action, search)
+                results, mirror = pirate.pirate.search_mirrors(printer, args)
                 self.assertEqual(results, [])
                 self.assertEqual(mirror, 'https://example.com')
                 remote.assert_has_calls([

@@ -10,7 +10,7 @@ if LooseVersion(sys.version) < LooseVersion("3.4.0"):
 
 if __name__ == '__main__':
     setup(name='pirate-get',
-        version='0.2.8',
+        version='0.2.9',
         description='A command line interface for The Pirate Bay',
         url='https://github.com/vikstrous/pirate-get',
         author='vikstrous',

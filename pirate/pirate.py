@@ -173,6 +173,9 @@ def parse_args(args_in):
     parser.add_argument('-m', '--mirror',
                         type=str, nargs='+',
                         help='the pirate bay mirror(s) to use')
+    parser.add_argument('-v', '--version',
+                        action='store_true',
+                        help='print pirate-get version number')
     args = parser.parse_args(args_in)
 
     return args
@@ -284,6 +287,11 @@ def search_mirrors(printer, args):
 
 def pirate_main(args):
     printer = Printer(args.color)
+
+    # print version
+    if args.version:
+        printer.print('pirate-get, version {}'.format(pirate.data.version))
+        sys.exit(0)
 
     # check it transmission is running
     if args.transmission:

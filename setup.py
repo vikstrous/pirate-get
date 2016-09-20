@@ -2,6 +2,7 @@
 from setuptools import setup, find_packages
 from distutils.version import LooseVersion
 import sys
+import pirate.data
 
 if LooseVersion(sys.version) < LooseVersion("3.4.0"):
     print("pirate-get requires at least python 3.4.0."
@@ -10,7 +11,7 @@ if LooseVersion(sys.version) < LooseVersion("3.4.0"):
 
 if __name__ == '__main__':
     setup(name='pirate-get',
-        version='0.2.9',
+        version=pirate.data.version,
         description='A command line interface for The Pirate Bay',
         url='https://github.com/vikstrous/pirate-get',
         author='vikstrous',

@@ -395,12 +395,12 @@ def pirate_main(args):
 
     if args.output == 'save_magnet_files':
         printer.print('Saving selected magnets...')
-        pirate.torrent.save_magnets(choices, results, args.save_directory)
+        pirate.torrent.save_magnets(printer, choices, results, args.save_directory)
         return
 
     if args.output == 'save_torrent_files':
         printer.print('Saving selected torrents...')
-        pirate.torrent.save_torrents(choices, results, args.save_directory)
+        pirate.torrent.save_torrents(printer, choices, results, args.save_directory)
         return
 
     for choice in choices:

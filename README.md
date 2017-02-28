@@ -23,8 +23,7 @@ Default is `$XDG_CONFIG_HOME/pirate-get`.
 If it does not exist then `$HOME/.config/pirate-get`.
 
 ### Default config file
-If not existing a new config file will be created when you start
-pirate-get. Here the available options and their behaviors are when unset:
+Here the available options and their behaviors are when unset:
 
 ```INI
 [Save]

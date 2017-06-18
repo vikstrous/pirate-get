@@ -167,8 +167,8 @@ def parse_args(args_in):
                         type=str, metavar='DIRECTORY',
                         help='directory where to save downloaded files'
                              ' (if none is given $PWD will be used)')
-    parser.add_argument('--disable-colors', dest='color',
-                        action='store_false',
+    parser.add_argument('--disable-colors', dest='disable_color',
+                        action='store_true',
                         help='disable colored output')
     parser.add_argument('-m', '--mirror',
                         type=str, nargs='+',
@@ -203,9 +203,10 @@ def combine_configs(config, args):
     if not args.database:
         args.database = config.get('LocalDB', 'path')
 
-    if not args.color or not config.getboolean('Misc', 'colors'):
-        # TODO: consider how this can be moved to the args
-        pirate.data.colored_output = False
+    if args.disable_color or config.getboolean('Misc', 'colors') == False:
+        args.color = False
+    else:
+        args.color = True
 
     if not args.save_directory:
         args.save_directory = config.get('Save', 'directory')

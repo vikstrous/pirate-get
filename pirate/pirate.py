@@ -322,7 +322,12 @@ def pirate_main(args):
     # fetch torrents
 
     if args.source == 'local_tpb':
-        results = pirate.local.search(args.database, args.search)
+        if os.path.isfile(args.database):
+            results = pirate.local.search(args.database, args.search)
+        else:
+            printer.print("Local pirate bay database doesn't exist.",
+                          '(%s)' % args.database, color='ERROR')
+            sys.exit(1)
     elif args.source == 'tpb':
         try:
             results, site = search_mirrors(printer, args)

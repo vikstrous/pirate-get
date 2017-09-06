@@ -154,7 +154,7 @@ def remote(printer, pages, category, sort, mode, terms, mirror):
 
 
 def get_torrent(info_hash):
-    url = 'http://torcache.net/torrent/{:X}.torrent'
+    url = 'http://itorrents.org/torrent/{:X}.torrent'
     req = request.Request(url.format(info_hash),
                           headers=pirate.data.default_headers)
     req.add_header('Accept-encoding', 'gzip')

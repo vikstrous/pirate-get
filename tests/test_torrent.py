@@ -116,7 +116,7 @@ class TestTorrent(unittest.TestCase):
         request_obj = MockRequest()
         with patch('urllib.request.Request', return_value=request_obj) as request:
             pirate.torrent.get_torrent(100000000000000)
-            request.assert_called_once_with('http://torcache.net/torrent/5AF3107A4000.torrent', headers=pirate.data.default_headers)
+            request.assert_called_once_with('http://itorrents.org/torrent/5AF3107A4000.torrent', headers=pirate.data.default_headers)
             urlopen.assert_called_once_with(request_obj, timeout=pirate.data.default_timeout)
 
     def test_remote(self):

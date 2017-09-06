@@ -52,16 +52,23 @@ def parse_config_file(text):
 
     return config
 
-
 def load_config():
     # user-defined config files
     config_home = os.getenv('XDG_CONFIG_HOME', '~/.config')
     config = expanduser(os.path.join(config_home, 'pirate-get'))
 
     # read config file
+
     if os.path.isfile(config):
         with open(config) as f:
             return parse_config_file(f.read())
+
+    # sees if local database exists
+    try:
+        os.path.isfile('/root/downloads/pirate-get/db')
+
+    except FileNotFoundError:
+        return "piratebay local database does not exists!"
 
     return parse_config_file("")
 

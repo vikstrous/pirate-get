@@ -63,12 +63,12 @@ def load_config():
         with open(config) as f:
             return parse_config_file(f.read())
 
-    # sees if local database exsists
+    # sees if local database exists
     try:
         os.path.isfile('/root/downloads/pirate-get/db')
 
     except FileNotFoundError:
-        return "piratebay local database does not exsist!"
+        return "piratebay local database does not exists!"
 
     return parse_config_file("")
 

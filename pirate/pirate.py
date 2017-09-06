@@ -52,7 +52,6 @@ def parse_config_file(text):
 
     return config
 
-print 'exist'
 def load_config():
     # user-defined config files
     config_home = os.getenv('XDG_CONFIG_HOME', '~/.config')

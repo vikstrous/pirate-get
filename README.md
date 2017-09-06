@@ -8,6 +8,8 @@ Make sure you have python 3.4 and pip installed. On Ubuntu 14.04 you may also ne
 
 Run `pip3 install pirate-get`
 
+Or if repository is cloned, run `python3 setup.py install`
+
 ## Usage
 
 To search use `pirate-get [search term]`.

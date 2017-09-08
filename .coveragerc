@@ -1,7 +1,7 @@
 [run]
 branch = True
+source = ./pirate
 [report]
-include = /home/ubuntu/pirate-get/*
-omit = */tests/*,*__init__*
+omit = */tests/*,*__init__*,.git/*
 [html]
-directory = /home/ubuntu/pirate-get/htmlcov/
+directory = ./htmlcov/

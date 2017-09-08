@@ -1,0 +1,21 @@
+box: python:3.4-slim
+build:
+  steps:
+    - install-packages:
+            packages: git
+    - script:
+        name: dependencies
+        code: |
+          pip install -r requirements-test.txt
+          python setup.py install
+          echo "python version $(python --version) running"
+          echo "pip version $(pip --version) running"
+    - script:
+        name: run tests
+        code: |
+          coverage run -m unittest discover
+    - script:
+        name: coverage report
+        code: |
+          coverage html
+          coveralls

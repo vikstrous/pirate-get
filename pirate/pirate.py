@@ -154,6 +154,8 @@ def parse_args(args_in):
                         help='open magnets with transmission-remote')
     parser.add_argument('-P', '--port', dest='port',
                         help='transmission-remote rpc port. default is 9091')
+    parser.add_argument('-A', '--auth', dest='auth',
+            help='transmission-remote rpc authentication, <user:pw>')
     parser.add_argument('-C', '--custom', dest='command',
                         help='open magnets with a custom command'
                               ' (%%s will be replaced with the url)')
@@ -217,6 +219,9 @@ def combine_configs(config, args):
     args.transmission_command = ['transmission-remote']
     if args.port:
         args.transmission_command.append(args.port)
+    if args.auth:
+        args.transmission_command.append('--auth')
+        args.transmission_command.append(args.auth)
 
     args.output = 'browser_open'
     if args.transmission or config.getboolean('Misc', 'transmission'):

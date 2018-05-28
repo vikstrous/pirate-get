@@ -422,7 +422,7 @@ def pirate_main(args):
         elif args.output == 'open_command':
             cmd = parse_cmd(args.open_command, url)
             printer.print(" ".join(cmd))
-            subprocess.call(cmd)
+            subprocess.call(cmd, shell=True)
         elif args.output == 'browser_open':
             webbrowser.open(url)
 

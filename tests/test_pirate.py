@@ -38,7 +38,7 @@ class TestPirate(unittest.TestCase):
             config = pirate.pirate.parse_config_file('')
             args = pirate.pirate.combine_configs(config, pirate.pirate.parse_args(['-0', 'term', '-C', 'blah %s']))
             pirate.pirate.pirate_main(args)
-            mock_call.assert_called_once_with(['blah', 'dn=derp'])
+            mock_call.assert_called_once_with(['blah', 'dn=derp'], shell=True)
 
     @patch('pirate.pirate.builtins.input', return_value='0')
     @patch('subprocess.call')
@@ -54,7 +54,7 @@ class TestPirate(unittest.TestCase):
             config = pirate.pirate.parse_config_file('')
             args = pirate.pirate.combine_configs(config, pirate.pirate.parse_args(['term', '-C', 'blah %s']))
             pirate.pirate.pirate_main(args)
-            mock_call.assert_called_once_with(['blah', 'dn=derp'])
+            mock_call.assert_called_once_with(['blah', 'dn=derp'], shell=True)
 
     def test_parse_torrent_command(self):
         tests = [

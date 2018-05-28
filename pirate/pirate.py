@@ -38,6 +38,8 @@ def parse_config_file(text):
     #       for interpolating in the command
     config.set('Misc', 'openCommand', '')
     config.set('Misc', 'transmission', 'false')
+    config.set('Misc', 'transmission-auth', '')
+    config.set('Misc', 'transmission-port', '')
     config.set('Misc', 'colors', 'true')
     config.set('Misc', 'mirror', pirate.data.default_mirror)
 
@@ -139,7 +141,8 @@ def parse_args(args_in):
                         action='store_true',
                         help='list Sortable Types')
     parser.add_argument('-L', '--local', dest='database',
-                        help='an xml file containing the Pirate Bay database')
+                        help='a csv file containing the Pirate Bay database '
+                        'downloaded from https://thepiratebay.org/static/dump/csv/')
     parser.add_argument('-p', dest='pages', default=1, type=int,
                         help='the number of pages to fetch '
                              "(doesn't work with --local)")
@@ -219,9 +222,14 @@ def combine_configs(config, args):
     args.transmission_command = ['transmission-remote']
     if args.port:
         args.transmission_command.append(args.port)
+    elif config.get('Misc', 'transmission-port'):
+        args.transmission_command.append(config.get('Misc', 'transmission-port'))
     if args.auth:
         args.transmission_command.append('--auth')
         args.transmission_command.append(args.auth)
+    elif config.get('Misc', 'transmission-auth'):
+        args.transmission_command.append('--auth')
+        args.transmission_command.append(config.get('Misc', 'transmission-auth'))
 
     args.output = 'browser_open'
     if args.transmission or config.getboolean('Misc', 'transmission'):

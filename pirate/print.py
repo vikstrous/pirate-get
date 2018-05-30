@@ -43,10 +43,13 @@ class Printer:
         even = True
 
         if local:
-            table = veryprettytable.VeryPrettyTable(['LINK', 'NAME'])
+            table = veryprettytable.VeryPrettyTable(['LINK', 'DATE', 'SIZE', 'NAME'])
+
+            table.align['SIZE'] = 'r'
+            table.align['NAME'] = 'l'
         else:
             table = veryprettytable.VeryPrettyTable(['LINK', 'SEED', 'LEECH',
-                                                     'RATIO', 'SIZE', '',
+                                                     'RATIO', 'SIZE',
                                                      'UPLOAD', 'NAME'])
             table.align['NAME'] = 'l'
             table.align['SEED'] = 'r'
@@ -65,7 +68,7 @@ class Printer:
             torrent_name = parse.unquote_plus(name.group(1))
 
             if local:
-                content = [n, torrent_name[:columns - 7]]
+                content = [n, result['date'], result['size'], torrent_name[:columns - 42]]
             else:
                 no_seeders = int(result['seeds'])
                 no_leechers = int(result['leechers'])
@@ -85,8 +88,8 @@ class Printer:
 
                 content = [n, no_seeders, no_leechers,
                            '{:.1f}'.format(ratio),
-                           '{:.1f}'.format(size),
-                           unit, date, torrent_name[:columns - 53]]
+                           '{:.1f} '.format(size) + unit,
+                           date, torrent_name[:columns - 50]]
 
             if even or not self.enable_color:
                 table.add_row(content)

@@ -24,8 +24,8 @@ if __name__ == '__main__':
         },
         install_requires=['colorama>=0.3.3',
                           'beautifulsoup4>=4.4.1',
-                          'veryprettytable>=0.8.1'],
-                          'pyperclip>=1.6.2'
+                          'veryprettytable>=0.8.1',
+                          'pyperclip>=1.6.2'],
         keywords=['torrent', 'magnet', 'download', 'tpb', 'client'],
         classifiers=[
             'Topic :: Utilities',

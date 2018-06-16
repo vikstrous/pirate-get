@@ -63,3 +63,5 @@ target/
 
 # setup.py
 publish/*
+
+.pypirc

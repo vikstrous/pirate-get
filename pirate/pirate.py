@@ -84,8 +84,8 @@ def parse_cmd(cmd, url):
 
 def parse_torrent_command(l):
     # Very permissive handling
-    # Check for any occurances or d, f, p, t, m, or q
-    cmd_code_match = re.search(r'([hdfpmtq])', l,
+    # Check for any occurances of c, d, f, p, t, m, or q
+    cmd_code_match = re.search(r'([hdfpmtqc])', l,
                                flags=re.IGNORECASE)
     if cmd_code_match:
         code = cmd_code_match.group(0).lower()
@@ -382,6 +382,7 @@ def pirate_main(args):
                     printer.print('Options:',
                                   '<links>: Download selected torrents',
                                   '[m<links>]: Save magnets as files',
+                                  '[c<links>]: Copy magnets to clipboard',
                                   '[t<links>]: Save .torrent files',
                                   '[d<links>]: Get descriptions',
                                   '[f<links>]: Get files',
@@ -399,6 +400,8 @@ def pirate_main(args):
                 elif code == 'm':
                     pirate.torrent.save_magnets(printer, choices, results,
                                                 args.save_directory)
+                elif code == 'c':
+                    pirate.torrent.copy_magnets(printer, choices, results)
                 elif code == 't':
                     pirate.torrent.save_torrents(printer, choices, results,
                                                  args.save_directory)

@@ -100,7 +100,10 @@ def parse_page(html):
     # parse the rows one by one (skipping headings)
     for row in table('tr')[1:]:
         # grab info about the row
-        id_ = row.find('a', class_='detLink')['href'].split('/')[2]
+        row_link = row.find('a', class_='detLink')
+        if row_link is None:
+            continue
+        id_ = row_link['href'].split('/')[2]
         seeds, leechers = [i.text for i in row('td')[-2:]]
         magnet = row.find(lambda tag:
                           tag.name == 'a' and

@@ -5,7 +5,7 @@ import pkgutil
 def get_resource(filename):
     return pkgutil.get_data(__package__, 'data/' + filename)
 
-version = '0.3.1'
+version = '0.3.2'
 
 categories = json.loads(get_resource('categories.json').decode())
 sorts = json.loads(get_resource('sorts.json').decode())

@@ -181,8 +181,9 @@ def save_torrents(printer, chosen_links, results, folder):
 
         try:
             torrent = get_torrent(info_hash)
-        except urllib.error.HTTPError:
-            printer.print('There is no cached file for this torrent :(',
+        except urllib.error.HTTPError as e:
+            printer.print('There is no cached file for this torrent :('
+                          ' \nCode: {} - {}'.format(e.code, e.reason),
                           color='ERROR')
         else:
             open(file, 'wb').write(torrent)

@@ -8,7 +8,6 @@ import socket
 import urllib.request as request
 import urllib.error
 import builtins
-from collections import OrderedDict
 
 import webbrowser
 

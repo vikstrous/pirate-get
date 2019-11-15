@@ -142,7 +142,8 @@ def parse_args(args_in):
                         help='list Sortable Types')
     parser.add_argument('-L', '--local', dest='database',
                         help='a csv file containing the Pirate Bay database '
-                        'downloaded from https://thepiratebay.org/static/dump/csv/')
+                             'downloaded from '
+                             'https://thepiratebay.org/static/dump/csv/')
     parser.add_argument('-p', dest='pages', default=1, type=int,
                         help='the number of pages to fetch '
                              "(doesn't work with --local)")
@@ -208,7 +209,7 @@ def combine_configs(config, args):
     if not args.database:
         args.database = config.get('LocalDB', 'path')
 
-    if args.disable_color or config.getboolean('Misc', 'colors') == False:
+    if args.disable_color or not config.getboolean('Misc', 'colors'):
         args.color = False
     else:
         args.color = True
@@ -417,12 +418,14 @@ def pirate_main(args):
 
     if args.output == 'save_magnet_files':
         printer.print('Saving selected magnets...')
-        pirate.torrent.save_magnets(printer, choices, results, args.save_directory)
+        pirate.torrent.save_magnets(printer, choices,
+                                    results, args.save_directory)
         return
 
     if args.output == 'save_torrent_files':
         printer.print('Saving selected torrents...')
-        pirate.torrent.save_torrents(printer, choices, results, args.save_directory)
+        pirate.torrent.save_torrents(printer, choices,
+                                     results, args.save_directory)
         return
 
     for choice in choices:

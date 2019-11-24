@@ -80,14 +80,12 @@ def build_request_path(page, category, sort, mode, terms):
 # this returns a list of dictionaries
 def parse_page(html):
     soup = BeautifulSoup(html, 'html.parser')
-    table = soup.find('table', id='searchResult')
-
-    results = []
+    tables = soup.find_all('table', id='searchResult')
     no_results = re.search(r'No hits\. Try adding an asterisk in '
                            r'you search phrase\.', html)
 
     # check for a blocked mirror
-    if not table and not no_results:
+    if not tables and not no_results:
         # Contradiction - we found no results,
         # but the page didn't say there were no results.
         # The page is probably not actually the pirate bay,
@@ -95,7 +93,21 @@ def parse_page(html):
         raise IOError('Blocked mirror detected.')
 
     if no_results:
-        return results
+        return []
+
+    # handle ads disguised as fake result tables
+    for table in tables:
+        results = parse_table(table)
+        if results:
+            break
+    else:
+        raise IOError('Mirror does not contain magnets.')
+
+    return results
+
+
+def parse_table(table):
+    results = []
 
     # parse the rows one by one (skipping headings)
     for row in table('tr')[1:]:
@@ -103,11 +115,14 @@ def parse_page(html):
         row_link = row.find('a', class_='detLink')
         if row_link is None:
             continue
+
         id_ = row_link['href'].split('/')[2]
         seeds, leechers = [i.text for i in row('td')[-2:]]
-        magnet = row.find(lambda tag:
-                          tag.name == 'a' and
-                          tag['href'].startswith('magnet'))['href']
+        magnet_tag = row.find(lambda tag: tag.name == 'a' and
+                              tag['href'].startswith('magnet'))
+        if magnet_tag is None:
+            continue
+        magnet = magnet_tag['href']
 
         # parse descriptions separately
         description = row.find('font', class_='detDesc').text
@@ -202,6 +217,7 @@ def save_magnets(printer, chosen_links, results, folder):
         printer.print('Saved {:X} in {}'.format(info_hash, file))
         with open(file, 'w') as f:
             f.write(magnet + '\n')
+
 
 def copy_magnets(printer, chosen_links, results):
     clipboard_text = ''

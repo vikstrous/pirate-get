@@ -259,8 +259,9 @@ def connect_mirror(mirror, printer, args):
             mode=args.action,
             terms=args.search,
             mirror=mirror)
-    except (urllib.error.URLError, socket.timeout, IOError, ValueError):
-        printer.print('Failed', color='WARN')
+    except (urllib.error.URLError, socket.timeout, IOError, ValueError) as e:
+        printer.print('Failed', color='WARN', end=' ')
+        printer.print('(', e, ')', sep='')
         return None
     else:
         printer.print('Ok', color='alt')

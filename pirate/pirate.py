@@ -39,6 +39,7 @@ def parse_config_file(text):
     config.set('Misc', 'transmission', 'false')
     config.set('Misc', 'transmission-auth', '')
     config.set('Misc', 'transmission-endpoint', '')
+    config.set('Misc', 'transmission-port', '')  # for backward compatibility
     config.set('Misc', 'colors', 'true')
     config.set('Misc', 'mirror', pirate.data.default_mirror)
 
@@ -155,11 +156,11 @@ def parse_args(args_in):
     parser.add_argument('-t', '--transmission',
                         action='store_true',
                         help='open magnets with transmission-remote')
-    parser.add_argument('-E', '--transmission-endpoint',
+    parser.add_argument('-E', '--transmission-endpoint', '--port',
                         metavar='HOSTNAME:PORT', dest='endpoint',
                         help='transmission-remote RPC endpoint. '
                              'default is localhost:9091')
-    parser.add_argument('-A', '--transmission-auth',
+    parser.add_argument('-A', '--transmission-auth', '--auth',
                         metavar='USER:PASSWORD', dest='auth',
                         help='transmission-remote RPC authentication')
     parser.add_argument('-C', '--custom', dest='command',
@@ -228,6 +229,10 @@ def combine_configs(config, args):
     elif config.get('Misc', 'transmission-endpoint'):
         args.transmission_command.append(
             config.get('Misc', 'transmission-endpoint'))
+    # for backward compatibility
+    elif config.get('Misc', 'transmission-port'):
+        args.transmission_command.append(
+            config.get('Misc', 'transmission-port'))
     if args.auth:
         args.transmission_command.append('--auth')
         args.transmission_command.append(args.auth)

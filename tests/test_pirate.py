@@ -130,7 +130,7 @@ class TestPirate(unittest.TestCase):
             ('', ['term'], {'action': 'search', 'source': 'tpb'}),
             ('', ['-L', 'filename', 'term'], {'action': 'search', 'source': 'local_tpb', 'database': 'filename'}),
             ('', ['term', '-S', 'dir'], {'action': 'search', 'save_directory': 'dir'}),
-            ('', ['-P', '1337'], {'transmission_command': ['transmission-remote', '1337']}),
+            ('', ['-E', 'localhost:1337'], {'transmission_command': ['transmission-remote', 'localhost:1337']}),
             ('', ['term'], {'output': 'browser_open'}),
             ('', ['term', '-t'], {'output': 'transmission'}),
             ('', ['term', '--save-magnets'], {'output': 'save_magnet_files'}),

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import unittest
 from unittest.mock import patch, call, MagicMock
 
@@ -6,6 +7,10 @@ from pirate.print import Printer
 
 
 class TestPrint(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # needed to display the results table
+        os.environ['COLUMNS'] = '80'
 
     def test_print_results_remote(self):
         class MockTable:

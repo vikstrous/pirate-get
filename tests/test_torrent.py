@@ -124,14 +124,18 @@ class TestTorrent(unittest.TestCase):
             add_header = mock.MagicMock()
         request_obj = MockRequest()
         class MockResponse():
-            read = mock.MagicMock(return_value='<html>No hits. Try adding an asterisk in you search phrase.</html>'.encode('utf8'))
+            read = mock.MagicMock(return_value=b'<html>No hits. Try adding an asterisk in you search phrase.</html>')
             info = mock.MagicMock()
         response_obj = MockResponse()
+        class MockOpener():
+            open = mock.MagicMock(return_value=response_obj)
+            add_handler = mock.MagicMock()
+        opener_obj = MockOpener()
         with patch('urllib.request.Request', return_value=request_obj) as request:
-            with patch('urllib.request.urlopen', return_value=response_obj) as urlopen:
+            with patch('urllib.request.OpenerDirector', return_value=opener_obj) as opener:
                 res = pirate.torrent.remote(MagicMock(Printer), 1, 100, 10, 'browse', [], 'http://example.com')
                 request.assert_called_once_with('http://example.com/browse/100/0/10', headers=pirate.data.default_headers)
-                urlopen.assert_called_once_with(request_obj, timeout=pirate.data.default_timeout)
+                opener_obj.open.assert_called_once_with(request_obj, timeout=pirate.data.default_timeout)
                 self.assertEqual(res, [])
 
 if __name__ == '__main__':

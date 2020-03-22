@@ -7,11 +7,11 @@ import urllib.parse as parse
 import urllib.error
 import os.path
 
-from bs4 import BeautifulSoup
-
 import pirate.data
 
+from bs4 import BeautifulSoup
 from io import BytesIO
+from http.cookiejar import CookieJar
 
 
 parser_regex = r'"(magnet\:\?xt=[^"]*)|<td align="right">([^<]+)</td>'
@@ -152,13 +152,18 @@ def remote(printer, pages, category, sort, mode, terms, mirror):
 
     # Catch the Ctrl-C exception and exit cleanly
     try:
+        jar = CookieJar()
+        opener = request.build_opener(
+            request.HTTPErrorProcessor,
+            request.HTTPCookieProcessor(jar))
+
         for page in range(pages):
             path = build_request_path(page, category, sort, mode, terms)
 
             req = request.Request(mirror + path,
                                   headers=pirate.data.default_headers)
             req.add_header('Accept-encoding', 'gzip')
-            f = request.urlopen(req, timeout=pirate.data.default_timeout)
+            f = opener.open(req, timeout=pirate.data.default_timeout)
             if f.info().get('Content-Encoding') == 'gzip':
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))
             res = f.read().decode('utf-8')

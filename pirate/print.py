@@ -4,12 +4,14 @@ import gzip
 import urllib.parse as parse
 import urllib.request as request
 import shutil
-from io import BytesIO
+
+import pirate.data
 
 import colorama
 import veryprettytable
 
-import pirate.data
+from io import BytesIO
+from http.cookiejar import CookieJar
 
 
 class Printer:
@@ -101,12 +103,17 @@ class Printer:
         self.print(table)
 
     def descriptions(self, chosen_links, results, site):
+        jar = CookieJar()
+        opener = request.build_opener(
+            request.HTTPErrorProcessor,
+            request.HTTPCookieProcessor(jar))
+
         for link in chosen_links:
             path = '/torrent/%s/' % results[link]['id']
             req = request.Request(site + path,
                                   headers=pirate.data.default_headers)
             req.add_header('Accept-encoding', 'gzip')
-            f = request.urlopen(req, timeout=pirate.data.default_timeout)
+            f = opener.open(req, timeout=pirate.data.default_timeout)
 
             if f.info().get('Content-Encoding') == 'gzip':
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))
@@ -125,13 +132,18 @@ class Printer:
             self.print(desc, color='zebra_0')
 
     def file_lists(self, chosen_links, results, site):
+        jar = CookieJar()
+        opener = request.build_opener(
+            request.HTTPErrorProcessor,
+            request.HTTPCookieProcessor(jar))
+
         for link in chosen_links:
             path = '/ajax_details_filelist.php'
             query = '?id=' + results[link]['id']
             req = request.Request(site + path + query,
                                   headers=pirate.data.default_headers)
             req.add_header('Accept-encoding', 'gzip')
-            f = request.urlopen(req, timeout=pirate.data.default_timeout)
+            f = opener.open(req, timeout=pirate.data.default_timeout)
 
             if f.info().get('Content-Encoding') == 'gzip':
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))

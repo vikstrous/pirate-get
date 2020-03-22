@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import unittest
 from unittest.mock import patch, call, MagicMock
 
@@ -6,6 +7,10 @@ from pirate.print import Printer
 
 
 class TestPrint(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # needed to display the results table
+        os.environ['COLUMNS'] = '80'
 
     def test_print_results_remote(self):
         class MockTable:
@@ -88,8 +93,12 @@ class TestPrint(unittest.TestCase):
             read = MagicMock(return_value='<html><div class="nfo"><pre>stuff <a href="href">link</a></pre></div></html>'.encode('utf8'))
             info = MagicMock()
         response_obj = MockResponse()
+        class MockOpener():
+            open = MagicMock(return_value=response_obj)
+            add_handler = MagicMock()
+        opener_obj = MockOpener()
         with patch('urllib.request.Request', return_value=request_obj) as request:
-            with patch('urllib.request.urlopen', return_value=response_obj) as urlopen:
+            with patch('urllib.request.OpenerDirector', return_value=opener_obj) as opener:
                 printer.descriptions([0], [{'id': '1', 'magnet': 'dn=name'}], 'example.com')
                 printer.print.assert_has_calls([call('Description for "name":', color='zebra_1'),call('stuff [link](href)', color='zebra_0')])
 
@@ -103,8 +112,12 @@ class TestPrint(unittest.TestCase):
             read = MagicMock(return_value='<html><tr><td align="left">1.</td><td align="right">filename</tr></html>'.encode('utf8'))
             info = MagicMock()
         response_obj = MockResponse()
+        class MockOpener():
+            open = MagicMock(return_value=response_obj)
+            add_handler = MagicMock()
+        opener_obj = MockOpener()
         with patch('urllib.request.Request', return_value=request_obj) as request:
-            with patch('urllib.request.urlopen', return_value=response_obj) as urlopen:
+            with patch('urllib.request.OpenerDirector', return_value=opener_obj) as opener:
                 printer.file_lists([0], [{'id': '1', 'magnet': 'dn=name'}], 'example.com')
                 printer.print.assert_has_calls([call('Files in "name":', color='zebra_1'),call('         1.  filename', color='zebra_0')])
 

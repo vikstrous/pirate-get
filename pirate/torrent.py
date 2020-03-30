@@ -163,7 +163,15 @@ def remote(printer, pages, category, sort, mode, terms, mirror):
             req = request.Request(mirror + path,
                                   headers=pirate.data.default_headers)
             req.add_header('Accept-encoding', 'gzip')
-            f = opener.open(req, timeout=pirate.data.default_timeout)
+
+            try:
+                f = opener.open(req, timeout=pirate.data.default_timeout)
+            except urllib.error.URLError as e:
+                res = e.fp.read().decode()
+                if e.code == 503 and 'cf-browser-verification' in res:
+                    raise IOError('Cloudflare protected')
+                raise e
+
             if f.info().get('Content-Encoding') == 'gzip':
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))
             res = f.read().decode('utf-8')

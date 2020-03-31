@@ -1,15 +1,10 @@
-machine:
-  python:
-    version: 3.4.2
-dependencies:
-  override:
-    - pip install -r requirements-test.txt
-    - python setup.py install
-test:
-  override:
-    - coverage run -m unittest discover
-  post:
-    - mkdir -p $CIRCLE_ARTIFACTS/coverage
-    - cd /home/ubuntu/pirate-get && coverage html
-    - cp -R /home/ubuntu/pirate-get/htmlcov/* $CIRCLE_ARTIFACTS/coverage
-    - coveralls
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.6
+    steps:
+      - checkout
+      - run: pip install -r requirements-test.txt
+      - run: coverage run -m unittest discover
+      - run: coveralls

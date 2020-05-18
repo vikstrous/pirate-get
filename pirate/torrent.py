@@ -236,7 +236,7 @@ def copy_magnets(printer, chosen_links, results):
     clipboard_text = ''
     for link in chosen_links:
         magnet = results[link]['magnet']
-        info_hash = int(re.search(r'btih:([a-f0-9]{40})', magnet).group(1), 16)
+        info_hash = int(re.search(r'btih:([a-fA-F0-9]{40})', magnet).group(1), 16)
         clipboard_text += magnet + "\n"
         printer.print('Copying {:X} to clipboard'.format(info_hash))
 

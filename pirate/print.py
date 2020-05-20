@@ -1,17 +1,17 @@
 import builtins
 import re
 import gzip
-import urllib.parse as parse
 import urllib.request as request
 import shutil
+import json
 
 import pirate.data
+import pirate.torrent
 
 import colorama
-import veryprettytable
 
+from veryprettytable import VeryPrettyTable
 from io import BytesIO
-from http.cookiejar import CookieJar
 
 
 class Printer:
@@ -45,14 +45,14 @@ class Printer:
         even = True
 
         if local:
-            table = veryprettytable.VeryPrettyTable(['LINK', 'DATE', 'SIZE', 'NAME'])
+            table = VeryPrettyTable(['LINK', 'DATE', 'SIZE', 'NAME'])
 
             table.align['SIZE'] = 'r'
             table.align['NAME'] = 'l'
         else:
-            table = veryprettytable.VeryPrettyTable(['LINK', 'SEED', 'LEECH',
-                                                     'RATIO', 'SIZE',
-                                                     'UPLOAD', 'NAME'])
+            table = VeryPrettyTable(['LINK', 'SEED', 'LEECH',
+                                     'RATIO', 'SIZE',
+                                     'UPLOAD', 'NAME'])
             table.align['NAME'] = 'l'
             table.align['SEED'] = 'r'
             table.align['LEECH'] = 'r'
@@ -65,21 +65,15 @@ class Printer:
         table.padding_width = 1
 
         for n, result in enumerate(results):
-
-            name = re.search(r'dn=([^\&]*)', result['magnet'])
-            torrent_name = parse.unquote_plus(name.group(1))
+            torrent_name = result['name']
 
             if local:
-                content = [n, result['date'], result['size'], torrent_name[:columns - 42]]
+                content = [n, result['date'], result['size'],
+                           torrent_name[:columns - 42]]
             else:
-                no_seeders = int(result['seeds'])
+                no_seeders = int(result['seeders'])
                 no_leechers = int(result['leechers'])
-                if result['size'] != []:
-                    size = float(result['size'][0])
-                    unit = result['size'][1]
-                else:
-                    size = 0
-                    unit = '???'
+                size = result['size']
                 date = result['uploaded']
 
                 # compute the S/L ratio (Higher is better)
@@ -90,8 +84,7 @@ class Printer:
 
                 content = [n, no_seeders, no_leechers,
                            '{:.1f}'.format(ratio),
-                           '{:.1f} '.format(size) + unit,
-                           date, torrent_name[:columns - 50]]
+                           size, date, torrent_name[:columns - 50]]
 
             if even or not self.enable_color:
                 table.add_row(content)
@@ -103,64 +96,63 @@ class Printer:
         self.print(table)
 
     def descriptions(self, chosen_links, results, site):
-        jar = CookieJar()
-        opener = request.build_opener(
-            request.HTTPErrorProcessor,
-            request.HTTPCookieProcessor(jar))
+        opener = request.build_opener(request.HTTPErrorProcessor)
 
         for link in chosen_links:
-            path = '/torrent/%s/' % results[link]['id']
-            req = request.Request(site + path,
-                                  headers=pirate.data.default_headers)
+            result = results[link]
+            req = request.Request(
+                site + '/t.php?id=' + result['id'],
+                headers=pirate.data.default_headers)
             req.add_header('Accept-encoding', 'gzip')
             f = opener.open(req, timeout=pirate.data.default_timeout)
 
             if f.info().get('Content-Encoding') == 'gzip':
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))
 
-            res = f.read().decode('utf-8')
-            name = re.search(r'dn=([^\&]*)', results[link]['magnet'])
-            torrent_name = parse.unquote(name.group(1)).replace('+', ' ')
-            desc = re.search(r'<div class="nfo">\s*<pre>(.+?)(?=</pre>)',
-                             res, re.DOTALL).group(1)
+            res = json.load(f)
 
             # Replace HTML links with markdown style versions
             desc = re.sub(r'<a href="\s*([^"]+?)\s*"[^>]*>(\s*)([^<]+?)(\s*'
-                          r')</a>', r'\2[\3](\1)\4', desc)
+                          r')</a>', r'\2[\3](\1)\4', res['descr'])
 
-            self.print('Description for "%s":' % torrent_name, color='zebra_1')
+            self.print('Description for "{}":'.format(result['name']),
+                       color='zebra_1')
             self.print(desc, color='zebra_0')
 
     def file_lists(self, chosen_links, results, site):
-        jar = CookieJar()
-        opener = request.build_opener(
-            request.HTTPErrorProcessor,
-            request.HTTPCookieProcessor(jar))
+        opener = request.build_opener(request.HTTPErrorProcessor)
+
+        # the API may returns object instead of list
+        def get(obj):
+            try:
+                return obj[0]
+            except KeyError:
+                return obj['0']
 
         for link in chosen_links:
-            path = '/ajax_details_filelist.php'
-            query = '?id=' + results[link]['id']
-            req = request.Request(site + path + query,
-                                  headers=pirate.data.default_headers)
+            result = results[link]
+            req = request.Request(
+                site + '/f.php?id=' + result['id'],
+                headers=pirate.data.default_headers)
             req.add_header('Accept-encoding', 'gzip')
             f = opener.open(req, timeout=pirate.data.default_timeout)
 
             if f.info().get('Content-Encoding') == 'gzip':
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))
 
-            # TODO: proper html decoding/parsing
-            res = f.read().decode('utf-8').replace('&nbsp;', ' ')
-            if 'File list not available.' in res:
+            res = json.load(f)
+
+            if len(res) == 1 and 'not found' in get(res[0]['name']):
                 self.print('File list not available.')
                 return
-            files = re.findall(r'<td align="left">\s*([^<]+?)\s*</td><td ali'
-                               r'gn="right">\s*([^<]+?)\s*</tr>', res)
-            name = re.search(r'dn=([^\&]*)', results[link]['magnet'])
-            torrent_name = parse.unquote(name.group(1)).replace('+', ' ')
 
-            self.print('Files in "%s":' % torrent_name, color='zebra_1')
+            self.print('Files in {}:'.format(result['name']), color='zebra_1')
             cur_color = 'zebra_0'
 
-            for f in files:
-                self.print('{0[0]:>11}  {0[1]}'.format(f), color=cur_color)
+            for f in res:
+                name = get(f['name'])
+                size = pirate.torrent.pretty_size(int(get(f['size'])))
+                self.print('{:>11} {}'.format(
+                    size, name),
+                    color=cur_color)
                 cur_color = 'zebra_0' if cur_color == 'zebra_1' else 'zebra_1'

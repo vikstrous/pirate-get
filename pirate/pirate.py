@@ -144,9 +144,6 @@ def parse_args(args_in):
                         help='a csv file containing the Pirate Bay database '
                              'downloaded from '
                              'https://thepiratebay.org/static/dump/csv/')
-    parser.add_argument('-p', dest='pages', default=1, type=int,
-                        help='the number of pages to fetch '
-                             "(doesn't work with --local)")
     parser.add_argument('-0', dest='first',
                         action='store_true',
                         help='choose the top result')
@@ -261,14 +258,14 @@ def combine_configs(config, args):
 def connect_mirror(mirror, printer, args):
     try:
         printer.print('Trying', mirror, end='... ')
+        url = pirate.torrent.find_api(mirror)
         results = pirate.torrent.remote(
             printer=printer,
-            pages=args.pages,
             category=pirate.torrent.parse_category(printer, args.category),
             sort=pirate.torrent.parse_sort(printer, args.sort),
             mode=args.action,
             terms=args.search,
-            mirror=mirror)
+            mirror=url)
     except (urllib.error.URLError, socket.timeout, IOError, ValueError) as e:
         printer.print('Failed', color='WARN', end=' ')
         printer.print('(', e, ')', sep='')
@@ -380,13 +377,13 @@ def pirate_main(args):
             printer.print("\nSelect links (Type 'h' for more options"
                           ", 'q' to quit)", end='\b', color='alt')
             try:
-                l = builtins.input(': ')
+                cmd = builtins.input(': ')
             except (KeyboardInterrupt, EOFError):
                 printer.print('\nCancelled.')
                 return
 
             try:
-                code, choices = parse_torrent_command(l)
+                code, choices = parse_torrent_command(cmd)
                 # Act on option, if supplied
                 printer.print('')
                 if code == 'h':
@@ -416,7 +413,7 @@ def pirate_main(args):
                 elif code == 't':
                     pirate.torrent.save_torrents(printer, choices, results,
                                                  args.save_directory)
-                elif not l:
+                elif not cmd:
                     printer.print('No links entered!', color='WARN')
                 else:
                     break

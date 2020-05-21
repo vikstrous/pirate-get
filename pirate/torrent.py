@@ -84,15 +84,24 @@ def parse_page(page):
     return results
 
 
-def remote(printer, category, sort, mode, terms, mirror, timeout):
-    # special query when no terms
-    if not terms:
-        if category == 0:
-            category = 'all'
-        query = '/precompiled/data_top100_{}.json'.format(category)
-    else:
+def build_request_path(mode, category, terms):
+    if mode == 'search':
         query = '/q.php?q={}&cat={}'.format(' '.join(terms), category)
+    elif mode == 'top':
+        cat = 'all' if category == 0 else category
+        query = '/precompiled/data_top100_{}.json'.format(cat)
+    elif mode == 'recent':
+        query = '/precompiled/data_top100_recent.json'
+    elif mode == 'browse':
+        raise NotImplementedError
+    else:
+        raise Exception('Invalid mode', mode)
 
+    return parse.quote(query, '?=&/')
+
+
+def remote(printer, category, sort, mode, terms, mirror, timeout):
+    query = build_request_path(mode, category, terms)
     # Catch the Ctrl-C exception and exit cleanly
     try:
         req = request.Request(

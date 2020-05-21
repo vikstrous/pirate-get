@@ -63,26 +63,27 @@ class TestTorrent(unittest.TestCase):
         self.assertEqual(99, sort)
 
     def test_request_path(self):
-        # the args are (page, category, sort, mode, terms)
-        tests = [
-            ((0, 100, 10, 'browse', []), '/browse/100/0/10'),
-            ((0, 0, 10, 'browse', []), '/browse/100/0/10'),
-            ((0, 0, 10, 'recent', []), '/top/48hall'),
-            ((0, 100, 10, 'recent', []), '/top/48h100'),
-            ((0, 100, 10, 'top', []), '/top/100'),
-            ((0, 0, 10, 'top', []), '/top/all'),
-            ((0, 100, 10, 'search', ['abc']), '/search/abc/0/10/100'),
-            ((0, 100, 10, 'search', ['abc', 'def']), '/search/abc+def/0/10/100'),
-            ((0, 100, 10, 'search', [u'\u1234']), '/search/%E1%88%B4/0/10/100'),
-            ((0, 100, 10, 'asdf', []), Exception),
+        # the args are (mode, category, terms)
+        succeed = [
+            (('recent',   0, []), '/precompiled/data_top100_recent.json'),
+            (('recent', 100, []), '/precompiled/data_top100_recent.json'),
+            (('top',      0, []), '/precompiled/data_top100_all.json'),
+            (('top',    100, []), '/precompiled/data_top100_100.json'),
+            (('search', 100, ['abc']), '/q.php?q=abc&cat=100'),
+            (('search', 100, ['abc', 'def']), '/q.php?q=abc%20def&cat=100'),
+            (('search', 100, ['\u1234']), '/q.php?q=%E1%88%B4&cat=100'),
         ]
-        for test in tests:
-            if test[1] != Exception:
-                path = pirate.torrent.build_request_path(*test[0])
-                self.assertEqual(test[1], path)
-            else:
-                with self.assertRaises(test[1]):
-                    pirate.torrent.build_request_path(test[0])
+        fail = [
+            (('browse', 100, []), NotImplementedError),
+            (('browse',   0, []), NotImplementedError),
+            (('asdf',   100, []), Exception),
+        ]
+        for inp, out in succeed:
+            path = pirate.torrent.build_request_path(*inp)
+            self.assertEqual(out, path)
+        for inp, out, in fail:
+            with self.assertRaises(out):
+                pirate.torrent.build_request_path(*inp)
 
     @patch('pirate.torrent.get_torrent')
     def test_save_torrents(self, get_torrent):
@@ -146,7 +147,7 @@ class TestTorrent(unittest.TestCase):
         with patch('urllib.request.Request', return_value=req_obj) as req:
             with patch('urllib.request.urlopen', return_value=res_obj) as res:
                 results = pirate.torrent.remote(
-                    MagicMock(Printer), 100, 10, 'browse',
+                    MagicMock(Printer), 100, 10, 'top',
                     [], 'http://example.com', 9)
                 req.assert_called_once_with(
                     'http://example.com/precompiled/data_top100_100.json',

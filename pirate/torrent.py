@@ -64,9 +64,27 @@ def make_magnet(name, info_hash):
         info_hash, parse.quote(name, ''))
 
 
-def remote(printer, category, sort, mode, terms, mirror, timeout):
+def parse_page(page):
     results = []
+    try:
+        data = json.load(page)
+    except json.decoder.JSONDecodeError:
+        raise IOError('invalid JSON in API reply: blocked mirror?')
 
+    if len(data) == 1 and 'No results' in data[0]['name']:
+        return results
+
+    for res in data:
+        res['size'] = pretty_size(int(res['size']))
+        res['magnet'] = make_magnet(res['name'], res['info_hash'])
+        res['info_hash'] = int(res['info_hash'], 16)
+        res['uploaded'] = pretty_date(res['added'])
+        results.append(res)
+
+    return results
+
+
+def remote(printer, category, sort, mode, terms, mirror, timeout):
     # special query when no terms
     if not terms:
         if category == 0:
@@ -87,19 +105,7 @@ def remote(printer, category, sort, mode, terms, mirror, timeout):
 
         if f.info().get('Content-Encoding') == 'gzip':
             f = gzip.GzipFile(fileobj=BytesIO(f.read()))
-        data = json.load(f)
-
-        if len(data) == 1 and 'No results' in data[0]['name']:
-            return []
-
-        for res in data:
-            res['size'] = pretty_size(int(res['size']))
-            res['magnet'] = make_magnet(res['name'], res['info_hash'])
-            res['info_hash'] = int(res['info_hash'], 16)
-            res['uploaded'] = pretty_date(res['added'])
-            results.append(res)
-
-        return results
+        return parse_page(f)
 
     except KeyboardInterrupt:
         printer.print('\nCancelled.')

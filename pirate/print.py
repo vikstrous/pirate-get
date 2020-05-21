@@ -9,8 +9,8 @@ import pirate.data
 import pirate.torrent
 
 import colorama
+import veryprettytable as pretty
 
-from veryprettytable import VeryPrettyTable
 from io import BytesIO
 
 
@@ -45,14 +45,14 @@ class Printer:
         even = True
 
         if local:
-            table = VeryPrettyTable(['LINK', 'DATE', 'SIZE', 'NAME'])
+            table = pretty.VeryPrettyTable(['LINK', 'DATE', 'SIZE', 'NAME'])
 
             table.align['SIZE'] = 'r'
             table.align['NAME'] = 'l'
         else:
-            table = VeryPrettyTable(['LINK', 'SEED', 'LEECH',
-                                     'RATIO', 'SIZE',
-                                     'UPLOAD', 'NAME'])
+            table = pretty.VeryPrettyTable(['LINK', 'SEED', 'LEECH',
+                                            'RATIO', 'SIZE',
+                                            'UPLOAD', 'NAME'])
             table.align['NAME'] = 'l'
             table.align['SEED'] = 'r'
             table.align['LEECH'] = 'r'
@@ -99,7 +99,7 @@ class Printer:
         for link in chosen_links:
             result = results[link]
             req = request.Request(
-                site + '/t.php?id=' + result['id'],
+                site + '/t.php?id=' + str(result['id']),
                 headers=pirate.data.default_headers)
             req.add_header('Accept-encoding', 'gzip')
             f = request.urlopen(req, timeout=timeout)
@@ -128,7 +128,7 @@ class Printer:
         for link in chosen_links:
             result = results[link]
             req = request.Request(
-                site + '/f.php?id=' + result['id'],
+                site + '/f.php?id=' + str(result['id']),
                 headers=pirate.data.default_headers)
             req.add_header('Accept-encoding', 'gzip')
             f = request.urlopen(req, timeout=timeout)

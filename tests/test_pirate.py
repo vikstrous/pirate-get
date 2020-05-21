@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import socket
 import unittest
-import subprocess
 from argparse import Namespace
 from unittest import mock
 from unittest.mock import patch, call, MagicMock
@@ -28,33 +27,40 @@ class TestPirate(unittest.TestCase):
     @patch('subprocess.call')
     def test_main(self, mock_call):
         result = {
-            'magnet': 'dn=derp',
-            'seeds': '1',
+            'name': 'derp',
+            'magnet': 'magnet:?xt=urn:btih:deadbeef&dn=derp',
+            'seeders': '1',
             'leechers': '1',
             'size': ('1', 'mb'),
             'uploaded': '1',
         }
-        with patch('pirate.torrent.remote', return_value=[result]) as mock_remote:
+        with patch('pirate.torrent.remote', return_value=[result]):
             config = pirate.pirate.parse_config_file('')
-            args = pirate.pirate.combine_configs(config, pirate.pirate.parse_args(['-0', 'term', '-C', 'blah %s']))
+            args = pirate.pirate.combine_configs(
+                config,
+                pirate.pirate.parse_args(['-0', 'term', '-C', 'blah %s']))
             pirate.pirate.pirate_main(args)
-            mock_call.assert_called_once_with(['blah', 'dn=derp'])
+            mock_call.assert_called_once_with(
+                ['blah', 'magnet:?xt=urn:btih:deadbeef&dn=derp'])
 
     @patch('pirate.pirate.builtins.input', return_value='0')
     @patch('subprocess.call')
     def test_main_choice(self, mock_call, mock_input):
         result = {
-            'magnet': 'dn=derp',
-            'seeds': '1',
+            'name': 'derp',
+            'magnet': 'magnet:?xt=urn:btih:deadbeef&dn=derp',
+            'seeders': '1',
             'leechers': '1',
             'size': ('1', 'mb'),
             'uploaded': '1',
         }
-        with patch('pirate.torrent.remote', return_value=[result]) as mock_remote:
+        with patch('pirate.torrent.remote', return_value=[result]):
             config = pirate.pirate.parse_config_file('')
-            args = pirate.pirate.combine_configs(config, pirate.pirate.parse_args(['term', '-C', 'blah %s']))
+            args = pirate.pirate.combine_configs(
+                config, pirate.pirate.parse_args(['term', '-C', 'blah %s']))
             pirate.pirate.pirate_main(args)
-            mock_call.assert_called_once_with(['blah', 'dn=derp'])
+            mock_call.assert_called_once_with(
+                ['blah', 'magnet:?xt=urn:btih:deadbeef&dn=derp'])
 
     def test_parse_torrent_command(self):
         tests = [
@@ -70,11 +76,13 @@ class TestPirate(unittest.TestCase):
             [['d 23, 1'], ('d', [23, 1])],
             [['1d'], ('d', [1])],
             [['1 ... d'], ('d', [1])],
-            [['1-3 d'], ('d', [1,2,3])],
-            [['1-3'], (None, [1,2,3])],
+            [['1-3 d'], ('d', [1, 2, 3])],
+            [['1-3'], (None, [1, 2, 3])],
         ]
         for test in tests:
-            self.assertEqual(pirate.pirate.parse_torrent_command(*test[0]), test[1])
+            self.assertEqual(
+                pirate.pirate.parse_torrent_command(*test[0]),
+                test[1])
 
     def test_parse_config_file(self):
         types = {
@@ -128,16 +136,30 @@ class TestPirate(unittest.TestCase):
             ('', ['-l'], {'action': 'list_categories'}),
             ('', ['--list_sorts'], {'action': 'list_sorts'}),
             ('', ['term'], {'action': 'search', 'source': 'tpb'}),
-            ('', ['-L', 'filename', 'term'], {'action': 'search', 'source': 'local_tpb', 'database': 'filename'}),
-            ('', ['term', '-S', 'dir'], {'action': 'search', 'save_directory': 'dir'}),
-            ('', ['-E', 'localhost:1337'], {'transmission_command': ['transmission-remote', 'localhost:1337']}),
+            ('',
+             ['-L', 'filename', 'term'],
+             {'action': 'search', 'source': 'local_tpb',
+              'database': 'filename'}),
+            ('',
+             ['term', '-S', 'dir'],
+             {'action': 'search', 'save_directory': 'dir'}),
+            ('',
+             ['-E', 'localhost:1337'],
+             {'transmission_command':
+              ['transmission-remote', 'localhost:1337']}),
             ('', ['term'], {'output': 'browser_open'}),
             ('', ['term', '-t'], {'output': 'transmission'}),
             ('', ['term', '--save-magnets'], {'output': 'save_magnet_files'}),
-            ('', ['term', '--save-torrents'], {'output': 'save_torrent_files'}),
-            ('', ['term', '-C', 'command'], {'output': 'open_command', 'open_command': 'command'}),
+            ('',
+             ['term', '-C', 'command'],
+             {'output': 'open_command', 'open_command': 'command'}),
             ('', ['internets'], {'action': 'search', 'search': ['internets']}),
-            ('', ['internets lol', 'lel'], {'action': 'search', 'search': ['internets lol', 'lel']}),
+            ('',
+             ['term', '--save-torrents'],
+             {'output': 'save_torrent_files'}),
+            ('',
+             ['internets lol', 'lel'],
+             {'action': 'search', 'search': ['internets lol', 'lel']}),
         ]
         for test in tests:
             args = pirate.pirate.parse_args(test[1])
@@ -148,29 +170,36 @@ class TestPirate(unittest.TestCase):
                 self.assertEqual(test[2][option], value)
 
     def test_search_mirrors(self):
-        args = Namespace(pages=1, category=100, sort=10,
-                         action='browse', search=[],
-                         mirror=[pirate.data.default_mirror])
+        args = Namespace(
+            category=100, sort=10,
+            action='browse', search=[],
+            mirror=[pirate.data.default_mirror],
+            timeout=pirate.data.default_timeout)
+
         class MockResponse():
-            readlines = mock.MagicMock(return_value=[x.encode('utf-8') for x in ['', '', '', 'https://example.com']])
+            readlines = mock.MagicMock(
+                return_value=[
+                    x.encode('utf-8') for x in
+                    ['', '', '', 'https://example.com']])
             info = mock.MagicMock()
             getcode = mock.MagicMock(return_value=200)
         response_obj = MockResponse()
+
+        returns = [None, ([], 'https://example.com')]
+
         printer = MagicMock(Printer)
-        with patch('urllib.request.urlopen', return_value=response_obj) as urlopen:
-            with patch('pirate.torrent.remote', return_value=[]) as remote:
+        with patch('pirate.pirate.connect_mirror',
+                   side_effect=returns) as connect:
+            with patch('urllib.request.urlopen', return_value=response_obj):
                 results, mirror = pirate.pirate.search_mirrors(printer, args)
-                self.assertEqual(results, [])
-                self.assertEqual(mirror, pirate.data.default_mirror)
-                remote.assert_called_once_with(printer=printer, pages=1, category=100, sort=10, mode='browse', terms=[], mirror=pirate.data.default_mirror)
-            with patch('pirate.torrent.remote', side_effect=[socket.timeout, []]) as remote:
-                results, mirror = pirate.pirate.search_mirrors(printer, args)
-                self.assertEqual(results, [])
-                self.assertEqual(mirror, 'https://example.com')
-                remote.assert_has_calls([
-                    call(printer=printer, pages=1, category=100, sort=10, mode='browse', terms=[], mirror=pirate.data.default_mirror),
-                    call(printer=printer, pages=1, category=100, sort=10, mode='browse', terms=[], mirror='https://example.com')
-                ])
+
+        connect.assert_has_calls([
+            call(pirate.data.default_mirror, printer, args),
+            call('https://example.com', printer, args)])
+
+        self.assertEqual(results, [])
+        self.assertEqual(mirror, 'https://example.com')
+
 
 if __name__ == '__main__':
     unittest.main()

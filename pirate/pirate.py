@@ -286,7 +286,7 @@ def search_mirrors(printer, args):
     # try default or user mirrors
     for mirror in args.mirror:
         result = connect_mirror(mirror, printer, args)
-        if result:
+        if result is not None:
             return result
 
     # download mirror list
@@ -308,7 +308,7 @@ def search_mirrors(printer, args):
         if mirror in pirate.data.blacklist:
             continue
         result = connect_mirror(mirror, printer, args)
-        if result:
+        if result is not None:
             return result
     else:
         raise IOError('No more available mirrors')

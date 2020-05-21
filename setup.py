@@ -23,7 +23,6 @@ if __name__ == '__main__':
             'console_scripts': ['pirate-get = pirate.pirate:main']
         },
         install_requires=['colorama>=0.3.3',
-                          'beautifulsoup4>=4.4.1',
                           'veryprettytable>=0.8.1',
                           'pyperclip>=1.6.2'],
         keywords=['torrent', 'magnet', 'download', 'tpb', 'client'],

@@ -42,6 +42,7 @@ def parse_config_file(text):
     config.set('Misc', 'transmission-port', '')  # for backward compatibility
     config.set('Misc', 'colors', 'true')
     config.set('Misc', 'mirror', pirate.data.default_mirror)
+    config.set('Misc', 'timeout', pirate.data.default_timeout)
 
     config.read_string(text)
 
@@ -179,6 +180,8 @@ def parse_args(args_in):
     parser.add_argument('-m', '--mirror',
                         type=str, nargs='+',
                         help='the pirate bay mirror(s) to use')
+    parser.add_argument('-z', '--timeout', type=int,
+                        help='timeout in seconds for http requests')
     parser.add_argument('-v', '--version',
                         action='store_true',
                         help='print pirate-get version number')
@@ -220,6 +223,9 @@ def combine_configs(config, args):
     if not args.mirror:
         args.mirror = config.get('Misc', 'mirror').split()
 
+    if not args.timeout:
+        args.timeout = int(config.get('Misc', 'timeout'))
+
     args.transmission_command = ['transmission-remote']
     if args.endpoint:
         args.transmission_command.append(args.endpoint)
@@ -258,14 +264,15 @@ def combine_configs(config, args):
 def connect_mirror(mirror, printer, args):
     try:
         printer.print('Trying', mirror, end='... ')
-        url = pirate.torrent.find_api(mirror)
+        url = pirate.torrent.find_api(mirror, args.timeout)
         results = pirate.torrent.remote(
             printer=printer,
             category=pirate.torrent.parse_category(printer, args.category),
             sort=pirate.torrent.parse_sort(printer, args.sort),
             mode=args.action,
             terms=args.search,
-            mirror=url)
+            mirror=url,
+            timeout=args.timeout)
     except (urllib.error.URLError, socket.timeout, IOError, ValueError) as e:
         printer.print('Failed', color='WARN', end=' ')
         printer.print('(', e, ')', sep='')
@@ -286,7 +293,7 @@ def search_mirrors(printer, args):
     try:
         req = request.Request(pirate.data.mirror_list,
                               headers=pirate.data.default_headers)
-        f = request.urlopen(req, timeout=pirate.data.default_timeout)
+        f = request.urlopen(req, timeout=args.timeout)
     except urllib.error.URLError as e:
         raise IOError('Could not fetch mirrors', e.reason)
 
@@ -400,9 +407,9 @@ def pirate_main(args):
                     printer.print('Bye.', color='alt')
                     return
                 elif code == 'd':
-                    printer.descriptions(choices, results, site)
+                    printer.descriptions(choices, results, site, args.timeout)
                 elif code == 'f':
-                    printer.file_lists(choices, results, site)
+                    printer.file_lists(choices, results, site, args.timeout)
                 elif code == 'p':
                     printer.search_results(results)
                 elif code == 'm':
@@ -412,7 +419,8 @@ def pirate_main(args):
                     pirate.torrent.copy_magnets(printer, choices, results)
                 elif code == 't':
                     pirate.torrent.save_torrents(printer, choices, results,
-                                                 args.save_directory)
+                                                 args.save_directory,
+                                                 args.timeout)
                 elif not cmd:
                     printer.print('No links entered!', color='WARN')
                 else:
@@ -432,7 +440,8 @@ def pirate_main(args):
     if args.output == 'save_torrent_files':
         printer.print('Saving selected torrents...')
         pirate.torrent.save_torrents(printer, choices,
-                                     results, args.save_directory)
+                                     results, args.save_directory,
+                                     args.timeout)
         return
 
     for choice in choices:

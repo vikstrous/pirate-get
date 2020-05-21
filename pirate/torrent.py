@@ -64,7 +64,7 @@ def make_magnet(name, info_hash):
         info_hash, parse.quote(name, ''))
 
 
-def remote(printer, category, sort, mode, terms, mirror):
+def remote(printer, category, sort, mode, terms, mirror, timeout):
     results = []
 
     # Catch the Ctrl-C exception and exit cleanly
@@ -74,7 +74,7 @@ def remote(printer, category, sort, mode, terms, mirror):
                 mirror, ' '.join(terms), category),
             headers=pirate.data.default_headers)
         try:
-            f = request.urlopen(req, timeout=pirate.data.default_timeout)
+            f = request.urlopen(req, timeout=timeout)
         except urllib.error.URLError as e:
             raise e
 
@@ -94,13 +94,13 @@ def remote(printer, category, sort, mode, terms, mirror):
         sys.exit(0)
 
 
-def find_api(mirror):
+def find_api(mirror, timeout):
     # try common paths
     for path in ['', '/apip', '/api.php?url=']:
         req = request.Request(mirror + path + '/q.php?q=test&cat=0',
                               headers=pirate.data.default_headers)
         try:
-            f = request.urlopen(req, timeout=pirate.data.default_timeout)
+            f = request.urlopen(req, timeout=timeout)
             if f.info().get_content_type() == 'application/json':
                 return mirror + path
         except urllib.error.URLError:
@@ -110,7 +110,7 @@ def find_api(mirror):
     req = request.Request(mirror + '/static/main.js',
                           headers=pirate.data.default_headers)
     try:
-        f = request.urlopen(req, timeout=pirate.data.default_timeout)
+        f = request.urlopen(req, timeout=timeout)
         if f.info().get_content_type() == 'application/javascript':
             match = re.search("var server='([^']+)'", f.read().decode())
             return mirror + match.group(1)
@@ -120,27 +120,27 @@ def find_api(mirror):
     raise IOError('API not found')
 
 
-def get_torrent(info_hash):
+def get_torrent(info_hash, timeout):
     url = 'http://itorrents.org/torrent/{:X}.torrent'
     req = request.Request(url.format(info_hash),
                           headers=pirate.data.default_headers)
     req.add_header('Accept-encoding', 'gzip')
 
-    torrent = request.urlopen(req, timeout=pirate.data.default_timeout)
+    torrent = request.urlopen(req, timeout=timeout)
     if torrent.info().get('Content-Encoding') == 'gzip':
         torrent = gzip.GzipFile(fileobj=BytesIO(torrent.read()))
 
     return torrent.read()
 
 
-def save_torrents(printer, chosen_links, results, folder):
+def save_torrents(printer, chosen_links, results, folder, timeout):
     for link in chosen_links:
         result = results[link]
         torrent_name = result['name'].replace('/', '_').replace('\\', '_')
         file = os.path.join(folder, torrent_name + '.torrent')
 
         try:
-            torrent = get_torrent(result['info_hash'])
+            torrent = get_torrent(result['info_hash'], timeout)
         except urllib.error.HTTPError as e:
             printer.print('There is no cached file for this torrent :('
                           ' \nCode: {} - {}'.format(e.code, e.reason),

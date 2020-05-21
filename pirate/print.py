@@ -95,16 +95,14 @@ class Printer:
             even = not even
         self.print(table)
 
-    def descriptions(self, chosen_links, results, site):
-        opener = request.build_opener(request.HTTPErrorProcessor)
-
+    def descriptions(self, chosen_links, results, site, timeout):
         for link in chosen_links:
             result = results[link]
             req = request.Request(
                 site + '/t.php?id=' + result['id'],
                 headers=pirate.data.default_headers)
             req.add_header('Accept-encoding', 'gzip')
-            f = opener.open(req, timeout=pirate.data.default_timeout)
+            f = request.urlopen(req, timeout=timeout)
 
             if f.info().get('Content-Encoding') == 'gzip':
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))
@@ -119,9 +117,7 @@ class Printer:
                        color='zebra_1')
             self.print(desc, color='zebra_0')
 
-    def file_lists(self, chosen_links, results, site):
-        opener = request.build_opener(request.HTTPErrorProcessor)
-
+    def file_lists(self, chosen_links, results, site, timeout):
         # the API may returns object instead of list
         def get(obj):
             try:
@@ -135,7 +131,7 @@ class Printer:
                 site + '/f.php?id=' + result['id'],
                 headers=pirate.data.default_headers)
             req.add_header('Accept-encoding', 'gzip')
-            f = opener.open(req, timeout=pirate.data.default_timeout)
+            f = request.urlopen(req, timeout=timeout)
 
             if f.info().get('Content-Encoding') == 'gzip':
                 f = gzip.GzipFile(fileobj=BytesIO(f.read()))

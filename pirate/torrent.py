@@ -67,11 +67,18 @@ def make_magnet(name, info_hash):
 def remote(printer, category, sort, mode, terms, mirror, timeout):
     results = []
 
+    # special query when no terms
+    if not terms:
+        if category == 0:
+            category = 'all'
+        query = '/precompiled/data_top100_{}.json'.format(category)
+    else:
+        query = '/q.php?q={}&cat={}'.format(' '.join(terms), category)
+
     # Catch the Ctrl-C exception and exit cleanly
     try:
         req = request.Request(
-            '{}/q.php?q={}&cat={}'.format(
-                mirror, ' '.join(terms), category),
+            mirror + query,
             headers=pirate.data.default_headers)
         try:
             f = request.urlopen(req, timeout=timeout)
@@ -80,7 +87,12 @@ def remote(printer, category, sort, mode, terms, mirror, timeout):
 
         if f.info().get('Content-Encoding') == 'gzip':
             f = gzip.GzipFile(fileobj=BytesIO(f.read()))
-        for res in json.load(f):
+        data = json.load(f)
+
+        if len(data) == 1 and 'No results' in data[0]['name']:
+            return []
+
+        for res in data:
             res['size'] = pretty_size(int(res['size']))
             res['magnet'] = make_magnet(res['name'], res['info_hash'])
             res['info_hash'] = int(res['info_hash'], 16)

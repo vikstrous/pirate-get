@@ -5,6 +5,8 @@ from unittest.mock import patch, MagicMock
 import io
 import urllib
 import json
+import os
+import time
 
 import pirate.torrent
 import pirate.data
@@ -13,6 +15,12 @@ from tests import util
 
 
 class TestTorrent(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # to make test deterministic
+        os.environ['TZ'] = 'Etc/UTC'
+        time.tzset()
 
     def test_no_hits(self):
         expected = []

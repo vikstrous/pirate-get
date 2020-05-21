@@ -31,10 +31,11 @@ class TestPirate(unittest.TestCase):
             'magnet': 'magnet:?xt=urn:btih:deadbeef&dn=derp',
             'seeders': '1',
             'leechers': '1',
-            'size': ('1', 'mb'),
+            'size': '1 MB',
             'uploaded': '1',
         }
-        with patch('pirate.torrent.remote', return_value=[result]):
+        with patch('pirate.pirate.connect_mirror',
+                   return_value=([result], '')):
             config = pirate.pirate.parse_config_file('')
             args = pirate.pirate.combine_configs(
                 config,
@@ -51,10 +52,11 @@ class TestPirate(unittest.TestCase):
             'magnet': 'magnet:?xt=urn:btih:deadbeef&dn=derp',
             'seeders': '1',
             'leechers': '1',
-            'size': ('1', 'mb'),
+            'size': '1 MB',
             'uploaded': '1',
         }
-        with patch('pirate.torrent.remote', return_value=[result]):
+        with patch('pirate.pirate.connect_mirror',
+                   return_value=([result], '')):
             config = pirate.pirate.parse_config_file('')
             args = pirate.pirate.combine_configs(
                 config, pirate.pirate.parse_args(['term', '-C', 'blah %s']))

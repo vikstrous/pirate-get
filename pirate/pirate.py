@@ -8,7 +8,7 @@ import socket
 import urllib.request as request
 import urllib.error
 import builtins
-
+import json
 import webbrowser
 
 import pirate.data
@@ -138,8 +138,8 @@ def parse_args(args_in):
     parser.add_argument('-l', dest='list_categories',
                         action='store_true',
                         help='list categories')
-    parser.add_argument('--list_sorts', dest='list_sorts',
-                        action='store_true',
+    parser.add_argument('--list-sorts', '--list_sorts',
+                        dest='list_sorts', action='store_true',
                         help='list Sortable Types')
     parser.add_argument('-L', '--local', dest='database',
                         help='a csv file containing the Pirate Bay database '
@@ -185,6 +185,9 @@ def parse_args(args_in):
     parser.add_argument('-v', '--version',
                         action='store_true',
                         help='print pirate-get version number')
+    parser.add_argument('-j', '--json',
+                        action='store_true',
+                        help='print results in JSON format to stdout')
     args = parser.parse_args(args_in)
 
     return args
@@ -369,7 +372,11 @@ def pirate_main(args):
         printer.print('No results')
         return
 
-    printer.search_results(results, local=args.source == 'local_tpb')
+    if args.json:
+        print(json.dumps(results))
+        return
+    else:
+        printer.search_results(results, local=args.source == 'local_tpb')
 
     # number of results to pick
     if args.first:

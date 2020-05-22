@@ -4,6 +4,7 @@ import gzip
 import urllib.request as request
 import shutil
 import json
+import sys
 
 import pirate.data
 import pirate.torrent
@@ -33,10 +34,10 @@ class Printer:
             c = color_dict[kwargs.pop('color')]
             args = (c + args[0],) + args[1:] + (colorama.Style.RESET_ALL,)
             kwargs.pop('color', None)
-            return builtins.print(*args, **kwargs)
+            return builtins.print(*args, file=sys.stderr, **kwargs)
         else:
             kwargs.pop('color', None)
-            return builtins.print(*args, **kwargs)
+            return builtins.print(*args, file=sys.stderr, **kwargs)
 
     # TODO: extract the name from the search results
     #       instead of from the magnet link when possible

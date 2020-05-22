@@ -2,6 +2,7 @@
 import os
 import unittest
 import json
+import sys
 
 from unittest.mock import patch, call, MagicMock
 from pirate.print import Printer
@@ -64,11 +65,15 @@ class TestPrint(unittest.TestCase):
         printer = Printer(False)
         with patch('pirate.print.builtins.print') as mock_print:
             printer.print('abc', color='zebra_1')
-            mock_print.assert_called_once_with('abc')
+            mock_print.assert_called_once_with(
+                'abc',
+                file=sys.stderr)
         printer = Printer(True)
         with patch('pirate.print.builtins.print') as mock_print:
             printer.print('abc', color='zebra_1')
-            mock_print.assert_called_once_with('\x1b[34mabc', '\x1b[0m')
+            mock_print.assert_called_once_with(
+                '\x1b[34mabc', '\x1b[0m',
+                file=sys.stderr)
 
     def test_print_results_local2(self):
         class MockTable:

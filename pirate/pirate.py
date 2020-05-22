@@ -344,7 +344,7 @@ def pirate_main(args):
         cur_color = 'zebra_0'
         for key, value in sorted(pirate.data.sorts.items()):
             cur_color = 'zebra_0' if cur_color == 'zebra_1' else 'zebra_1'
-            printer.print(str(value), '\t', key, sep='', color=cur_color)
+            printer.print(str(value[0]), '\t', key, sep='', color=cur_color)
         return
 
     # fetch torrents

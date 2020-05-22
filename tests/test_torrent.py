@@ -38,6 +38,7 @@ class TestTorrent(unittest.TestCase):
             expected = json.load(file)
         with util.open_data('debian_iso.json') as res:
             actual = pirate.torrent.parse_page(res)
+        json.dump(actual, open('result.json', 'w'))
         self.assertEqual(actual, expected)
 
     def test_parse_category(self):
@@ -54,13 +55,17 @@ class TestTorrent(unittest.TestCase):
 
     def test_parse_sort(self):
         sort = pirate.torrent.parse_sort(MagicMock(Printer), 'SeedersDsc')
-        self.assertEqual(7, sort)
+        self.assertEqual(['seeders', True], sort)
+        sort = pirate.torrent.parse_sort(MagicMock(Printer), 'CategoryAsc')
+        self.assertEqual(['category', False], sort)
+        sort = pirate.torrent.parse_sort(MagicMock(Printer), 'DateAsc')
+        self.assertEqual(['raw_uploaded', False], sort)
         sort = pirate.torrent.parse_sort(MagicMock(Printer), '7')
-        self.assertEqual(7, sort)
+        self.assertEqual(['seeders', True], sort)
         sort = pirate.torrent.parse_sort(MagicMock(Printer), 'asdf')
-        self.assertEqual(99, sort)
+        self.assertEqual(['seeders', True], sort)
         sort = pirate.torrent.parse_sort(MagicMock(Printer), '7000')
-        self.assertEqual(99, sort)
+        self.assertEqual(['seeders', True], sort)
 
     def test_request_path(self):
         # the args are (mode, category, terms)
@@ -144,10 +149,12 @@ class TestTorrent(unittest.TestCase):
             info = mock.MagicMock(return_value=MockInfo())
         res_obj = MockResponse()
 
+        sort = pirate.torrent.parse_sort(MagicMock(Printer), 10)
+
         with patch('urllib.request.Request', return_value=req_obj) as req:
             with patch('urllib.request.urlopen', return_value=res_obj) as res:
                 results = pirate.torrent.remote(
-                    MagicMock(Printer), 100, 10, 'top',
+                    MagicMock(Printer), 100, sort, 'top',
                     [], 'http://example.com', 9)
                 req.assert_called_once_with(
                     'http://example.com/precompiled/data_top100_100.json',

@@ -33,13 +33,42 @@ def parse_sort(printer, sort):
         sort = int(sort)
     except ValueError:
         pass
-    if sort in pirate.data.sorts.values():
-        return sort
-    elif sort in pirate.data.sorts.keys():
-        return pirate.data.sorts[sort]
+    for key, val in pirate.data.sorts.items():
+        if sort == key or sort == val[0]:
+            return val[1:]
     else:
         printer.print('Invalid sort ignored', color='WARN')
-        return 99
+        return pirate.data.sorts['Default'][1:]
+
+
+def parse_page(page):
+    results = []
+    try:
+        data = json.load(page)
+    except json.decoder.JSONDecodeError:
+        raise IOError('invalid JSON in API reply: blocked mirror?')
+
+    if len(data) == 1 and 'No results' in data[0]['name']:
+        return results
+
+    for res in data:
+        res['raw_size'] = int(res['size'])
+        res['size'] = pretty_size(int(res['size']))
+        res['magnet'] = build_magnet(res['name'], res['info_hash'])
+        res['info_hash'] = int(res['info_hash'], 16)
+        res['raw_uploaded'] = int(res['added'])
+        res['uploaded'] = pretty_date(res['added'])
+        res['seeders'] = int(res['seeders'])
+        res['leechers'] = int(res['leechers'])
+        res['category'] = int(res['category'])
+        results.append(res)
+
+    return results
+
+
+def sort_results(sort, res):
+    key, reverse = sort
+    return sorted(res, key=lambda x: x[key], reverse=reverse)
 
 
 def pretty_size(size):
@@ -59,29 +88,9 @@ def pretty_date(ts):
     return date.strftime('%Y-%m-%d %H:%M')
 
 
-def make_magnet(name, info_hash):
+def build_magnet(name, info_hash):
     return 'magnet:?xt=urn:btih:{}&dn={}'.format(
         info_hash, parse.quote(name, ''))
-
-
-def parse_page(page):
-    results = []
-    try:
-        data = json.load(page)
-    except json.decoder.JSONDecodeError:
-        raise IOError('invalid JSON in API reply: blocked mirror?')
-
-    if len(data) == 1 and 'No results' in data[0]['name']:
-        return results
-
-    for res in data:
-        res['size'] = pretty_size(int(res['size']))
-        res['magnet'] = make_magnet(res['name'], res['info_hash'])
-        res['info_hash'] = int(res['info_hash'], 16)
-        res['uploaded'] = pretty_date(res['added'])
-        results.append(res)
-
-    return results
 
 
 def build_request_path(mode, category, terms):
@@ -114,11 +123,11 @@ def remote(printer, category, sort, mode, terms, mirror, timeout):
 
         if f.info().get('Content-Encoding') == 'gzip':
             f = gzip.GzipFile(fileobj=BytesIO(f.read()))
-        return parse_page(f)
-
     except KeyboardInterrupt:
         printer.print('\nCancelled.')
         sys.exit(0)
+
+    return sort_results(sort, parse_page(f))
 
 
 def find_api(mirror, timeout):

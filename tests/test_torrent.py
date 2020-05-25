@@ -70,18 +70,18 @@ class TestTorrent(unittest.TestCase):
     def test_request_path(self):
         # the args are (mode, category, terms)
         succeed = [
-            (('recent',   0, []), '/precompiled/data_top100_recent.json'),
-            (('recent', 100, []), '/precompiled/data_top100_recent.json'),
-            (('top',      0, []), '/precompiled/data_top100_all.json'),
-            (('top',    100, []), '/precompiled/data_top100_100.json'),
-            (('search', 100, ['abc']), '/q.php?q=abc&cat=100'),
-            (('search', 100, ['abc', 'def']), '/q.php?q=abc%20def&cat=100'),
-            (('search', 100, ['\u1234']), '/q.php?q=%E1%88%B4&cat=100'),
-            (('browse', 100, []), '/q.php?q=category%3A100'),
+            (('recent', 1,   0, []), '/precompiled/data_top100_recent_1.json'),
+            (('recent', 2, 100, []), '/precompiled/data_top100_recent_2.json'),
+            (('top',    1,   0, []), '/precompiled/data_top100_all.json'),
+            (('top',    1, 100, []), '/precompiled/data_top100_100.json'),
+            (('search', 1, 100, ['abc']), '/q.php?q=abc&cat=100'),
+            (('search', 1, 100, ['abc', 'def']), '/q.php?q=abc%20def&cat=100'),
+            (('search', 1, 100, ['\u1234']), '/q.php?q=%E1%88%B4&cat=100'),
+            (('browse', 1, 100, []), '/q.php?q=category%3A100'),
         ]
         fail = [
-            (('browse',   0, []), Exception),
-            (('asdf',   100, []), Exception)
+            (('browse', 1,   0, []), Exception),
+            (('asdf',   1, 100, []), Exception)
         ]
         for inp, out in succeed:
             path = pirate.torrent.build_request_path(*inp)
@@ -154,7 +154,7 @@ class TestTorrent(unittest.TestCase):
         with patch('urllib.request.Request', return_value=req_obj) as req:
             with patch('urllib.request.urlopen', return_value=res_obj) as res:
                 results = pirate.torrent.remote(
-                    MagicMock(Printer), 100, sort, 'top',
+                    MagicMock(Printer), 1, 100, sort, 'top',
                     [], 'http://example.com', 9)
                 req.assert_called_once_with(
                     'http://example.com/precompiled/data_top100_100.json',

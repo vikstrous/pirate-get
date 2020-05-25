@@ -134,14 +134,18 @@ def parse_args(args_in):
                         help='specify a sort option', default='SeedersDsc')
     parser.add_argument('-R', '--recent',
                         action='store_true',
-                        help='torrents uploaded in the last 48hours.'
+                        help='torrents uploaded in the last 48hours. '
                              '*ignored in searches*')
     parser.add_argument('-l', '--list-categories',
                         action='store_true',
                         help='list categories')
     parser.add_argument('--list-sorts', '--list_sorts',
                         action='store_true',
-                        help='list Sortable Types')
+                        help='list types by which results can be sorted')
+    parser.add_argument('-p', '--pages',
+                        default=1, type=int,
+                        help='the number of pages to fetch. '
+                             '(only used with --recent)')
     parser.add_argument('-L', '--local', dest='database',
                         help='a csv file containing the Pirate Bay database '
                              'downloaded from '
@@ -271,6 +275,7 @@ def connect_mirror(mirror, printer, args):
         url = pirate.torrent.find_api(mirror, args.timeout)
         results = pirate.torrent.remote(
             printer=printer,
+            pages=args.pages,
             category=pirate.torrent.parse_category(printer, args.category),
             sort=pirate.torrent.parse_sort(printer, args.sort),
             mode=args.action,

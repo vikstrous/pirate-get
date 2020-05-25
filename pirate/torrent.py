@@ -93,14 +93,14 @@ def build_magnet(name, info_hash):
         info_hash, parse.quote(name, ''))
 
 
-def build_request_path(mode, category, terms):
+def build_request_path(mode, page, category, terms):
     if mode == 'search':
         query = '/q.php?q={}&cat={}'.format(' '.join(terms), category)
     elif mode == 'top':
         cat = 'all' if category == 0 else category
         query = '/precompiled/data_top100_{}.json'.format(cat)
     elif mode == 'recent':
-        query = '/precompiled/data_top100_recent.json'
+        query = '/precompiled/data_top100_recent_{}.json'.format(page)
     elif mode == 'browse':
         if category == 0:
             raise Exception('You must specify a category')
@@ -111,25 +111,30 @@ def build_request_path(mode, category, terms):
     return parse.quote(query, '?=&/')
 
 
-def remote(printer, category, sort, mode, terms, mirror, timeout):
-    query = build_request_path(mode, category, terms)
-    # Catch the Ctrl-C exception and exit cleanly
-    try:
-        req = request.Request(
-            mirror + query,
-            headers=pirate.data.default_headers)
+def remote(printer, pages, category, sort, mode, terms, mirror, timeout):
+    results = []
+    for i in range(1, pages + 1):
+        query = build_request_path(mode, i, category, terms)
+
+        # Catch the Ctrl-C exception and exit cleanly
         try:
-            f = request.urlopen(req, timeout=timeout)
-        except urllib.error.URLError as e:
-            raise e
+            req = request.Request(
+                mirror + query,
+                headers=pirate.data.default_headers)
+            try:
+                f = request.urlopen(req, timeout=timeout)
+            except urllib.error.URLError as e:
+                raise e
 
-        if f.info().get('Content-Encoding') == 'gzip':
-            f = gzip.GzipFile(fileobj=BytesIO(f.read()))
-    except KeyboardInterrupt:
-        printer.print('\nCancelled.')
-        sys.exit(0)
+            if f.info().get('Content-Encoding') == 'gzip':
+                f = gzip.GzipFile(fileobj=BytesIO(f.read()))
+        except KeyboardInterrupt:
+            printer.print('\nCancelled.')
+            sys.exit(0)
 
-    return sort_results(sort, parse_page(f))
+        results.extend(parse_page(f))
+
+    return sort_results(sort, results)
 
 
 def find_api(mirror, timeout):

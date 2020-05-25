@@ -123,23 +123,24 @@ def parse_torrent_command(l):
 def parse_args(args_in):
     parser = argparse.ArgumentParser(
         description='finds and downloads torrents from the Pirate Bay')
-    parser.add_argument('-b', dest='browse',
+    parser.add_argument('-b', '--browse',
                         action='store_true',
                         help='display in Browse mode')
-    parser.add_argument('search', metavar='search',
+    parser.add_argument('search',
                         nargs='*', help='term to search for')
-    parser.add_argument('-c', dest='category', metavar='category',
+    parser.add_argument('-c', '--category',
                         help='specify a category to search', default='All')
-    parser.add_argument('-s', dest='sort', metavar='sort',
+    parser.add_argument('-s', '--sort',
                         help='specify a sort option', default='SeedersDsc')
-    parser.add_argument('-R', dest='recent',  action='store_true',
+    parser.add_argument('-R', '--recent',
+                        action='store_true',
                         help='torrents uploaded in the last 48hours.'
                              '*ignored in searches*')
-    parser.add_argument('-l', dest='list_categories',
+    parser.add_argument('-l', '--list-categories',
                         action='store_true',
                         help='list categories')
     parser.add_argument('--list-sorts', '--list_sorts',
-                        dest='list_sorts', action='store_true',
+                        action='store_true',
                         help='list Sortable Types')
     parser.add_argument('-L', '--local', dest='database',
                         help='a csv file containing the Pirate Bay database '

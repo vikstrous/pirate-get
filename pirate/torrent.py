@@ -102,7 +102,9 @@ def build_request_path(mode, category, terms):
     elif mode == 'recent':
         query = '/precompiled/data_top100_recent.json'
     elif mode == 'browse':
-        raise NotImplementedError
+        if category == 0:
+            raise Exception('You must specify a category')
+        query = '/q.php?q=category:{}'.format(category)
     else:
         raise Exception('Invalid mode', mode)
 

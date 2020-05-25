@@ -77,11 +77,11 @@ class TestTorrent(unittest.TestCase):
             (('search', 100, ['abc']), '/q.php?q=abc&cat=100'),
             (('search', 100, ['abc', 'def']), '/q.php?q=abc%20def&cat=100'),
             (('search', 100, ['\u1234']), '/q.php?q=%E1%88%B4&cat=100'),
+            (('browse', 100, []), '/q.php?q=category%3A100'),
         ]
         fail = [
-            (('browse', 100, []), NotImplementedError),
-            (('browse',   0, []), NotImplementedError),
-            (('asdf',   100, []), Exception),
+            (('browse',   0, []), Exception),
+            (('asdf',   100, []), Exception)
         ]
         for inp, out in succeed:
             path = pirate.torrent.build_request_path(*inp)

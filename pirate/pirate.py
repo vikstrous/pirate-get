@@ -320,6 +320,13 @@ def search_mirrors(printer, args):
 def pirate_main(args):
     printer = Printer(args.color)
 
+    # browse mode needs a specific category
+    if args.browse:
+        if args.category == 'All' or args.category == 0:
+            printer.print('You must select a specific category in browse mode.'
+                          ' ("All" is not valid)', color='ERROR')
+            sys.exit(1)
+
     # print version
     if args.version:
         printer.print('pirate-get, version {}'.format(pirate.data.version))

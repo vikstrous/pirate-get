@@ -8,7 +8,7 @@ import socket
 import urllib.request as request
 import urllib.error
 import builtins
-
+import json
 import webbrowser
 
 import pirate.data
@@ -42,6 +42,7 @@ def parse_config_file(text):
     config.set('Misc', 'transmission-port', '')  # for backward compatibility
     config.set('Misc', 'colors', 'true')
     config.set('Misc', 'mirror', pirate.data.default_mirror)
+    config.set('Misc', 'timeout', pirate.data.default_timeout)
 
     config.read_string(text)
 
@@ -122,31 +123,33 @@ def parse_torrent_command(l):
 def parse_args(args_in):
     parser = argparse.ArgumentParser(
         description='finds and downloads torrents from the Pirate Bay')
-    parser.add_argument('-b', dest='browse',
+    parser.add_argument('-b', '--browse',
                         action='store_true',
                         help='display in Browse mode')
-    parser.add_argument('search', metavar='search',
+    parser.add_argument('search',
                         nargs='*', help='term to search for')
-    parser.add_argument('-c', dest='category', metavar='category',
+    parser.add_argument('-c', '--category',
                         help='specify a category to search', default='All')
-    parser.add_argument('-s', dest='sort', metavar='sort',
+    parser.add_argument('-s', '--sort',
                         help='specify a sort option', default='SeedersDsc')
-    parser.add_argument('-R', dest='recent',  action='store_true',
-                        help='torrents uploaded in the last 48hours.'
+    parser.add_argument('-R', '--recent',
+                        action='store_true',
+                        help='torrents uploaded in the last 48hours. '
                              '*ignored in searches*')
-    parser.add_argument('-l', dest='list_categories',
+    parser.add_argument('-l', '--list-categories',
                         action='store_true',
                         help='list categories')
-    parser.add_argument('--list_sorts', dest='list_sorts',
+    parser.add_argument('--list-sorts', '--list_sorts',
                         action='store_true',
-                        help='list Sortable Types')
+                        help='list types by which results can be sorted')
+    parser.add_argument('-p', '--pages',
+                        default=1, type=int,
+                        help='the number of pages to fetch. '
+                             '(only used with --recent)')
     parser.add_argument('-L', '--local', dest='database',
                         help='a csv file containing the Pirate Bay database '
                              'downloaded from '
                              'https://thepiratebay.org/static/dump/csv/')
-    parser.add_argument('-p', dest='pages', default=1, type=int,
-                        help='the number of pages to fetch '
-                             "(doesn't work with --local)")
     parser.add_argument('-0', dest='first',
                         action='store_true',
                         help='choose the top result')
@@ -182,9 +185,14 @@ def parse_args(args_in):
     parser.add_argument('-m', '--mirror',
                         type=str, nargs='+',
                         help='the pirate bay mirror(s) to use')
+    parser.add_argument('-z', '--timeout', type=int,
+                        help='timeout in seconds for http requests')
     parser.add_argument('-v', '--version',
                         action='store_true',
                         help='print pirate-get version number')
+    parser.add_argument('-j', '--json',
+                        action='store_true',
+                        help='print results in JSON format to stdout')
     args = parser.parse_args(args_in)
 
     return args
@@ -222,6 +230,9 @@ def combine_configs(config, args):
 
     if not args.mirror:
         args.mirror = config.get('Misc', 'mirror').split()
+
+    if not args.timeout:
+        args.timeout = int(config.get('Misc', 'timeout'))
 
     args.transmission_command = ['transmission-remote']
     if args.endpoint:
@@ -261,6 +272,7 @@ def combine_configs(config, args):
 def connect_mirror(mirror, printer, args):
     try:
         printer.print('Trying', mirror, end='... ')
+        url = pirate.torrent.find_api(mirror, args.timeout)
         results = pirate.torrent.remote(
             printer=printer,
             pages=args.pages,
@@ -268,7 +280,8 @@ def connect_mirror(mirror, printer, args):
             sort=pirate.torrent.parse_sort(printer, args.sort),
             mode=args.action,
             terms=args.search,
-            mirror=mirror)
+            mirror=url,
+            timeout=args.timeout)
     except (urllib.error.URLError, socket.timeout, IOError, ValueError) as e:
         printer.print('Failed', color='WARN', end=' ')
         printer.print('(', e, ')', sep='')
@@ -282,14 +295,14 @@ def search_mirrors(printer, args):
     # try default or user mirrors
     for mirror in args.mirror:
         result = connect_mirror(mirror, printer, args)
-        if result:
+        if result is not None:
             return result
 
     # download mirror list
     try:
         req = request.Request(pirate.data.mirror_list,
                               headers=pirate.data.default_headers)
-        f = request.urlopen(req, timeout=pirate.data.default_timeout)
+        f = request.urlopen(req, timeout=args.timeout)
     except urllib.error.URLError as e:
         raise IOError('Could not fetch mirrors', e.reason)
 
@@ -304,7 +317,7 @@ def search_mirrors(printer, args):
         if mirror in pirate.data.blacklist:
             continue
         result = connect_mirror(mirror, printer, args)
-        if result:
+        if result is not None:
             return result
     else:
         raise IOError('No more available mirrors')
@@ -312,6 +325,13 @@ def search_mirrors(printer, args):
 
 def pirate_main(args):
     printer = Printer(args.color)
+
+    # browse mode needs a specific category
+    if args.browse:
+        if args.category == 'All' or args.category == 0:
+            printer.print('You must select a specific category in browse mode.'
+                          ' ("All" is not valid)', color='ERROR')
+            sys.exit(1)
 
     # print version
     if args.version:
@@ -340,7 +360,7 @@ def pirate_main(args):
         cur_color = 'zebra_0'
         for key, value in sorted(pirate.data.sorts.items()):
             cur_color = 'zebra_0' if cur_color == 'zebra_1' else 'zebra_1'
-            printer.print(str(value), '\t', key, sep='', color=cur_color)
+            printer.print(str(value[0]), '\t', key, sep='', color=cur_color)
         return
 
     # fetch torrents
@@ -365,7 +385,11 @@ def pirate_main(args):
         printer.print('No results')
         return
 
-    printer.search_results(results, local=args.source == 'local_tpb')
+    if args.json:
+        print(json.dumps(results))
+        return
+    else:
+        printer.search_results(results, local=args.source == 'local_tpb')
 
     # number of results to pick
     if args.first:
@@ -380,13 +404,13 @@ def pirate_main(args):
             printer.print("\nSelect links (Type 'h' for more options"
                           ", 'q' to quit)", end='\b', color='alt')
             try:
-                l = builtins.input(': ')
+                cmd = builtins.input(': ')
             except (KeyboardInterrupt, EOFError):
                 printer.print('\nCancelled.')
                 return
 
             try:
-                code, choices = parse_torrent_command(l)
+                code, choices = parse_torrent_command(cmd)
                 # Act on option, if supplied
                 printer.print('')
                 if code == 'h':
@@ -403,9 +427,9 @@ def pirate_main(args):
                     printer.print('Bye.', color='alt')
                     return
                 elif code == 'd':
-                    printer.descriptions(choices, results, site)
+                    printer.descriptions(choices, results, site, args.timeout)
                 elif code == 'f':
-                    printer.file_lists(choices, results, site)
+                    printer.file_lists(choices, results, site, args.timeout)
                 elif code == 'p':
                     printer.search_results(results)
                 elif code == 'm':
@@ -415,8 +439,9 @@ def pirate_main(args):
                     pirate.torrent.copy_magnets(printer, choices, results)
                 elif code == 't':
                     pirate.torrent.save_torrents(printer, choices, results,
-                                                 args.save_directory)
-                elif not l:
+                                                 args.save_directory,
+                                                 args.timeout)
+                elif not cmd:
                     printer.print('No links entered!', color='WARN')
                 else:
                     break
@@ -435,7 +460,8 @@ def pirate_main(args):
     if args.output == 'save_torrent_files':
         printer.print('Saving selected torrents...')
         pirate.torrent.save_torrents(printer, choices,
-                                     results, args.save_directory)
+                                     results, args.save_directory,
+                                     args.timeout)
         return
 
     for choice in choices:

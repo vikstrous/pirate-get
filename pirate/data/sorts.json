@@ -1,15 +1,15 @@
 {
-"TitleDsc": 1, 
-"TitleAsc": 2,
-"DateDsc": 3, 
-"DateAsc": 4,
-"SizeDsc": 5, 
-"SizeAsc": 6,
-"SeedersDsc": 7, 
-"SeedersAsc": 8,
-"LeechersDsc": 9, 
-"LeechersAsc": 10,
-"CategoryDsc": 13, 
-"CategoryAsc": 14,
-"Default": 99
+"TitleDsc": [1, "name", true],
+"TitleAsc": [2, "name", false],
+"DateDsc":  [3, "raw_uploaded", true],
+"DateAsc":  [4, "raw_uploaded", false],
+"SizeDsc":  [5, "raw_size", true],
+"SizeAsc":  [6, "raw_size", false],
+"SeedersDsc": [7, "seeders", true],
+"SeedersAsc": [8, "seeders", false],
+"LeechersDsc": [9, "leechers", true],
+"LeechersAsc": [10, "leechers", false],
+"CategoryDsc": [13, "category", true],
+"CategoryAsc": [14, "category", false],
+"Default": [99, "seeders", true]
 }

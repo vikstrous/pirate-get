@@ -18,12 +18,11 @@ if __name__ == '__main__':
         author_email='me@viktorstanchev.com',
         license='AGPL',
         packages=find_packages(),
-        package_data={'': ["data/*.json"]},
+        package_data={'': ["data/*.json", "tests/data/*"]},
         entry_points={
             'console_scripts': ['pirate-get = pirate.pirate:main']
         },
         install_requires=['colorama>=0.3.3',
-                          'beautifulsoup4>=4.4.1',
                           'veryprettytable>=0.8.1',
                           'pyperclip>=1.6.2'],
         keywords=['torrent', 'magnet', 'download', 'tpb', 'client'],

@@ -18,7 +18,7 @@ if __name__ == '__main__':
         author_email='me@viktorstanchev.com',
         license='AGPL',
         packages=find_packages(),
-        package_data={'': ["data/*.json", "tests/data/*"]},
+        package_data={'': ["data/*", "tests/data/*"]},
         entry_points={
             'console_scripts': ['pirate-get = pirate.pirate:main']
         },

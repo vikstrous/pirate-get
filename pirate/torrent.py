@@ -146,7 +146,7 @@ def find_api(mirror, timeout):
             f = request.urlopen(req, timeout=timeout)
             if f.info().get_content_type() == 'application/json':
                 return mirror + path
-        except urllib.error.URLError as e:
+        except urllib.error.HTTPError as e:
             res = e.fp.read().decode()
             if e.code == 503 and 'cf-browser-verification' in res:
                 raise IOError('Cloudflare protected')

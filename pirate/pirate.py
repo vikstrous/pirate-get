@@ -31,6 +31,9 @@ def parse_config_file(text):
     config.add_section('LocalDB')
     config.set('LocalDB', 'enabled', 'false')
     config.set('LocalDB', 'path', expanduser('~/downloads/pirate-get/db'))
+    
+    config.add_section('Search')
+    config.set('Search', 'total-results', 50)
 
     config.add_section('Misc')
     # TODO: try to use configparser.BasicInterpolation
@@ -146,6 +149,9 @@ def parse_args(args_in):
                         default=1, type=int,
                         help='the number of pages to fetch. '
                              '(only used with --recent)')
+    parser.add_argument('-r', '--total-results',
+                        type=int,
+                        help='maximum number of results to show')
     parser.add_argument('-L', '--local', dest='database',
                         help='a csv file containing the Pirate Bay database '
                              'downloaded from '
@@ -233,6 +239,10 @@ def combine_configs(config, args):
 
     if not args.timeout:
         args.timeout = int(config.get('Misc', 'timeout'))
+
+    config_total_results = int(config.get('Search', 'total-results'))
+    if not args.total_results and config_total_results:
+        args.total_results = config_total_results
 
     args.transmission_command = ['transmission-remote']
     if args.endpoint:
@@ -389,6 +399,9 @@ def pirate_main(args):
         print(json.dumps(results))
         return
     else:
+        # Results are sorted on the request, so it's safe to remove results here.
+        if args.total_results:
+            results = results[0:args.total_results]
         printer.search_results(results, local=args.source == 'local_tpb')
 
     # number of results to pick

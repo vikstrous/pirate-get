@@ -16,4 +16,4 @@ default_headers = {'User-Agent': 'pirate get'}
 default_timeout = 10
 
 default_mirror = 'https://apibay.org'
-mirror_list = 'https://proxybay.bz/list.txt'
+mirror_list = 'https://proxy-bay.app/list.txt'

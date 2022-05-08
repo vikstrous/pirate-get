@@ -31,6 +31,9 @@ def parse_config_file(text):
     config.add_section('LocalDB')
     config.set('LocalDB', 'enabled', 'false')
     config.set('LocalDB', 'path', expanduser('~/downloads/pirate-get/db'))
+    
+    config.add_section('Search')
+    config.set('Search', 'total-results', 50)
 
     config.add_section('Search')
     config.set('Search', 'total-results', 50)
